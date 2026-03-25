@@ -1,0 +1,1 @@
+This is the frontend (UI) project for admin interface

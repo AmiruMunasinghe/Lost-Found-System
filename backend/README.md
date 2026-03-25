@@ -1,0 +1,1 @@
+This is the backend for the project. This include admin and normal user handling, lost and found item handling, matching lost and found item handling, database handling logics, etc.
