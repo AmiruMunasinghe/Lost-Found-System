@@ -1,0 +1,90 @@
+sequenceDiagram
+    actor Admin
+    participant Auth as Auth System
+    participant CC as Claim Controller
+    participant IC as Item Controller
+    participant DB as Database
+    participant NS as Notification Service
+    participant User as University User(s)
+
+    rect rgb(245, 245, 245)
+    Note over Admin, DB: Authentication & Session Start
+    Admin->>Auth: Request Admin Access
+    activate Auth
+    Auth->>DB: Validate Permissions
+    activate DB
+    DB-->>Auth: Authorized
+    deactivate DB
+    Auth-->>Admin: Access Granted
+    deactivate Auth
+    end
+
+    rect rgb(255, 240, 240)
+    Note over Admin, User: Content Moderation (Flagged Posts)
+    Admin->>IC: Fetch Flagged Reports
+    activate IC
+    IC->>DB: Query Items (Status: Flagged)
+    activate DB
+    DB-->>IC: Return Results
+    deactivate DB
+    IC-->>Admin: Display Dashboard
+    deactivate IC
+
+    opt Violation Detected (e.g., Fake Post)
+        Admin->>IC: Delete Item (Item_ID)
+        activate IC
+        IC->>DB: Archive/Remove Record
+        activate DB
+        DB-->>IC: Confirm Removal
+        deactivate DB
+        IC->>NS: Trigger Policy Violation Alert
+        activate NS
+        NS-->>User: Notify: Post Removed
+        deactivate NS
+        IC-->>Admin: UI Refreshed
+        deactivate IC
+    end
+    end
+
+    rect rgb(235, 245, 255)
+    Note over Admin, User: Conflict Resolution & Evidence Loop
+    Admin->>CC: Fetch "In Conflict" Items
+    activate CC
+    CC->>DB: Query Claims for Item_ID
+    activate DB
+    DB-->>CC: Return Multiple Claimants
+    deactivate DB
+    CC-->>Admin: Display Conflict List
+    deactivate CC
+
+    %% NEW: The Evidence Request Loop
+    Admin->>NS: Request Additional Evidence from all Claimants
+    activate NS
+    NS-->>User: Alert: "Additional proof of ownership required"
+    deactivate NS
+    
+    User->>CC: Submit Detailed Proof (Photos/Descriptions)
+    activate CC
+    CC->>DB: Update Claim Evidence
+    deactivate CC
+
+    Admin->>CC: Review New Evidence & Compare
+    activate CC
+    CC->>DB: Fetch All Multi-Step Verification Docs
+    activate DB
+    DB-->>CC: Return Final Evidence Set
+    deactivate DB
+    CC-->>Admin: Show Comparison View
+    
+    Admin->>CC: Approve Winner / Reject Others
+    CC->>DB: Update Owner & Set Status: "Recovered"
+    activate DB
+    DB-->>CC: Success
+    deactivate DB
+    CC->>NS: Send Final Outcome Notifications
+    activate NS
+    NS-->>User: Notify Winner & Notify Others
+    deactivate NS
+    CC-->>Admin: Conflict Resolved
+    deactivate CC
+    end

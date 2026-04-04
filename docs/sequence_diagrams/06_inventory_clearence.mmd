@@ -1,0 +1,46 @@
+sequenceDiagram
+    actor Admin
+    participant IC as Item Controller
+    participant DB as Database
+    participant NS as Notification Service
+    actor User as Potential Bidder
+
+    rect rgb(255, 250, 240)
+    Note over Admin, User: Lifecycle Management
+    IC->>DB: Auto-Check: Unclaimed Items > Expiry Limit
+    activate IC
+    activate DB
+    DB-->>IC: List Stale Items
+    deactivate DB
+    IC->>Admin: Alert: Items Ready for Clearance
+    deactivate IC
+
+    opt Initiate Clearance
+        Admin->>IC: Select Clearance Method
+        activate IC
+        
+        alt Strategy: Structured Bidding
+            IC->>DB: Set Status: "Bidding Active"
+            IC->>NS: Broadcast Auction Alert
+            NS-->>User: Notify Community
+            
+            loop Auction Period
+                User->>IC: Place Bid
+                IC->>DB: Validate & Update High Bid
+            end
+            
+            Note over IC, DB: On Timer Expiry
+            IC->>DB: Finalize Winner
+            IC->>NS: Notify Winner (Payment Instructions)
+            User->>IC: Submit Payment
+            IC->>DB: Update Status: "Sold" & Archive
+            
+        else Strategy: University Donation
+            IC->>DB: Update Status: "Donated"
+            IC->>DB: Archive Record
+        end
+        
+        IC-->>Admin: Inventory Process Completed
+        deactivate IC
+    end
+    end

@@ -1,0 +1,61 @@
+sequenceDiagram
+    actor User as User
+    participant CC as Claim Controller
+    participant IC as Item Controller
+    participant DB as Database
+    participant NS as Notification Service
+    actor Admin as Admin
+
+    rect rgb(240, 255, 240)
+    Note over User, DB: Initiation & Evidence Submission
+    User->>CC: Request to Claim Item (Item_ID)
+    activate CC
+    CC->>IC: Validate Item Availability
+    activate IC
+    IC->>DB: Fetch Item Status
+    activate DB
+    DB-->>IC: Status: "Active / Found"
+    deactivate DB
+    IC-->>CC: Item Available
+    deactivate IC
+    
+    CC-->>User: Prompt for Proof (Photo/Description)
+    User->>CC: Submit Evidence Payload
+    CC->>DB: Store Claim (Status: Pending_Admin)
+    activate DB
+    DB-->>CC: Claim_ID Created
+    deactivate DB
+    CC-->>User: Claim Received (Awaiting Verification)
+    deactivate CC
+    end
+
+    rect rgb(235, 245, 255)
+    Note over User, Admin: Administrative Review & Outcome
+    Admin->>CC: Review Pending Claims
+    activate CC
+    CC-->>Admin: Display Evidence vs. Item Metadata
+    
+    alt Evidence Validated (Success)
+        Admin->>CC: Approve Claim
+        CC->>DB: Update Item Status: "Claimed"
+        CC->>DB: Update Claim Status: "Approved"
+        
+        CC->>NS: Trigger Approval Notification
+        activate NS
+        NS-->>User: Alert: "Claim Approved - Schedule Pickup"
+        deactivate NS
+
+        User->>CC: Select Pickup Slot
+        CC->>DB: Record Pickup Schedule
+        CC-->>User: Confirmation & Digital Receipt
+        
+    else Evidence Insufficient (Rejection)
+        Admin->>CC: Reject Claim
+        CC->>DB: Update Claim Status: "Rejected"
+        CC->>NS: Trigger Rejection Notification
+        activate NS
+        NS-->>User: Alert: "Claim Denied - Insufficient Proof"
+        deactivate NS
+    end
+    deactivate CC
+    end
