@@ -1,0 +1,55 @@
+sequenceDiagram
+    actor User
+    actor Admin
+    participant Auth as Auth System
+    participant IC as Item Controller
+    participant DB as Database
+    participant NS as Notification Service
+
+    rect rgb(240, 255, 240)
+    Note over User, NS: Module 1A: New User Registration
+    User->>Auth: Submit Registration (Name, ID, Email, Role, Password)
+    activate Auth
+    Auth->>DB: Check if User/Email exists
+    activate DB
+    DB-->>Auth: Availability Result
+    deactivate DB
+
+    alt User Already Exists
+        Auth-->>User: Error: "Email/ID already registered"
+    else User Available
+        Auth->>DB: Store Hash & Profile (Role: Student/Admin)
+        activate DB
+        DB-->>Auth: Success (User_ID Created)
+        deactivate DB
+
+        Auth->>NS: Trigger Welcome & Email Verification
+        activate NS
+        NS-->>User: "Please verify your email"
+        deactivate NS
+
+        Auth-->>User: Registration Complete
+    end
+    deactivate Auth
+    end
+
+    rect rgb(245, 245, 245)
+    Note over User, DB: Module 1B: Role-Based Authentication (Login)
+    User->>Auth: Login Request (Email, Password)
+    activate Auth
+    Auth->>DB: Validate Credentials & Fetch Role
+    activate DB
+    DB-->>Auth: Validation Result
+    deactivate DB
+
+    alt Invalid Credentials
+        Auth-->>User: Error: "Invalid Email or Password"
+    else Valid (Role: Admin OR Student)
+        alt Role == Admin
+            Auth-->>Admin: Access Granted: Admin Dashboard (JWT Issued)
+        else Role == Student
+            Auth-->>User: Access Granted: User Dashboard (JWT Issued)
+        end
+    end
+    deactivate Auth
+    end

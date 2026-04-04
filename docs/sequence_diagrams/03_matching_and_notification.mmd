@@ -1,0 +1,53 @@
+sequenceDiagram
+    actor User
+    participant Auth as Auth System
+    participant IC as Item Controller
+    participant ME as Matching Engine
+    participant DB as Database
+    participant NS as Notification Service
+
+    rect rgb(245, 245, 245)
+    Note over User, DB: Item Submission & Storage
+    User->>Auth: Provide Credentials / Session Token
+    activate Auth
+    Auth-->>User: Authentication Success
+    deactivate Auth
+
+    User->>IC: Submit Item Report (Lost/Found)
+    activate IC
+    IC->>DB: Store Item Metadata
+    activate DB
+    DB-->>IC: Confirmation (Item_ID Created)
+    deactivate DB
+    
+    IC->>ME: Initiate Matching Request (Item_ID)
+    activate ME
+    end
+
+    rect rgb(235, 245, 255)
+    Note over ME, NS: Background Matching Logic & Trigger
+    ME->>DB: Retrieve Candidate Dataset (Category/Location)
+    activate DB
+    DB-->>ME: Return Potential Matches
+    deactivate DB
+
+    ME->>ME: Execute Comparison Logic (NLP/Attribute Filter)
+
+    alt Match Found
+        ME->>DB: Link Match IDs & Update Status
+        ME->>NS: Trigger Match Notification
+        activate NS
+        NS-->>User: Alert: "Possible Match Found for your Item"
+        
+        Note right of NS: Parallel Alert to the corresponding Party
+        NS-->>User: Alert: "A new item matches your report"
+        deactivate NS
+        
+    else No Match Found
+        ME-->>IC: Status: No Immediate Match
+    end
+    
+    deactivate ME
+    IC-->>User: Report Processed Successfully
+    deactivate IC
+    end

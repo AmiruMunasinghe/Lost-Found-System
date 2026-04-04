@@ -1,0 +1,62 @@
+sequenceDiagram
+    autonumber
+    actor User as User
+    participant Auth as Auth System
+    participant IC as Item Controller
+    participant DB as Database
+    participant NS as Notification Service
+
+    rect rgb(245, 245, 245)
+    Note over User, NS: Reporting Flow (Lost or Found)
+    User->>Auth: Request access (Session Token)
+    activate Auth
+    Auth-->>User: Authentication success
+    deactivate Auth
+
+    User->>IC: Submit Report (Description, Location, Image)
+    activate IC
+    IC->>IC: Validate inputs & sanitize data
+
+    alt Valid Data
+        IC->>DB: Save item (Status: Active, UserID)
+        activate DB
+        DB-->>IC: Return ItemID (Success)
+        deactivate DB
+
+        IC->>NS: Trigger confirmation receipt
+        activate NS
+        NS-->>User: "Report #ID created successfully"
+        deactivate NS
+
+        IC-->>User: Display Success Dashboard
+    else Invalid Data
+        IC-->>User: Display Error (e.g., missing fields)
+    end
+    deactivate IC
+    end
+
+    rect rgb(240, 255, 240)
+    Note over User, NS: Rating & Social Features Flow
+    User->>IC: Provide feedback (ItemID)
+    activate IC
+    IC->>DB: Verify interaction status = "Completed"
+    activate DB
+    DB-->>IC: Status confirmed
+    deactivate DB
+    
+    IC-->>User: Display rating form (1–5 stars)
+    User->>IC: Submit rating & review
+
+    IC->>DB: Store review & update Finder reputation
+    activate DB
+    DB-->>IC: Confirmation
+    deactivate DB
+
+    IC->>NS: Notify Finder: "New community rating!"
+    activate NS
+    NS-->>User: (Notification delivered)
+    deactivate NS
+    
+    IC-->>User: Display "Thank you" message
+    deactivate IC
+    end
