@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-LostfoundApplication<lostfound>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "uom.msd.lostfound.LostfoundApplication",
+            "projectName": "lostfound",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
