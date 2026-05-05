@@ -1,6 +1,6 @@
 import React from "react";
 
-function Home({ goToForm }) {
+function Home({ goToForm,goToResults }) {
   return (
     <div style={styles.page}>
       {/* NAVBAR */}
@@ -25,10 +25,15 @@ function Home({ goToForm }) {
           A centralized platform for students and staff of the University of
           Moratuwa to report, track, and recover lost or found items efficiently.
         </p>
-
-        <button style={styles.primaryButton} onClick={goToForm}>
+        <div style={{ display: "flex", gap: "20px", justifyContent: "center", alignItems: "center", }}>
+        <button style={styles.formButton} onClick={goToForm}>
           ➕ Submit a Report
         </button>
+        <button style={styles.resultsButton} onClick={goToResults}>
+              ➕Match Results
+        </button>
+        </div>
+        
       </div>
 
       {/* INFO SECTION */}
@@ -109,7 +114,16 @@ const styles = {
     margin: "0 auto 25px",
     lineHeight: "1.6",
   },
-  primaryButton: {
+  formButton: {
+    padding: "14px 24px",
+    background: "#0f172a",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "15px",
+    cursor: "pointer",
+  },
+  resultsButton: {
     padding: "14px 24px",
     background: "#0f172a",
     color: "white",
