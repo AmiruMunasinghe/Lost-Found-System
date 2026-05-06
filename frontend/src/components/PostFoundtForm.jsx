@@ -15,23 +15,23 @@ function PostForm({ goHome }) {
   if (!title.trim()) return;
 
   const formData = {
-    type,
+    type : "Found" ,
     title,
     desc,
     color,
     venue,
     time,
   };
-
+  console.log("FORM DATA:", formData);
   createItem(formData); // ✅ SAVE TO LOCALSTORAGE
 
   // console.log(formData); // useful for backend later
 
-  alert(`${type} item posted!`);
+  alert(`Found item posted!`);
 
   setTitle("");
   setDesc("");
-  setType("Lost");
+  setType("");
   setColor("");
   setVenue("");
   setTime("");
@@ -53,16 +53,7 @@ function PostForm({ goHome }) {
 
         {/* FORM */}
         <form onSubmit={handleSubmit} style={styles.form}>
-          {/* TYPE */}
-          <label style={styles.label}>Type</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            style={styles.select}
-          >
-            <option>Lost</option>
-            <option>Found</option>
-          </select>
+          
 
           {/* TITLE */}
           <label style={styles.label}>Item Title</label>

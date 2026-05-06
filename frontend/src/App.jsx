@@ -1,45 +1,72 @@
 import React, { useState } from "react";
 import Home from "./pages/Home";
-import PostForm from "./components/PostForm";
+import PostLostForm from "./components/PostLostForm";
+import PostFoundForm from "./components/PostFoundtForm"
 import MatchResults from "./pages/MatchResults";
 import ReturnItem from "./pages/ReturnItem";
 import ClaimItem from "./pages/ClaimItem";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard"; // ✅ IMPORTANT
+import Registration from"./pages/Registration";
+import ForgotPassword from "./pages/ForgotPassword";
+import Profile from "./pages/Profile";
+import Rewards from "./pages/Rewards";
+import MyReports from "./pages/MyReports";
 
 function App() {
-  const [page, setPage] = useState("home");
+  const [page, setPage] = useState("login");
 
   return (
-    <div>
-      {page === "home" && (
-        <Home
-          goToForm={() => setPage("form")}
-          goToResults={() => setPage("results")}
-          goToReturnItem={() => setPage("returnitem")}
-          goToClaimItem={() => setPage("claimitem")}
-        />
-      )}
+    <>
+      {/* LOGIN */}
+      {page === "login" && <Login setPage={setPage} />}
 
-      {page === "form" && (
-        <PostForm goHome={() => setPage("home")} />
-      )}
+      {/* DASHBOARD */}
+      {page === "dashboard" && <Dashboard setPage={setPage} />}
 
-      {page === "results" && (
-        <MatchResults goHome={() => setPage("home")} />
-      )}
+      {/* REGISTER */}
+      {page === "register" && <Registration go={setPage} />}
 
-      {page === "returnitem" && (
-        <ReturnItem goHome={() => setPage("home")} />
-      )}
+      {/* ForgotPassword */}
+      {page === "forgot" && <ForgotPassword go={setPage} />}
 
-      {page === "claimitem" && (
-        <ReturnItem goHome={() => setPage("home")} />
+      {page ==="reports" && (
+      <MyReports go={setPage}/>
       )}
 
 
+      {page ==="rewards" && (
+      <Rewards go={setPage}/>
+      )}
 
+      {page === "profile" && (
+       <Profile go={setPage} />
+      )}
+
+      {page === "postlost" && (
+       <PostLostForm goHome={() => setPage("dashboard")} />
+      )}
+
+      {page === "postfound" && (
+       <PostFoundForm goHome={() => setPage("dashboard")} />
+      )}
+
+      {/* MATCH RESULTS */}
+      {page === "matchresults" && (
+        <MatchResults goHome={() => setPage("dashboard")} />
+      )}
+
+      {/* RETURN ITEM */}
+      {page === "return" && (
+        <ReturnItem goHome={() => setPage("dashboard")} />
+      )}
+
+      {/* CLAIM ITEM */}
+      {page === "claim" && (
+        <ClaimItem goHome={() => setPage("dashboard")} />
+      )}
       
-      
-    </div>
+    </>
   );
 }
 
