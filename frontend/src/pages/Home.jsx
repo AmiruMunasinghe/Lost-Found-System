@@ -1,6 +1,6 @@
 import React from "react";
 
-function Home({ goToForm,goToResults }) {
+function Home({ goToForm,goToResults,goToReturnItem, goToClaimItem }) {
   return (
     <div style={styles.page}>
       {/* NAVBAR */}
@@ -26,11 +26,18 @@ function Home({ goToForm,goToResults }) {
           Moratuwa to report, track, and recover lost or found items efficiently.
         </p>
         <div style={{ display: "flex", gap: "20px", justifyContent: "center", alignItems: "center", }}>
-        <button style={styles.formButton} onClick={goToForm}>
+        <button style={styles.Button} onClick={goToForm}>
           ➕ Submit a Report
         </button>
-        <button style={styles.resultsButton} onClick={goToResults}>
+        <button style={styles.Button} onClick={goToResults}>
               ➕Match Results
+        </button>
+          <button style={styles.Button} onClick={goToReturnItem}>
+              ➕Return Item
+        </button>
+
+          <button style={styles.Button} onClick={goToClaimItem}>
+              ➕Claim Item
         </button>
         </div>
         
@@ -56,7 +63,7 @@ function Home({ goToForm,goToResults }) {
 
       {/* FOOTER */}
       <div style={styles.footer}>
-        © 2026 University of Moratuwa | Faculty of Information Technology
+        © 2026 University of Moratuwa | Faculty of Engineering
       </div>
     </div>
   );
@@ -71,13 +78,14 @@ const styles = {
 
   /* NAVBAR */
   nav: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "20px 40px",
-    background: "#0f172a",
-    color: "white",
-  },
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "20px 40px",
+  background: "#6d28d9", // purple
+  color: "white",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+},
   logo: {
     margin: 0,
     fontSize: "18px",
@@ -87,15 +95,18 @@ const styles = {
     fontSize: "13px",
     color: "#cbd5e1",
   },
-  button: {
-    background: "#ffffff",
-    color: "#0f172a",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
+Button: {
+  padding: "14px 28px",
+  fontSize: "16px",
+  fontWeight: "600",
+  color: "white",
+  border: "none",
+  borderRadius: "12px",
+  cursor: "pointer",
+  background: "linear-gradient(135deg, #7F00FF, #E100FF)",
+  boxShadow: "0 8px 20px rgba(127, 0, 255, 0.3)",
+  transition: "all 0.3s ease",
+},
 
   /* HERO */
   hero: {
