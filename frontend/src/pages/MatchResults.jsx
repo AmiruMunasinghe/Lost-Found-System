@@ -1,16 +1,23 @@
 import React from "react";
 
 function MatchResults({ goHome }) {
+
   const matches = [
     {
       id: 1,
       userItem: {
         title: "Black Wallet",
         desc: "Lost near library around 10 AM",
+        color: "Black",
+        venue: "Library",
+        time: "2026-05-06T10:00",
       },
       matchedItem: {
-        title: "Black Wallet Found",
-        desc: "Found at student cafeteria counter",
+        title: "Wallet Found",
+        desc: "Found at cafeteria counter",
+        color: "Black",
+        venue: "Cafeteria",
+        time: "2026-05-06T10:30",
       },
       status: "Matched",
     },
@@ -19,17 +26,36 @@ function MatchResults({ goHome }) {
       userItem: {
         title: "iPhone 13",
         desc: "Lost in lecture hall A",
+        color: "Blue",
+        venue: "Lecture Hall A",
+        time: "2026-05-06T09:00",
       },
       matchedItem: {
         title: "No Match Yet",
         desc: "Still searching in system",
+        color: "",
+        venue: "",
+        time: "",
       },
       status: "Pending",
     },
   ];
 
+  // 🔍 Compare helper
+  const isSame = (a, b) =>
+    a && b && a.toLowerCase() === b.toLowerCase();
+
+  // 📊 Match score
+  const getMatchScore = (u, m) => {
+    let score = 0;
+    if (isSame(u.color, m.color)) score++;
+    if (isSame(u.venue, m.venue)) score++;
+    return score;
+  };
+
   return (
     <div style={styles.page}>
+      
       {/* HEADER */}
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={goHome}>
@@ -42,25 +68,50 @@ function MatchResults({ goHome }) {
       <div style={styles.container}>
         {matches.map((m) => (
           <div key={m.id} style={styles.card}>
-            
+
             {/* SIDE BY SIDE */}
             <div style={styles.row}>
-              
+
               {/* USER ITEM */}
               <div style={styles.box}>
-                <h4>🧍 User Item</h4>
+                <h4> User Item</h4>
                 <h3>{m.userItem.title}</h3>
                 <p>{m.userItem.desc}</p>
+
+                <p><b>Color:</b> {m.userItem.color}</p>
+                <p><b>Venue:</b> {m.userItem.venue}</p>
+                <p><b>Time:</b> {m.userItem.time}</p>
               </div>
 
               {/* MATCHED ITEM */}
               <div style={styles.box}>
-                <h4>🎯 Matched Item</h4>
+                <h4> Matched Item</h4>
                 <h3>{m.matchedItem.title}</h3>
                 <p>{m.matchedItem.desc}</p>
+
+                <p style={{
+                  color: isSame(m.userItem.color, m.matchedItem.color) ? "green" : "black"
+                }}>
+                  <b>Color:</b> {m.matchedItem.color || "-"}
+                </p>
+
+                <p style={{
+                  color: isSame(m.userItem.venue, m.matchedItem.venue) ? "green" : "black"
+                }}>
+                  <b>Venue:</b> {m.matchedItem.venue || "-"}
+                </p>
+
+                <p>
+                  <b>Time:</b> {m.matchedItem.time || "-"}
+                </p>
               </div>
 
             </div>
+
+            {/* MATCH SCORE */}
+            <p style={{ marginTop: "10px", fontSize: "14px" }}>
+               Match Score: {getMatchScore(m.userItem, m.matchedItem)} / 2
+            </p>
 
             {/* STATUS */}
             <span

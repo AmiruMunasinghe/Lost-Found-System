@@ -1,21 +1,41 @@
 import React, { useState } from "react";
+import { createItem } from "../api/items";
 
 function PostForm({ goHome }) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [type, setType] = useState("Lost");
+  const [color, setColor] = useState("");
+  const [venue, setVenue] = useState("");
+  const [time, setTime] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ const handleSubmit = (e) => {
+  e.preventDefault();
 
-    if (!title.trim()) return;
+  if (!title.trim()) return;
 
-    alert(`${type} item posted!`);
-
-    setTitle("");
-    setDesc("");
-    setType("Lost");
+  const formData = {
+    type,
+    title,
+    desc,
+    color,
+    venue,
+    time,
   };
+
+  createItem(formData); // ✅ SAVE TO LOCALSTORAGE
+
+  // console.log(formData); // useful for backend later
+
+  alert(`${type} item posted!`);
+
+  setTitle("");
+  setDesc("");
+  setType("Lost");
+  setColor("");
+  setVenue("");
+  setTime("");
+};
 
   return (
     <div style={styles.page}>
@@ -62,9 +82,36 @@ function PostForm({ goHome }) {
             style={styles.textarea}
           />
 
+          {/* COLOR */}
+          <label style={styles.label}>Color (If applicable)</label>
+          <input
+            placeholder="e.g. Black, Red"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            style={styles.input}
+          />
+
+          {/* VENUE */}
+          <label style={styles.label}>Venue / Location</label>
+          <input
+            placeholder="e.g. Library, Bus stop"
+            value={venue}
+            onChange={(e) => setVenue(e.target.value)}
+            style={styles.input}
+          />
+
+          {/* TIME */}
+          <label style={styles.label}>Time</label>
+          <input
+            type="datetime-local"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            style={styles.input}
+          />
+
           {/* BUTTON */}
           <button type="submit" style={styles.button}>
-            🚀 Submit Report
+             Submit Report
           </button>
         </form>
       </div>
