@@ -1,0 +1,7 @@
+# Database Configuration (PostgreSQL)
+DB_URL=jdbc:postgresql://localhost:5432/lostfound
+DB_USER=username
+DB_PASSWORD=password
+
+# JWT Configuration
+TOKEN_SECRET_KEY=secretkey

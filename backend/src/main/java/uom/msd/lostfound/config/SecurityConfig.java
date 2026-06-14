@@ -36,10 +36,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Disable security for now - allow all requests without authentication
+        // Previous stricter setup (keep for rollback after testing):
+        // http
+        //     .csrf(csrf -> csrf.disable())
+        //     .authorizeHttpRequests(authz -> authz
+        //         .requestMatchers("/auth/**").permitAll()
+        //         .anyRequest().authenticated());
+
+        // Testing mode: disable authentication/authorization for all endpoints.
         http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+            .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());
+
         return http.build();
     }
 }
