@@ -1,10 +1,10 @@
 package uom.msd.lostfound.dto;
 
-import uom.msd.lostfound.enums.ItemStatus;
-import uom.msd.lostfound.enums.ReportType;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import uom.msd.lostfound.enums.ItemStatus;
+import uom.msd.lostfound.enums.ReportType;
 
 public class ItemResponseDTO {
     private Long id;
@@ -17,7 +17,7 @@ public class ItemResponseDTO {
     private Long userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<String> imageUrls;
+    private List<String> imageUrls = new java.util.ArrayList<>();
 
     public ItemResponseDTO() {
     }
