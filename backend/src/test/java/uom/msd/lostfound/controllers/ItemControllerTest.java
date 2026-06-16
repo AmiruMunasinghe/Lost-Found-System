@@ -351,6 +351,18 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
+        @Test
+        @DisplayName("Should return 400 for blank search query")
+        void testSearchItems_BlankQuery() throws Exception {
+                // Act & Assert
+                mockMvc.perform(get("/items/search")
+                                .param("q", "   "))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$", hasSize(0)));
+
+                verify(itemService, never()).searchItems(anyString());
+        }
+
     // ==================== Update Tests ====================
 
     @Test
@@ -495,6 +507,36 @@ class ItemControllerTest {
         mockMvc.perform(get("/items/paginated"))
                 .andExpect(status().isOk());
     }
+
+        @Test
+        @DisplayName("Should normalize negative page and non-positive size")
+        void testGetItemsWithPagination_NormalizesInvalidInputs() throws Exception {
+                // Arrange
+                when(itemService.getItemsWithPagination(0, 10)).thenReturn(new ArrayList<>());
+
+                // Act & Assert
+                mockMvc.perform(get("/items/paginated")
+                                .param("page", "-2")
+                                .param("size", "0"))
+                                .andExpect(status().isOk());
+
+                verify(itemService, times(1)).getItemsWithPagination(0, 10);
+        }
+
+        @Test
+        @DisplayName("Should cap pagination size at 50")
+        void testGetItemsWithPagination_CapsLargeSize() throws Exception {
+                // Arrange
+                when(itemService.getItemsWithPagination(1, 50)).thenReturn(new ArrayList<>());
+
+                // Act & Assert
+                mockMvc.perform(get("/items/paginated")
+                                .param("page", "1")
+                                .param("size", "200"))
+                                .andExpect(status().isOk());
+
+                verify(itemService, times(1)).getItemsWithPagination(1, 50);
+        }
 
         private ItemResponseDTO buildItemResponse(Long id, String title, ReportType type, ItemStatus status, Long userId) {
                 return new ItemResponseDTO(

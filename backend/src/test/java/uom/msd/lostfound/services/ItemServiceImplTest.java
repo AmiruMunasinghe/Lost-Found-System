@@ -139,6 +139,24 @@ class ItemServiceImplTest {
         verify(itemRepository, times(1)).save(any(Item.class));
     }
 
+    @Test
+    @DisplayName("Should create item with empty image list")
+    void testCreateItem_WithEmptyImageList() {
+        // Arrange
+        itemRequestDTO.setImageUrls(new ArrayList<>());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(itemRepository.save(any(Item.class))).thenReturn(testItem);
+
+        // Act
+        ItemResponseDTO result = itemService.createItem(1L, itemRequestDTO);
+
+        // Assert
+        assertNotNull(result);
+        ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
+        verify(itemRepository).save(itemCaptor.capture());
+        assertTrue(itemCaptor.getValue().getImages().isEmpty());
+    }
+
     // ==================== Get Item Tests ====================
 
     @Test
@@ -483,6 +501,23 @@ class ItemServiceImplTest {
         assertNotNull(result);
         verify(itemRepository, times(1)).findById(1L);
         verify(itemRepository, times(1)).save(any(Item.class));
+    }
+
+    @Test
+    @DisplayName("Should include added image URL in response")
+    void testAddImageToItem_IncludesImageUrlInResponse() {
+        // Arrange
+        String imageUrl = "https://example.com/new-image.jpg";
+        when(itemRepository.findById(1L)).thenReturn(Optional.of(testItem));
+        when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        ItemResponseDTO result = itemService.addImageToItem(1L, imageUrl);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getImageUrls().size());
+        assertEquals(imageUrl, result.getImageUrls().get(0));
     }
 
     @Test
