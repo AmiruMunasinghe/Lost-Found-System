@@ -1,7 +1,9 @@
-﻿package uom.msd.lostfound.models;
+package uom.msd.lostfound.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import uom.msd.lostfound.enums.NotificationChannel;
+import uom.msd.lostfound.enums.NotificationType;
 import java.time.LocalDateTime;
 
 @Entity

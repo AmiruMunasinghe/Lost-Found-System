@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.dto;
+package uom.msd.lostfound.dto;
 
 import lombok.Builder;
 import lombok.Data;

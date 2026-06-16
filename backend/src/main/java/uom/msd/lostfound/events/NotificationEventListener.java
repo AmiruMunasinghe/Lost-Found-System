@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.events;
+package uom.msd.lostfound.events;
 
 import uom.msd.lostfound.dto.SendNotificationRequest;
 import uom.msd.lostfound.dto.RewardTransactionRequest;

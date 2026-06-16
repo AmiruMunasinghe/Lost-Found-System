@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.events;
+package uom.msd.lostfound.events;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;

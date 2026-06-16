@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.enums;
+package uom.msd.lostfound.enums;
 
 public enum NotificationChannel {
     IN_APP,

@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.dto;
+package uom.msd.lostfound.dto;
 
 import uom.msd.lostfound.enums.RewardTransactionType;
 import jakarta.validation.constraints.Min;

@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.enums;
+package uom.msd.lostfound.enums;
 
 public enum NotificationType {
     ITEM_MATCH,          // A lost item matched a found item

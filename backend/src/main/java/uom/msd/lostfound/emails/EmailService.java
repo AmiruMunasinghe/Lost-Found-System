@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.emails;
+package uom.msd.lostfound.emails;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
