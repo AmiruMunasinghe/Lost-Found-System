@@ -1,7 +1,20 @@
 import React from "react";
 
-function MatchResults({ goHome }) {
+const C = {
+  primary: "#0F5FFF",
+  primaryDk: "#0b3470",
+  bg: "#eef4fb",
+  card: "#FFFFFF",
+  text: "#0b3470",
+  body: "#344054",
+  muted: "#667085",
+  border: "#d0d5dd",
+  fieldBg: "#f6f9ff",
+  link: "#2563eb",
+  green: "#16a34a",
+};
 
+function MatchResults({ goHome }) {
   const matches = [
     {
       id: 1,
@@ -53,149 +66,159 @@ function MatchResults({ goHome }) {
     return score;
   };
 
+  const styles = {
+    page: {
+      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+      background: C.bg,
+      minHeight: "100vh",
+      padding: "30px 16px",
+    },
+    container: {
+      width: "100%",
+      maxWidth: 780,
+      margin: "0 auto",
+    },
+    backLink: {
+      background: "none",
+      border: "none",
+      color: C.link,
+      fontSize: 14,
+      fontWeight: 600,
+      cursor: "pointer",
+      marginBottom: 18,
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      padding: 0,
+      fontFamily: "inherit",
+    },
+    card: {
+      background: C.card,
+      padding: "24px",
+      borderRadius: 22,
+      border: `1px solid ${C.border}`,
+      boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+      marginBottom: 16,
+    },
+    row: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 16,
+    },
+    box: {
+      flex: 1,
+      padding: "18px",
+      borderRadius: 16,
+      background: C.fieldBg,
+      border: `1px solid ${C.border}`,
+    },
+    boxTitle: {
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: "0.6px",
+      textTransform: "uppercase",
+      color: C.muted,
+      marginBottom: 8,
+    },
+    boxItemTitle: {
+      fontSize: 18,
+      fontWeight: 800,
+      color: C.text,
+      marginBottom: 6,
+    },
+    boxDesc: {
+      fontSize: 13,
+      color: C.muted,
+      marginBottom: 12,
+      lineHeight: 1.4,
+    },
+    detailRow: {
+      fontSize: 13,
+      color: C.body,
+      marginBottom: 4,
+    },
+    status: {
+      display: "inline-block",
+      marginTop: 14,
+      padding: "6px 16px",
+      borderRadius: 22,
+      fontSize: 13,
+      fontWeight: 600,
+    },
+    matchScore: {
+      marginTop: 14,
+      fontSize: 14,
+      color: C.body,
+      fontWeight: 600,
+    },
+  };
+
   return (
     <div style={styles.page}>
-      
-      {/* HEADER */}
-      <div style={styles.header}>
-        <button style={styles.backBtn} onClick={goHome}>
-          ← Home
-        </button>
-        <h2>Match Results</h2>
-      </div>
-
-      {/* RESULTS */}
       <div style={styles.container}>
+        <button style={styles.backLink} onClick={goHome}>← Back to Dashboard</button>
+
+        <h2 style={{ margin: "0 0 6px", fontSize: 28, fontWeight: 800, color: C.text }}>Match Results</h2>
+        <p style={{ margin: "0 0 22px", fontSize: 15, color: C.muted }}>View potential matches for your reported items</p>
+
         {matches.map((m) => (
           <div key={m.id} style={styles.card}>
-
-            {/* SIDE BY SIDE */}
             <div style={styles.row}>
-
               {/* USER ITEM */}
               <div style={styles.box}>
-                <h4> User Item</h4>
-                <h3>{m.userItem.title}</h3>
-                <p>{m.userItem.desc}</p>
-
-                <p><b>Color:</b> {m.userItem.color}</p>
-                <p><b>Venue:</b> {m.userItem.venue}</p>
-                <p><b>Time:</b> {m.userItem.time}</p>
+                <div style={styles.boxTitle}>🔴 Your Item</div>
+                <div style={styles.boxItemTitle}>{m.userItem.title}</div>
+                <div style={styles.boxDesc}>{m.userItem.desc}</div>
+                <p style={styles.detailRow}><b>Color:</b> {m.userItem.color}</p>
+                <p style={styles.detailRow}><b>Venue:</b> {m.userItem.venue}</p>
+                <p style={styles.detailRow}><b>Time:</b> {m.userItem.time}</p>
               </div>
 
               {/* MATCHED ITEM */}
               <div style={styles.box}>
-                <h4> Matched Item</h4>
-                <h3>{m.matchedItem.title}</h3>
-                <p>{m.matchedItem.desc}</p>
-
+                <div style={styles.boxTitle}>🟢 Matched Item</div>
+                <div style={styles.boxItemTitle}>{m.matchedItem.title}</div>
+                <div style={styles.boxDesc}>{m.matchedItem.desc}</div>
                 <p style={{
-                  color: isSame(m.userItem.color, m.matchedItem.color) ? "green" : "black"
+                  ...styles.detailRow,
+                  color: isSame(m.userItem.color, m.matchedItem.color) ? C.green : C.body,
+                  fontWeight: isSame(m.userItem.color, m.matchedItem.color) ? 700 : 400,
                 }}>
-                  <b>Color:</b> {m.matchedItem.color || "-"}
+                  <b>Color:</b> {m.matchedItem.color || "—"}
                 </p>
-
                 <p style={{
-                  color: isSame(m.userItem.venue, m.matchedItem.venue) ? "green" : "black"
+                  ...styles.detailRow,
+                  color: isSame(m.userItem.venue, m.matchedItem.venue) ? C.green : C.body,
+                  fontWeight: isSame(m.userItem.venue, m.matchedItem.venue) ? 700 : 400,
                 }}>
-                  <b>Venue:</b> {m.matchedItem.venue || "-"}
+                  <b>Venue:</b> {m.matchedItem.venue || "—"}
                 </p>
-
-                <p>
-                  <b>Time:</b> {m.matchedItem.time || "-"}
+                <p style={styles.detailRow}>
+                  <b>Time:</b> {m.matchedItem.time || "—"}
                 </p>
               </div>
-
             </div>
 
             {/* MATCH SCORE */}
-            <p style={{ marginTop: "10px", fontSize: "14px" }}>
-               Match Score: {getMatchScore(m.userItem, m.matchedItem)} / 2
+            <p style={styles.matchScore}>
+              📊 Match Score: {getMatchScore(m.userItem, m.matchedItem)} / 2
             </p>
 
             {/* STATUS */}
             <span
               style={{
                 ...styles.status,
-                background:
-                  m.status === "Matched"
-                    ? "#d1fae5"
-                    : "#fef3c7",
-                color:
-                  m.status === "Matched"
-                    ? "#065f46"
-                    : "#92400e",
+                background: m.status === "Matched" ? "#E6F1FB" : "#FAEEDA",
+                color: m.status === "Matched" ? "#0b3470" : "#633806",
               }}
             >
               {m.status}
             </span>
-
           </div>
         ))}
       </div>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    fontFamily: "Arial",
-    background: "#f5f7fb",
-    minHeight: "100vh",
-    padding: "20px",
-  },
-
-  header: {
-    textAlign: "center",
-    marginBottom: "20px",
-  },
-
-  backBtn: {
-    position: "absolute",
-    left: "20px",
-    top: "20px",
-    padding: "8px 12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    background: "white",
-    cursor: "pointer",
-  },
-
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    alignItems: "center",
-  },
-
-  card: {
-    width: "700px",
-    background: "white",
-    padding: "20px",
-    borderRadius: "12px",
-    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-  },
-
-  row: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "20px",
-  },
-
-  box: {
-    flex: 1,
-    padding: "15px",
-    borderRadius: "10px",
-    background: "#f9fafb",
-  },
-
-  status: {
-    display: "inline-block",
-    marginTop: "15px",
-    padding: "6px 12px",
-    borderRadius: "20px",
-    fontSize: "12px",
-  },
-};
 
 export default MatchResults;

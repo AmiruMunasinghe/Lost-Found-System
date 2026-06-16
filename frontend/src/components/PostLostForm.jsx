@@ -1,6 +1,19 @@
 import React, { useState } from "react";
 import { createItem } from "../api/items";
 
+const C = {
+  primary: "#0F5FFF",
+  primaryDk: "#0b3470",
+  bg: "#eef4fb",
+  card: "#FFFFFF",
+  text: "#0b3470",
+  body: "#344054",
+  muted: "#667085",
+  border: "#d0d5dd",
+  fieldBg: "#f6f9ff",
+  link: "#2563eb",
+};
+
 function PostForm({ goHome }) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -9,203 +22,210 @@ function PostForm({ goHome }) {
   const [venue, setVenue] = useState("");
   const [time, setTime] = useState("");
 
- const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  if (!title.trim()) return;
+    if (!title.trim()) return;
 
-  const formData = {
-    type : "Lost",
-    title,
-    desc,
-    color,
-    venue,
-    time,
+    const formData = {
+      type: "Lost",
+      title,
+      desc,
+      color,
+      venue,
+      time,
+    };
+
+    createItem(formData); // ✅ SAVE TO LOCALSTORAGE
+
+    // console.log(formData); // useful for backend later
+
+    alert(`Lost item posted!`);
+
+    setTitle("");
+    setDesc("");
+    setType("");
+    setColor("");
+    setVenue("");
+    setTime("");
   };
 
-  createItem(formData); // ✅ SAVE TO LOCALSTORAGE
-
-  // console.log(formData); // useful for backend later
-
-  alert(`Lost item posted!`);
-
-  setTitle("");
-  setDesc("");
-  setType("");
-  setColor("");
-  setVenue("");
-  setTime("");
-};
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      background: C.bg,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+      padding: "30px 16px",
+    },
+    card: {
+      width: "100%",
+      maxWidth: "540px",
+      background: C.card,
+      borderRadius: "22px",
+      padding: "36px 32px",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+      border: `1px solid ${C.border}`,
+    },
+    backLink: {
+      background: "none",
+      border: "none",
+      color: C.link,
+      fontSize: 14,
+      fontWeight: 600,
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      padding: 0,
+      fontFamily: "inherit",
+      marginBottom: 20,
+    },
+    header: {
+      marginBottom: "24px",
+      textAlign: "center",
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: 800,
+      color: C.text,
+      marginBottom: 6,
+      margin: "0 0 6px",
+    },
+    subtitle: {
+      fontSize: 15,
+      color: C.muted,
+      margin: 0,
+    },
+    form: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+    },
+    fieldGap: {
+      marginBottom: 16,
+    },
+    label: {
+      display: "block",
+      marginBottom: 10,
+      color: C.body,
+      fontWeight: 600,
+      fontSize: 15,
+    },
+    input: {
+      width: "100%",
+      height: "54px",
+      borderRadius: "14px",
+      border: `1px solid ${C.border}`,
+      padding: "0 18px",
+      fontSize: "15px",
+      boxSizing: "border-box",
+      outline: "none",
+      fontFamily: "inherit",
+    },
+    textarea: {
+      width: "100%",
+      borderRadius: "14px",
+      border: `1px solid ${C.border}`,
+      padding: "14px 18px",
+      fontSize: "15px",
+      minHeight: "110px",
+      boxSizing: "border-box",
+      outline: "none",
+      resize: "none",
+      fontFamily: "inherit",
+    },
+    submitBtn: {
+      width: "100%",
+      height: "60px",
+      border: "none",
+      borderRadius: "14px",
+      background: "linear-gradient(90deg, #0F5FFF, #4A8BFF)",
+      color: "#fff",
+      fontSize: "17px",
+      fontWeight: "700",
+      cursor: "pointer",
+      fontFamily: "inherit",
+      marginTop: 8,
+    },
+  };
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <button style={styles.backLink} onClick={goHome}>
+          ← Back to Dashboard
+        </button>
+
         {/* HEADER */}
         <div style={styles.header}>
-          <button style={styles.backBtn} onClick={goHome}>
-            ← Back
-          </button>
-          <h2 style={styles.title}>Report an Item</h2>
+          <h2 style={styles.title}>Report Lost Item 🔴</h2>
           <p style={styles.subtitle}>
-            Help others by reporting a lost or found item
+            Help others by reporting a lost item
           </p>
         </div>
 
         {/* FORM */}
         <form onSubmit={handleSubmit} style={styles.form}>
-         
+          <div style={styles.fieldGap}>
+            <label style={styles.label}>Item Title</label>
+            <input
+              placeholder="e.g. Black Wallet, iPhone 13"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={styles.input}
+            />
+          </div>
 
-          {/* TITLE */}
-          <label style={styles.label}>Item Title</label>
-          <input
-            placeholder="e.g. Black Wallet, iPhone 13"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={styles.input}
-          />
+          <div style={styles.fieldGap}>
+            <label style={styles.label}>Description</label>
+            <textarea
+              placeholder="Add details like location, time, color..."
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              style={styles.textarea}
+            />
+          </div>
 
-          {/* DESCRIPTION */}
-          <label style={styles.label}>Description</label>
-          <textarea
-            placeholder="Add details like location, time, color..."
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            style={styles.textarea}
-          />
+          <div style={styles.fieldGap}>
+            <label style={styles.label}>Color (If applicable)</label>
+            <input
+              placeholder="e.g. Black, Red"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              style={styles.input}
+            />
+          </div>
 
-          {/* COLOR */}
-          <label style={styles.label}>Color (If applicable)</label>
-          <input
-            placeholder="e.g. Black, Red"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            style={styles.input}
-          />
+          <div style={styles.fieldGap}>
+            <label style={styles.label}>Venue / Location</label>
+            <input
+              placeholder="e.g. Library, Bus stop"
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              style={styles.input}
+            />
+          </div>
 
-          {/* VENUE */}
-          <label style={styles.label}>Venue / Location</label>
-          <input
-            placeholder="e.g. Library, Bus stop"
-            value={venue}
-            onChange={(e) => setVenue(e.target.value)}
-            style={styles.input}
-          />
+          <div style={styles.fieldGap}>
+            <label style={styles.label}>Time</label>
+            <input
+              type="datetime-local"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              style={styles.input}
+            />
+          </div>
 
-          {/* TIME */}
-          <label style={styles.label}>Time</label>
-          <input
-            type="datetime-local"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            style={styles.input}
-          />
-
-          {/* BUTTON */}
-          <button type="submit" style={styles.button}>
-             Submit Report
+          <button type="submit" style={styles.submitBtn}>
+            Submit Report
           </button>
         </form>
       </div>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "#f5f7fb",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    fontFamily: "Arial",
-    padding: "20px",
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: "500px",
-    background: "white",
-    borderRadius: "14px",
-    padding: "25px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-  },
-
-  header: {
-    marginBottom: "20px",
-    textAlign: "center",
-  },
-
-  backBtn: {
-    position: "absolute",
-    marginTop: "-10px",
-    marginLeft: "-10px",
-    background: "transparent",
-    border: "none",
-    fontSize: "14px",
-    cursor: "pointer",
-    color: "#555",
-  },
-
-  title: {
-    marginBottom: "5px",
-    color: "#111",
-  },
-
-  subtitle: {
-    fontSize: "14px",
-    color: "#666",
-  },
-
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-
-  label: {
-    fontSize: "13px",
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: "10px",
-  },
-
-  input: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    outline: "none",
-    transition: "0.2s",
-  },
-
-  textarea: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    minHeight: "100px",
-    outline: "none",
-    resize: "none",
-  },
-
-  select: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    outline: "none",
-  },
-
-backBtn: {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "6px",
-  background: "transparent",
-  border: "1px solid #e5e7eb",
-  padding: "8px 12px",
-  borderRadius: "8px",
-  fontSize: "14px",
-  cursor: "pointer",
-  color: "#374151",
-  transition: "all 0.2s ease",
-},
-};
 
 export default PostForm;

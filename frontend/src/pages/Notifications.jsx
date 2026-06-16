@@ -1,14 +1,16 @@
 import { useState } from "react";
 
 const C = {
-  primary: "#185FA5",
-  bg: "#F4F6FA",
+  primary: "#0F5FFF",
+  primaryDk: "#0b3470",
+  bg: "#eef4fb",
   card: "#FFFFFF",
-  text: "#1A1D2E",
-  muted: "#6B7080",
-  border: "#DDE1EA",
-  fieldBg: "#F8F9FC",
-  green: "#3B6D11",
+  text: "#0b3470",
+  body: "#344054",
+  muted: "#667085",
+  border: "#d0d5dd",
+  fieldBg: "#f6f9ff",
+  link: "#2563eb",
 };
 
 const css = {
@@ -16,23 +18,26 @@ const css = {
     minHeight: "100vh",
     background: C.bg,
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    padding: "24px 16px",
+    padding: "30px 16px",
   },
   container: {
     width: "100%",
-    maxWidth: 600,
+    maxWidth: 640,
     margin: "0 auto",
   },
-  link: {
+  backLink: {
     background: "none",
     border: "none",
-    color: C.primary,
-    fontSize: 13,
+    color: C.link,
+    fontSize: 14,
+    fontWeight: 600,
     cursor: "pointer",
-    marginBottom: 14,
+    marginBottom: 18,
     display: "flex",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
+    padding: 0,
+    fontFamily: "inherit",
   },
 };
 
@@ -71,24 +76,25 @@ export default function Notifications({ go }) {
   return (
     <div style={css.page}>
       <div style={css.container}>
-        <button style={css.link} onClick={() => go("dashboard")}>← Back to Dashboard</button>
+        <button style={css.backLink} onClick={() => go("dashboard")}>← Back to Dashboard</button>
 
         <div style={{
           background: C.card,
           border: `1px solid ${C.border}`,
-          borderRadius: 14,
+          borderRadius: 22,
           overflow: "hidden",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
         }}>
           {/* Header */}
           <div style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "16px 20px",
+            padding: "18px 24px",
             borderBottom: `1px solid ${C.border}`,
             background: C.fieldBg,
           }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>
               Notifications {unreadCount > 0 && `(${unreadCount} new)`}
             </h2>
             {unreadCount > 0 && (
@@ -97,9 +103,11 @@ export default function Notifications({ go }) {
                 style={{
                   background: "none",
                   border: "none",
-                  color: C.primary,
-                  fontSize: 12,
+                  color: C.link,
+                  fontSize: 13,
+                  fontWeight: 600,
                   cursor: "pointer",
+                  fontFamily: "inherit",
                 }}
               >
                 Mark all as read
@@ -110,7 +118,7 @@ export default function Notifications({ go }) {
           {/* Notifications list */}
           <div>
             {notifications.length === 0 ? (
-              <div style={{ padding: "40px", textAlign: "center", color: C.muted }}>
+              <div style={{ padding: "48px", textAlign: "center", color: C.muted, fontSize: 15 }}>
                 🔕 No notifications yet
               </div>
             ) : (
@@ -121,34 +129,34 @@ export default function Notifications({ go }) {
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
-                    gap: 12,
-                    padding: "14px 20px",
+                    gap: 14,
+                    padding: "16px 24px",
                     borderBottom: `1px solid ${C.border}`,
-                    background: notif.read ? C.card : "#F0F7FF",
+                    background: notif.read ? C.card : "#f0f5ff",
                     cursor: "pointer",
                     transition: "background 0.2s",
                   }}
                 >
-                  <div style={{ fontSize: 18 }}>{getTypeIcon(notif.type)}</div>
+                  <div style={{ fontSize: 20, marginTop: 2 }}>{getTypeIcon(notif.type)}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{
-                      fontSize: 13,
-                      color: C.text,
-                      marginBottom: 4,
-                      fontWeight: notif.read ? 400 : 600,
+                      fontSize: 14,
+                      color: C.body,
+                      marginBottom: 5,
+                      fontWeight: notif.read ? 400 : 700,
                     }}>
                       {notif.message}
                     </div>
-                    <div style={{ fontSize: 11, color: C.muted }}>{notif.time}</div>
+                    <div style={{ fontSize: 12, color: C.muted }}>{notif.time}</div>
                   </div>
                   {!notif.read && (
                     <div style={{
-                      width: 8,
-                      height: 8,
+                      width: 9,
+                      height: 9,
                       borderRadius: "50%",
                       background: C.primary,
                       flexShrink: 0,
-                      marginTop: 4,
+                      marginTop: 6,
                     }} />
                   )}
                 </div>

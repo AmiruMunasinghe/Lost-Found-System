@@ -1,123 +1,5 @@
 import { useState } from "react";
-
-const C = {
-  primary:    "#185FA5",
-  primaryDk:  "#0C447C",
-  bg:         "#F4F6FA",
-  card:       "#FFFFFF",
-  text:       "#1A1D2E",
-  muted:      "#6B7080",
-  border:     "#DDE1EA",
-  fieldBg:    "#F8F9FC",
-};
-
-const css = {
-  page: {
-    minHeight: "100vh",
-    background: C.bg,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    padding: "24px 16px",
-  },
-  card: {
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 14,
-    padding: "36px 40px",
-    width: "100%",
-    maxWidth: 480,
-    boxSizing: "border-box",
-  },
-  row2: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 12,
-  },
-  label: {
-    display: "block",
-    fontSize: 10,
-    fontWeight: 600,
-    letterSpacing: "0.6px",
-    textTransform: "uppercase",
-    color: C.muted,
-    marginBottom: 6,
-  },
-  input: {
-    width: "100%",
-    padding: "9px 12px",
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
-    background: C.fieldBg,
-    fontSize: 14,
-    color: C.text,
-    outline: "none",
-    boxSizing: "border-box",
-    fontFamily: "inherit",
-  },
-  fieldGap: { marginBottom: 14 },
-  btnPrimary: {
-    width: "100%",
-    padding: "11px",
-    background: C.primary,
-    color: "#fff",
-    border: "none",
-    borderRadius: 8,
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-  btnSecondary: {
-    width: "100%",
-    padding: "10px",
-    background: C.fieldBg,
-    color: C.text,
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
-    fontSize: 14,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-};
-
-function Field({ label, children }) {
-  return (
-    <div style={css.fieldGap}>
-      <label style={css.label}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function Input(props) {
-  return <input style={css.input} {...props} />;
-}
-
-function Select({ options, ...props }) {
-  return (
-    <select style={{ ...css.input, height: 38 }} {...props}>
-      {options.map(o => <option key={o}>{o}</option>)}
-    </select>
-  );
-}
-
-function BtnPrimary({ children, onClick }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <button
-      style={{ ...css.btnPrimary, background: hov ? C.primaryDk : C.primary }}
-      onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >{children}</button>
-  );
-}
-
-function BtnSecondary({ children, onClick }) {
-  return <button style={css.btnSecondary} onClick={onClick}>{children}</button>;
-}
+import authPanel from "../assets/left_panel.png";
 
 export default function Registration({ go }) {
   const [name, setName] = useState("");
@@ -134,45 +16,288 @@ export default function Registration({ go }) {
     go("login");
   }
 
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      background: "#eef4fb",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "30px",
+      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    },
+
+    container: {
+      width: "1400px",
+      maxWidth: "100%",
+      minHeight: "850px",
+      background: "#ffffff",
+      borderRadius: "30px",
+      overflow: "hidden",
+      display: "grid",
+      gridTemplateColumns: "45% 55%",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+    },
+
+    leftPanel: {
+      backgroundImage: `url(${authPanel})`,
+      backgroundSize: "contain",
+      backgroundPosition: "left center",
+      backgroundRepeat: "no-repeat",
+      backgroundColor: "#eef4fb",
+    },
+
+    rightPanel: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "70px",
+      background: "#ffffff",
+    },
+
+    form: {
+      width: "100%",
+      maxWidth: "520px",
+    },
+
+    logo: {
+      marginBottom: "30px",
+    },
+
+    logoTitle: {
+      fontSize: "18px",
+      fontWeight: "700",
+      color: "#0b3470",
+    },
+
+    logoSub: {
+      fontSize: "13px",
+      color: "#667085",
+    },
+
+    heading: {
+      fontSize: "48px",
+      fontWeight: "800",
+      color: "#0b3470",
+      marginBottom: "10px",
+      lineHeight: 1.1,
+    },
+
+    subtitle: {
+      fontSize: "18px",
+      color: "#667085",
+      marginBottom: "35px",
+    },
+
+    row2: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "16px",
+    },
+
+    fieldGap: {
+      marginBottom: "20px",
+    },
+
+    label: {
+      display: "block",
+      marginBottom: "10px",
+      color: "#344054",
+      fontWeight: "600",
+      fontSize: "15px",
+    },
+
+    input: {
+      width: "100%",
+      height: "62px",
+      borderRadius: "14px",
+      border: "1px solid #d0d5dd",
+      padding: "0 18px",
+      fontSize: "16px",
+      boxSizing: "border-box",
+      outline: "none",
+      fontFamily: "inherit",
+    },
+
+    select: {
+      width: "100%",
+      height: "62px",
+      borderRadius: "14px",
+      border: "1px solid #d0d5dd",
+      padding: "0 18px",
+      fontSize: "16px",
+      boxSizing: "border-box",
+      outline: "none",
+      fontFamily: "inherit",
+      background: "#ffffff",
+    },
+
+    signUpBtn: {
+      width: "100%",
+      height: "64px",
+      border: "none",
+      borderRadius: "14px",
+      background: "linear-gradient(90deg,#0F5FFF,#4A8BFF)",
+      color: "#fff",
+      fontSize: "18px",
+      fontWeight: "700",
+      cursor: "pointer",
+      marginTop: "8px",
+    },
+
+    backBtn: {
+      width: "100%",
+      height: "62px",
+      borderRadius: "14px",
+      border: "2px solid #2563eb",
+      background: "#ffffff",
+      color: "#2563eb",
+      fontSize: "17px",
+      fontWeight: "600",
+      cursor: "pointer",
+      marginTop: "12px",
+    },
+
+    loginText: {
+      textAlign: "center",
+      marginTop: "30px",
+      color: "#667085",
+      fontSize: "15px",
+    },
+
+    loginLink: {
+      color: "#2563eb",
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+  };
+
   return (
-    <div style={css.page}>
-      <div style={css.card}>
-        <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: C.text, textAlign: "center" }}>Create account</h2>
-        <p style={{ margin: "0 0 24px", fontSize: 13, color: C.muted, textAlign: "center" }}>Fill in the details below to get started</p>
+    <div style={styles.page}>
+      <div style={styles.container}>
 
-        <div style={css.row2}>
-          <Field label="Full name">
-            <Input placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} />
-          </Field>
-          <Field label="Role">
-            <Select options={["Student", "Staff"]} value={role} onChange={e => setRole(e.target.value)} />
-          </Field>
+        {/* LEFT IMAGE PANEL */}
+        <div style={styles.leftPanel}>
+          <img src={authPanel}
+            alt="Lost and Found"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              display: "block",
+            }} />
         </div>
 
-        <div style={css.row2}>
-          <Field label="University email">
-            <Input type="email" placeholder="john@uom.lk" value={email} onChange={e => setEmail(e.target.value)} />
-          </Field>
-          <Field label="Student / Staff ID">
-            <Input placeholder="e.g. 230224V" value={id} onChange={e => setId(e.target.value)} />
-          </Field>
-        </div>
+        {/* RIGHT REGISTRATION PANEL */}
+        <div style={styles.rightPanel}>
+          <div style={styles.form}>
 
-        <div style={css.row2}>
-          <Field label="Password">
-            <Input type="password" placeholder="Min. 8 characters" value={pass} onChange={e => setPass(e.target.value)} />
-          </Field>
-          <Field label="Confirm password">
-            <Input type="password" placeholder="Repeat password" value={conf} onChange={e => setConf(e.target.value)} />
-          </Field>
-        </div>
+            <div style={styles.logo}>
+              <div style={styles.logoTitle}>
+                UniLost & Found
+              </div>
+              <div style={styles.logoSub}>
+                University of Moratuwa
+              </div>
+            </div>
 
-        <div style={{ marginTop: 8 }}>
-          <BtnPrimary onClick={handleRegister}>Create account</BtnPrimary>
-          <div style={{ marginTop: 10 }}>
-            <BtnSecondary onClick={() => go("login")}>Back to sign in</BtnSecondary>
+            <h1 style={styles.heading}>
+              Create Account ✨
+            </h1>
+
+            <p style={styles.subtitle}>
+              Fill in the details below to get started
+            </p>
+
+            <div style={styles.row2}>
+              <div style={styles.fieldGap}>
+                <label style={styles.label}>Full Name</label>
+                <input
+                  style={styles.input}
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                />
+              </div>
+              <div style={styles.fieldGap}>
+                <label style={styles.label}>Role</label>
+                <select
+                  style={styles.select}
+                  value={role}
+                  onChange={e => setRole(e.target.value)}
+                >
+                  <option>Student</option>
+                  <option>Staff</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={styles.row2}>
+              <div style={styles.fieldGap}>
+                <label style={styles.label}>University Email</label>
+                <input
+                  style={styles.input}
+                  type="email"
+                  placeholder="john@uom.lk"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
+              <div style={styles.fieldGap}>
+                <label style={styles.label}>Student / Staff ID</label>
+                <input
+                  style={styles.input}
+                  placeholder="e.g. 230224V"
+                  value={id}
+                  onChange={e => setId(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={styles.row2}>
+              <div style={styles.fieldGap}>
+                <label style={styles.label}>Password</label>
+                <input
+                  style={styles.input}
+                  type="password"
+                  placeholder="Min. 8 characters"
+                  value={pass}
+                  onChange={e => setPass(e.target.value)}
+                />
+              </div>
+              <div style={styles.fieldGap}>
+                <label style={styles.label}>Confirm Password</label>
+                <input
+                  style={styles.input}
+                  type="password"
+                  placeholder="Repeat password"
+                  value={conf}
+                  onChange={e => setConf(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <button
+              style={styles.signUpBtn}
+              onClick={handleRegister}
+            >
+              Create Account
+            </button>
+
+            <div style={styles.loginText}>
+              Already have an account?{" "}
+              <span
+                style={styles.loginLink}
+                onClick={() => go("login")}
+              >
+                Sign In
+              </span>
+            </div>
+
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -1,16 +1,19 @@
 import { useState } from "react";
 
 const C = {
-  primary: "#185FA5",
-  primaryDk: "#0C447C",
-  bg: "#F4F6FA",
+  primary: "#0F5FFF",
+  primaryDk: "#0b3470",
+  bg: "#eef4fb",
   card: "#FFFFFF",
-  text: "#1A1D2E",
-  muted: "#6B7080",
-  border: "#DDE1EA",
+  text: "#0b3470",
+  body: "#344054",
+  muted: "#667085",
+  border: "#d0d5dd",
   danger: "#E24B4A",
   green: "#3B6D11",
   amber: "#BA7517",
+  fieldBg: "#f6f9ff",
+  link: "#2563eb",
 };
 
 const css = {
@@ -18,20 +21,21 @@ const css = {
     minHeight: "100vh",
     background: C.bg,
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    padding: "24px 16px",
+    padding: "30px 16px",
   },
   container: {
     width: "100%",
-    maxWidth: 660,
+    maxWidth: 720,
     margin: "0 auto",
   },
 };
 
-function Avatar({ initials, size = 40 }) {
+function Avatar({ initials, size = 44 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: C.primary, color: "#fff",
+      background: "linear-gradient(135deg, #0F5FFF, #4A8BFF)",
+      color: "#fff",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontWeight: 700, fontSize: size * 0.35,
     }}>{initials}</div>
@@ -43,24 +47,27 @@ function ActionCard({ title, desc, iconBg, icon, onClick, wide }) {
   return (
     <div
       style={{
-        background: hov ? "#F8FAFF" : C.card,
+        background: hov ? "#f6f9ff" : C.card,
         border: `1px solid ${hov ? C.primary : C.border}`,
-        borderRadius: 12, padding: "16px",
-        cursor: "pointer", transition: "all .15s",
-        display: wide ? "flex" : "block", alignItems: wide ? "center" : undefined, gap: wide ? 14 : undefined,
+        borderRadius: 18, padding: "18px 20px",
+        cursor: "pointer", transition: "all .2s ease",
+        display: wide ? "flex" : "block",
+        alignItems: wide ? "center" : undefined,
+        gap: wide ? 16 : undefined,
+        boxShadow: hov ? "0 8px 24px rgba(15,95,255,0.1)" : "none",
       }}
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
       <div style={{
-        width: 34, height: 34, borderRadius: 9,
+        width: 40, height: 40, borderRadius: 12,
         background: iconBg, display: "flex", alignItems: "center",
-        justifyContent: "center", fontSize: 16, marginBottom: wide ? 0 : 10,
+        justifyContent: "center", fontSize: 18, marginBottom: wide ? 0 : 12,
       }}>{icon}</div>
       <div>
-        <div style={{ fontWeight: 600, fontSize: 13, color: C.text, marginBottom: 2 }}>{title}</div>
-        <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{desc}</div>
+        <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 3 }}>{title}</div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{desc}</div>
       </div>
     </div>
   );
@@ -80,13 +87,13 @@ function NotificationPopup({ onClose, onViewAll }) {
   return (
     <div style={{
       position: "absolute",
-      top: 60,
-      right: 20,
-      width: 320,
+      top: 65,
+      right: 0,
+      width: 360,
       background: C.card,
       border: `1px solid ${C.border}`,
-      borderRadius: 12,
-      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      borderRadius: 18,
+      boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
       zIndex: 1000,
       overflow: "hidden",
     }}>
@@ -94,11 +101,11 @@ function NotificationPopup({ onClose, onViewAll }) {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "12px 16px",
+        padding: "14px 20px",
         borderBottom: `1px solid ${C.border}`,
         background: C.fieldBg,
       }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: C.text }}>
+        <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>
           Notifications {unreadCount > 0 && `(${unreadCount})`}
         </span>
         <div style={{ display: "flex", gap: 12 }}>
@@ -107,8 +114,9 @@ function NotificationPopup({ onClose, onViewAll }) {
             style={{
               background: "none",
               border: "none",
-              color: C.primary,
-              fontSize: 11,
+              color: C.link,
+              fontSize: 12,
+              fontWeight: 600,
               cursor: "pointer",
             }}
           >
@@ -120,7 +128,7 @@ function NotificationPopup({ onClose, onViewAll }) {
               background: "none",
               border: "none",
               color: C.muted,
-              fontSize: 16,
+              fontSize: 18,
               cursor: "pointer",
               lineHeight: 1,
             }}
@@ -134,16 +142,17 @@ function NotificationPopup({ onClose, onViewAll }) {
           <div
             key={notif.id}
             style={{
-              padding: "12px 16px",
+              padding: "14px 20px",
               borderBottom: `1px solid ${C.border}`,
-              background: notif.read ? C.card : "#F0F7FF",
+              background: notif.read ? C.card : "#f0f5ff",
               cursor: "pointer",
+              transition: "background .15s",
             }}
           >
-            <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>
+            <div style={{ fontSize: 14, color: C.body, marginBottom: 4, fontWeight: notif.read ? 400 : 600 }}>
               {notif.message}
             </div>
-            <div style={{ fontSize: 10, color: C.muted }}>{notif.time}</div>
+            <div style={{ fontSize: 11, color: C.muted }}>{notif.time}</div>
           </div>
         ))}
       </div>
@@ -165,7 +174,7 @@ export default function Dashboard({ setPage }) {
     { title: "Report found item", desc: "Found something? Help reunite it", iconBg: "#EAF3DE", icon: "🟢", nav: "postfound" },
     { title: "My reports",        desc: "View & manage your submitted reports", iconBg: "#E6F1FB", icon: "📄", nav: "reports" },
     { title: "My profile",        desc: "Update your info & settings", iconBg: "#EEEDFE", icon: "👤", nav: "profile" },
-    {title: "Match results",       desc:"Display match results", iconBg:"#22da22", icon:"👤", nav: "matchresults" },
+    { title: "Match results",     desc: "Display match results", iconBg: "#E6F1FB", icon: "🔗", nav: "matchresults" },
   ];
 
   return (
@@ -174,16 +183,17 @@ export default function Dashboard({ setPage }) {
         {/* Top bar */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 14, padding: "14px 20px",
+          borderRadius: 22, padding: "16px 24px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: 14,
+          marginBottom: 18,
           position: "relative",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Avatar initials="KS" size={40} />
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <Avatar initials="KS" size={44} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>Kumar Sangakkara</div>
-              <div style={{ fontSize: 11, color: C.muted }}>Student · 230224V</div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: C.text }}>Kumar Sangakkara</div>
+              <div style={{ fontSize: 12, color: C.muted }}>Student · 230224V</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -194,7 +204,7 @@ export default function Dashboard({ setPage }) {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 20,
+                  fontSize: 22,
                   cursor: "pointer",
                   position: "relative",
                 }}
@@ -209,7 +219,7 @@ export default function Dashboard({ setPage }) {
                   fontSize: 9,
                   fontWeight: "bold",
                   borderRadius: "50%",
-                  padding: "2px 4px",
+                  padding: "2px 5px",
                   minWidth: 14,
                   textAlign: "center",
                 }}>3</span>
@@ -217,47 +227,50 @@ export default function Dashboard({ setPage }) {
             </div>
             <button
               style={{
-                fontSize: 12, color: C.danger, cursor: "pointer",
-                border: `1px solid #F09595`, borderRadius: 20,
-                padding: "5px 14px", background: C.card,
+                fontSize: 13, color: C.danger, cursor: "pointer",
+                border: `1.5px solid #F09595`, borderRadius: 22,
+                padding: "7px 18px", background: C.card,
+                fontWeight: 600, fontFamily: "inherit",
               }}
               onClick={() => setPage("login")}
             >
               Sign out
             </button>
           </div>
+
+          {/* Notification Popup */}
+          {showNotifications && (
+            <NotificationPopup
+              onClose={() => setShowNotifications(false)}
+              onViewAll={() => {
+                setShowNotifications(false);
+                setPage("notifications");
+              }}
+            />
+          )}
         </div>
 
-        {/* Notification Popup */}
-        {showNotifications && (
-          <NotificationPopup
-            onClose={() => setShowNotifications(false)}
-            onViewAll={() => {
-              setShowNotifications(false);
-              setPage("notifications");
-            }}
-          />
-        )}
-
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 22 }}>
           {stats.map(s => (
             <div key={s.label} style={{
-              background: "#EEF1F8", borderRadius: 10, padding: "14px 12px", textAlign: "center",
+              background: C.card, borderRadius: 18, padding: "20px 16px", textAlign: "center",
+              border: `1px solid ${C.border}`,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
             }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: s.color }}>{s.num}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.num}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         <p style={{
-          fontSize: 10, fontWeight: 600, letterSpacing: "0.6px",
-          textTransform: "uppercase", color: C.muted, margin: "0 0 10px",
+          fontSize: 11, fontWeight: 700, letterSpacing: "0.8px",
+          textTransform: "uppercase", color: C.muted, margin: "0 0 12px",
         }}>Quick actions</p>
 
         {/* Action grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           {actions.map(a => (
             <ActionCard key={a.title} {...a} onClick={() => a.nav && setPage(a.nav)} />
           ))}

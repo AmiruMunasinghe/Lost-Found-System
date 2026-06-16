@@ -1,110 +1,5 @@
 import { useState } from "react";
-
-const C = {
-  primary:    "#185FA5",
-  primaryDk:  "#0C447C",
-  bg:         "#F4F6FA",
-  card:       "#FFFFFF",
-  text:       "#1A1D2E",
-  muted:      "#6B7080",
-  border:     "#DDE1EA",
-  fieldBg:    "#F8F9FC",
-};
-
-const css = {
-  page: {
-    minHeight: "100vh",
-    background: C.bg,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    padding: "24px 16px",
-  },
-  card: {
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 14,
-    padding: "36px 40px",
-    width: "100%",
-    maxWidth: 420,
-    boxSizing: "border-box",
-  },
-  label: {
-    display: "block",
-    fontSize: 10,
-    fontWeight: 600,
-    letterSpacing: "0.6px",
-    textTransform: "uppercase",
-    color: C.muted,
-    marginBottom: 6,
-  },
-  input: {
-    width: "100%",
-    padding: "9px 12px",
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
-    background: C.fieldBg,
-    fontSize: 14,
-    color: C.text,
-    outline: "none",
-    boxSizing: "border-box",
-    fontFamily: "inherit",
-  },
-  fieldGap: { marginBottom: 14 },
-  btnPrimary: {
-    width: "100%",
-    padding: "11px",
-    background: C.primary,
-    color: "#fff",
-    border: "none",
-    borderRadius: 8,
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-  btnSecondary: {
-    width: "100%",
-    padding: "10px",
-    background: C.fieldBg,
-    color: C.text,
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
-    fontSize: 14,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
-};
-
-function Field({ label, children }) {
-  return (
-    <div style={css.fieldGap}>
-      <label style={css.label}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function Input(props) {
-  return <input style={css.input} {...props} />;
-}
-
-function BtnPrimary({ children, onClick }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <button
-      style={{ ...css.btnPrimary, background: hov ? C.primaryDk : C.primary }}
-      onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >{children}</button>
-  );
-}
-
-function BtnSecondary({ children, onClick }) {
-  return <button style={css.btnSecondary} onClick={onClick}>{children}</button>;
-}
+import authPanel from "../assets/left_panel.png";
 
 export default function ForgotPassword({ go }) {
   const [email, setEmail] = useState("");
@@ -115,29 +10,232 @@ export default function ForgotPassword({ go }) {
     go("login");
   }
 
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      background: "#eef4fb",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "30px",
+      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    },
+
+    container: {
+      width: "1400px",
+      maxWidth: "100%",
+      minHeight: "850px",
+      background: "#ffffff",
+      borderRadius: "30px",
+      overflow: "hidden",
+      display: "grid",
+      gridTemplateColumns: "45% 55%",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+    },
+
+    leftPanel: {
+      backgroundImage: `url(${authPanel})`,
+      backgroundSize: "contain",
+      backgroundPosition: "left center",
+      backgroundRepeat: "no-repeat",
+      backgroundColor: "#eef4fb",
+    },
+
+    rightPanel: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "70px",
+      background: "#ffffff",
+    },
+
+    form: {
+      width: "100%",
+      maxWidth: "520px",
+    },
+
+    logo: {
+      marginBottom: "30px",
+    },
+
+    logoTitle: {
+      fontSize: "18px",
+      fontWeight: "700",
+      color: "#0b3470",
+    },
+
+    logoSub: {
+      fontSize: "13px",
+      color: "#667085",
+    },
+
+    iconBox: {
+      width: "72px",
+      height: "72px",
+      borderRadius: "18px",
+      background: "linear-gradient(135deg, #E8F0FE, #D6E4FF)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: "24px",
+    },
+
+    heading: {
+      fontSize: "48px",
+      fontWeight: "800",
+      color: "#0b3470",
+      marginBottom: "10px",
+      lineHeight: 1.1,
+    },
+
+    subtitle: {
+      fontSize: "18px",
+      color: "#667085",
+      marginBottom: "40px",
+      lineHeight: 1.5,
+    },
+
+    label: {
+      display: "block",
+      marginBottom: "10px",
+      color: "#344054",
+      fontWeight: "600",
+      fontSize: "15px",
+    },
+
+    input: {
+      width: "100%",
+      height: "62px",
+      borderRadius: "14px",
+      border: "1px solid #d0d5dd",
+      padding: "0 18px",
+      fontSize: "16px",
+      marginBottom: "22px",
+      boxSizing: "border-box",
+      outline: "none",
+      fontFamily: "inherit",
+    },
+
+    sendBtn: {
+      width: "100%",
+      height: "64px",
+      border: "none",
+      borderRadius: "14px",
+      background: "linear-gradient(90deg,#0F5FFF,#4A8BFF)",
+      color: "#fff",
+      fontSize: "18px",
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+
+    backBtn: {
+      width: "100%",
+      height: "62px",
+      borderRadius: "14px",
+      border: "2px solid #2563eb",
+      background: "#ffffff",
+      color: "#2563eb",
+      fontSize: "17px",
+      fontWeight: "600",
+      cursor: "pointer",
+      marginTop: "14px",
+    },
+
+    loginText: {
+      textAlign: "center",
+      marginTop: "30px",
+      color: "#667085",
+      fontSize: "15px",
+    },
+
+    loginLink: {
+      color: "#2563eb",
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+  };
+
   return (
-    <div style={css.page}>
-      <div style={css.card}>
-        <div style={{
-          width: 52, height: 52, borderRadius: 12,
-          background: "#E6F1FB", display: "flex", alignItems: "center",
-          justifyContent: "center", margin: "0 0 16px",
-        }}>
-          <span style={{ fontSize: 22, color: C.primary }}>✉</span>
+    <div style={styles.page}>
+      <div style={styles.container}>
+
+        {/* LEFT IMAGE PANEL */}
+        <div style={styles.leftPanel}>
+          <img src={authPanel}
+            alt="Lost and Found"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              display: "block",
+            }} />
         </div>
-        <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, color: C.text }}>Reset your password</h2>
-        <p style={{ margin: "0 0 24px", fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
-          Enter your university email and we'll send you a reset link.
-        </p>
-        <Field label="University email">
-          <Input type="email" placeholder="john@uom.lk" value={email} onChange={e => setEmail(e.target.value)} />
-        </Field>
-        <div style={{ marginTop: 4 }}>
-          <BtnPrimary onClick={handleSend}>Send reset link</BtnPrimary>
-          <div style={{ marginTop: 10 }}>
-            <BtnSecondary onClick={() => go("login")}>Back to sign in</BtnSecondary>
+
+        {/* RIGHT FORGOT PASSWORD PANEL */}
+        <div style={styles.rightPanel}>
+          <div style={styles.form}>
+
+            <div style={styles.logo}>
+              <div style={styles.logoTitle}>
+                UniLost & Found
+              </div>
+              <div style={styles.logoSub}>
+                University of Moratuwa
+              </div>
+            </div>
+
+            <div style={styles.iconBox}>
+              <span style={{ fontSize: "32px" }}>✉️</span>
+            </div>
+
+            <h1 style={styles.heading}>
+              Reset Password 🔐
+            </h1>
+
+            <p style={styles.subtitle}>
+              Enter your university email and we'll send you a reset link.
+            </p>
+
+            <label style={styles.label}>
+              University Email
+            </label>
+
+            <input
+              style={styles.input}
+              type="email"
+              placeholder="john@uom.lk"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+
+            <button
+              style={styles.sendBtn}
+              onClick={handleSend}
+            >
+              Send Reset Link
+            </button>
+
+            <button
+              style={styles.backBtn}
+              onClick={() => go("login")}
+            >
+              Back to Sign In
+            </button>
+
+            <div style={styles.loginText}>
+              Remember your password?{" "}
+              <span
+                style={styles.loginLink}
+                onClick={() => go("login")}
+              >
+                Sign In
+              </span>
+            </div>
+
           </div>
         </div>
+
       </div>
     </div>
   );
