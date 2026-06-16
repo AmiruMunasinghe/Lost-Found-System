@@ -106,6 +106,9 @@ public class ItemController {
     @GetMapping("/search")
     public ResponseEntity<List<ItemResponseDTO>> searchItems(
             @RequestParam(name = "q") String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(List.of());
+        }
         List<ItemResponseDTO> items = itemService.searchItems(searchTerm);
         return ResponseEntity.ok(items);
     }
@@ -164,6 +167,9 @@ public class ItemController {
      */
     @DeleteMapping("/{itemId}")
     public ResponseEntity<Void> deleteItem(@PathVariable Long itemId) {
+        if (itemId == null) {
+            return ResponseEntity.badRequest().build();
+        }
         itemService.deleteItem(itemId);
         return ResponseEntity.noContent().build();
     }
@@ -176,6 +182,9 @@ public class ItemController {
     public ResponseEntity<List<ItemResponseDTO>> getItemsWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        if (page < 0) page = 0;
+        if (size <= 0) size = 10;
+        if (size > 50) size = 50;
         List<ItemResponseDTO> items = itemService.getItemsWithPagination(page, size);
         return ResponseEntity.ok(items);
     }
