@@ -46,20 +46,34 @@ public class ManualReviewQueueService {
      */
     @Transactional
     public ReviewQueueItemDto resolveReview(UUID matchId, ResolveReviewRequest request) {
+        if (request == null) {
+            throw new MatchingException("ResolveReviewRequest must not be null");
+        }
+        if (request.getAdminId() == null) {
+            throw new MatchingException("AdminId must not be null");
+        }
+
         ManualReviewEntry entry = reviewQueueRepository.findByMatchId(matchId)
                 .orElseThrow(() -> new MatchingException("Review entry not found for matchId: " + matchId));
+
+        if (entry.getStatus() != ReviewStatus.PENDING) {
+            throw new MatchingException("Review entry is not pending for matchId: " + matchId);
+        }
 
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new MatchingException("Match not found: " + matchId));
 
-        ReviewStatus resolution = ReviewStatus.valueOf(request.getResolution().toUpperCase());
+        ReviewStatus resolution = parseResolution(request.getResolution());
+        if (resolution != ReviewStatus.APPROVED && resolution != ReviewStatus.REJECTED) {
+            throw new MatchingException("Review resolution must be APPROVED or REJECTED");
+        }
 
         if (resolution == ReviewStatus.APPROVED) {
             match.setStatus(MatchStatus.PENDING);
             matchRepository.save(match);
             eventPublisher.publishHighConfidenceMatch(match); // notify users
             log.info("[ReviewQueue] APPROVED matchId={} by adminId={}", matchId, request.getAdminId());
-        } else if (resolution == ReviewStatus.REJECTED) {
+        } else {
             match.setStatus(MatchStatus.REJECTED);
             matchRepository.save(match);
             log.info("[ReviewQueue] REJECTED matchId={} by adminId={}", matchId, request.getAdminId());
@@ -72,6 +86,18 @@ public class ManualReviewQueueService {
         reviewQueueRepository.save(entry);
 
         return toDto(entry);
+    }
+
+    private ReviewStatus parseResolution(String resolution) {
+        if (resolution == null || resolution.isBlank()) {
+            throw new MatchingException("Review resolution must be APPROVED or REJECTED");
+        }
+
+        try {
+            return ReviewStatus.valueOf(resolution.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new MatchingException("Invalid review resolution: " + resolution, ex);
+        }
     }
 
     private ReviewQueueItemDto toDto(ManualReviewEntry e) {

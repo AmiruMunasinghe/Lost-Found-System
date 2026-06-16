@@ -71,13 +71,15 @@ public class MatchingEngineService {
      */
     @Transactional
     public MatchingResultDto triggerMatchingForLostItem(UUID lostItemId) {
+        validateUuidParameter(lostItemId, "lostItemId");
         log.info("[MatchingEngine] Triggered for lostItemId={}", lostItemId);
 
         LostItem lostItem = lostItemRepository.findById(lostItemId)
                 .orElseThrow(() -> new MatchingException("LostItem not found: " + lostItemId));
 
-        List<FoundItem> candidates = foundItemRepository
-                .findActiveCandidates(lostItem.getCategory(), lostItem.getDateLost());
+        List<FoundItem> candidates = Objects.requireNonNull(foundItemRepository
+                .findActiveCandidates(lostItem.getCategory(), lostItem.getDateLost()),
+                "Found item candidate list must not be null");
 
         log.debug("[MatchingEngine] {} candidate(s) found for lostItemId={}", candidates.size(), lostItemId);
 
@@ -98,13 +100,15 @@ public class MatchingEngineService {
      */
     @Transactional
     public MatchingResultDto triggerMatchingForFoundItem(UUID foundItemId) {
+        validateUuidParameter(foundItemId, "foundItemId");
         log.info("[MatchingEngine] Triggered for foundItemId={}", foundItemId);
 
         FoundItem foundItem = foundItemRepository.findById(foundItemId)
                 .orElseThrow(() -> new MatchingException("FoundItem not found: " + foundItemId));
 
-        List<LostItem> candidates = lostItemRepository
-                .findActiveCandidates(foundItem.getCategory(), foundItem.getDateFound());
+        List<LostItem> candidates = Objects.requireNonNull(lostItemRepository
+                .findActiveCandidates(foundItem.getCategory(), foundItem.getDateFound()),
+                "Lost item candidate list must not be null");
 
         List<ScoredCandidate> scored = scoreAndRankReverse(foundItem, candidates);
         List<MatchDto> results = processResultsReverse(foundItem, scored);
@@ -123,6 +127,9 @@ public class MatchingEngineService {
      */
     @Transactional
     public MatchDto recalculateMatch(UUID lostItemId, UUID foundItemId) {
+        validateUuidParameter(lostItemId, "lostItemId");
+        validateUuidParameter(foundItemId, "foundItemId");
+
         LostItem lost = lostItemRepository.findById(lostItemId)
                 .orElseThrow(() -> new MatchingException("LostItem not found: " + lostItemId));
         FoundItem found = foundItemRepository.findById(foundItemId)
@@ -137,9 +144,15 @@ public class MatchingEngineService {
      * Returns the top-N ranked potential matches for a given lost item.
      */
     public List<MatchDto> getMatchesForLostItem(UUID lostItemId, int limit) {
+        validateUuidParameter(lostItemId, "lostItemId");
+        if (limit <= 0) {
+            return List.of();
+        }
+
         return matchRepository
                 .findByLostItemIdOrderByConfidenceScoreDesc(lostItemId, limit)
                 .stream()
+                .filter(Objects::nonNull)
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -148,9 +161,15 @@ public class MatchingEngineService {
      * Returns the top-N ranked potential matches for a given found item.
      */
     public List<MatchDto> getMatchesForFoundItem(UUID foundItemId, int limit) {
+        validateUuidParameter(foundItemId, "foundItemId");
+        if (limit <= 0) {
+            return List.of();
+        }
+
         return matchRepository
                 .findByFoundItemIdOrderByConfidenceScoreDesc(foundItemId, limit)
                 .stream()
+                .filter(Objects::nonNull)
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -316,5 +335,11 @@ public class MatchingEngineService {
                 .createdAt(m.getCreatedAt())
                 .updatedAt(m.getUpdatedAt())
                 .build();
+    }
+
+    private void validateUuidParameter(UUID value, String name) {
+        if (value == null) {
+            throw new MatchingException(name + " must not be null");
+        }
     }
 }

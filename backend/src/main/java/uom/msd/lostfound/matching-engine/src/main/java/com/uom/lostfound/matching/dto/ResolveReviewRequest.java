@@ -35,7 +35,7 @@ public class ResolveReviewRequest {
     }
 
     public void setResolution(String resolution) {
-        this.resolution = resolution;
+        this.resolution = resolution == null ? null : resolution.trim();
     }
 
     public String getNote() {
