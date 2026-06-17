@@ -45,6 +45,23 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), List.of());
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(InvalidClaimStatusTransitionException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidClaimStatusTransition(
+            InvalidClaimStatusTransitionException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid claim status transition: " + ex.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(ClaimNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleClaimNotFound(ClaimNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
+    }
+
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
             String message,
