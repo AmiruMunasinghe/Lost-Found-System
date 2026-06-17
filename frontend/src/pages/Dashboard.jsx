@@ -160,13 +160,50 @@ export default function Dashboard({ setPage }) {
     { num: "250", label: "Reward points", color: C.amber },
   ];
 
-  const actions = [
-    { title: "Report lost item",  desc: "Lost something? File a report", iconBg: "#FCEBEB", icon: "🔴", nav: "postlost" },
-    { title: "Report found item", desc: "Found something? Help reunite it", iconBg: "#EAF3DE", icon: "🟢", nav: "postfound" },
-    { title: "My reports",        desc: "View & manage your submitted reports", iconBg: "#E6F1FB", icon: "📄", nav: "reports" },
-    { title: "My profile",        desc: "Update your info & settings", iconBg: "#EEEDFE", icon: "👤", nav: "profile" },
-    {title: "Match results",       desc:"Display match results", iconBg:"#22da22", icon:"👤", nav: "matchresults" },
-  ];
+const actions = [
+  {
+    title: "Report lost item",
+    desc: "Lost something? File a report",
+    iconBg: "#FCEBEB",
+    icon: "🔴",
+    nav: "postlost",
+  },
+  {
+    title: "Report found item",
+    desc: "Found something? Help reunite it",
+    iconBg: "#EAF3DE",
+    icon: "🟢",
+    nav: "postfound",
+  },
+  {
+    title: "Search catalogue",
+    desc: "Browse lost and found items",
+    iconBg: "#E6F1FB",
+    icon: "🔍",
+    nav: "catalogue",
+  },
+  {
+    title: "My reports",
+    desc: "View & manage your submitted reports",
+    iconBg: "#E6F1FB",
+    icon: "📄",
+    nav: "reports",
+  },
+  {
+    title: "My profile",
+    desc: "Update your info & settings",
+    iconBg: "#EEEDFE",
+    icon: "👤",
+    nav: "profile",
+  },
+  {
+    title: "Match results",
+    desc: "Display potential item matches",
+    iconBg: "#EAF3DE",
+    icon: "🔗",
+    nav: "matchresults",
+  },
+];
 
   return (
     <div style={css.page}>

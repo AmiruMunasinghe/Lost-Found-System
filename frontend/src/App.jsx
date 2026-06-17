@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Profile from "./pages/Profile";
 import Rewards from "./pages/Rewards";
 import MyReports from "./pages/MyReports";
+import SearchCatalogue from "./pages/SearchCatalogue";  
 
 function App() {
   const [page, setPage] = useState("login");
@@ -42,6 +43,10 @@ function App() {
       {page === "profile" && (
        <Profile go={setPage} />
       )}
+
+   {page === "catalogue" && (
+  <SearchCatalogue goHome={() => setPage("dashboard")} />
+)}
 
       {page === "postlost" && (
        <PostLostForm goHome={() => setPage("dashboard")} />

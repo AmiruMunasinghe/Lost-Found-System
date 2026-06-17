@@ -1,211 +1,169 @@
 import React, { useState } from "react";
 import { createItem } from "../api/items";
 
-function PostForm({ goHome }) {
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [type, setType] = useState("Lost");
-  const [color, setColor] = useState("");
-  const [venue, setVenue] = useState("");
-  const [time, setTime] = useState("");
+function PostFoundForm({ goHome }) {
 
- const handleSubmit = (e) => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [location, setLocation] = useState("");
+  const [reportType] = useState("FOUND");
+  const [loading, setLoading] = useState(false);
+
+const handleSubmit = async (e) => {
+  console.log("🔥 SUBMIT FUNCTION TRIGGERED");
   e.preventDefault();
 
   if (!title.trim()) return;
 
   const formData = {
-    type : "Found" ,
-    title,
-    desc,
-    color,
-    venue,
-    time,
+    title: title,
+    description: description,
+    category: category || "General",
+    location: location,
+    reportType: "FOUND",
+    imageUrls: []
   };
-  console.log("FORM DATA:", formData);
-  createItem(formData); // ✅ SAVE TO LOCALSTORAGE
 
-  // console.log(formData); // useful for backend later
+  console.log("Sending to backend:", formData);
 
-  alert(`Found item posted!`);
+  try {
+    setLoading(true);
 
-  setTitle("");
-  setDesc("");
-  setType("");
-  setColor("");
-  setVenue("");
-  setTime("");
+    const response = await createItem(formData);
+
+    console.log("Response:", response);
+
+    alert("Found item posted successfully!");
+
+    // reset form correctly
+    setTitle("");
+    setDescription("");
+    setCategory("");
+    setLocation("");
+
+    goHome();
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to post item");
+
+  } finally {
+    setLoading(false);
+  }
 };
-
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        {/* HEADER */}
+
         <div style={styles.header}>
-          <button style={styles.backBtn} onClick={goHome}>
+          <button
+            style={styles.backBtn}
+            onClick={goHome}
+          >
             ← Back
           </button>
-          <h2 style={styles.title}>Report an Item</h2>
-          <p style={styles.subtitle}>
-            Help others by reporting a lost or found item
-          </p>
+
+          <h2>Report Found Item</h2>
         </div>
 
-        {/* FORM */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-          
+        <form
+          onSubmit={handleSubmit}
+          style={styles.form}
+        >
 
-          {/* TITLE */}
-          <label style={styles.label}>Item Title</label>
+          <label>Title</label>
           <input
-            placeholder="e.g. Black Wallet, iPhone 13"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e)=>setTitle(e.target.value)}
+            placeholder="Black Wallet"
             style={styles.input}
           />
 
-          {/* DESCRIPTION */}
-          <label style={styles.label}>Description</label>
+          <label>Description</label>
           <textarea
-            placeholder="Add details like location, time, color..."
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
+            value={description}
+            onChange={(e)=>setDescription(e.target.value)}
+            placeholder="Black wallet near library"
             style={styles.textarea}
           />
 
-          {/* COLOR */}
-          <label style={styles.label}>Color (If applicable)</label>
+          <label>Category</label>
+          <select
+            value={category}
+            onChange={(e)=>setCategory(e.target.value)}
+            style={styles.input}
+          >
+            <option value="">Select</option>
+            <option>Electronics</option>
+            <option>Books</option>
+            <option>Personal Items</option>
+            <option>Bags</option>
+            <option>Other</option>
+          </select>
+
+          <label>Location</label>
           <input
-            placeholder="e.g. Black, Red"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
+            value={location}
+            onChange={(e)=>setLocation(e.target.value)}
+            placeholder="Library"
             style={styles.input}
           />
 
-          {/* VENUE */}
-          <label style={styles.label}>Venue / Location</label>
-          <input
-            placeholder="e.g. Library, Bus stop"
-            value={venue}
-            onChange={(e) => setVenue(e.target.value)}
-            style={styles.input}
-          />
-
-          {/* TIME */}
-          <label style={styles.label}>Time</label>
-          <input
-            type="datetime-local"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            style={styles.input}
-          />
-
-          {/* BUTTON */}
-          <button type="submit" style={styles.button}>
-             Submit Report
+          <button
+            type="submit"
+            style={styles.button}
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit Report"}
           </button>
+
         </form>
+
       </div>
     </div>
   );
 }
 
 const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "#f5f7fb",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    fontFamily: "Arial",
-    padding: "20px",
+  page:{
+    minHeight:"100vh",
+    display:"flex",
+    justifyContent:"center",
+    alignItems:"center",
+    background:"#f5f7fb"
   },
 
-  card: {
-    width: "100%",
-    maxWidth: "500px",
-    background: "white",
-    borderRadius: "14px",
-    padding: "25px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+  card:{
+    width:"500px",
+    padding:"25px",
+    background:"white",
+    borderRadius:"10px"
   },
 
-  header: {
-    marginBottom: "20px",
-    textAlign: "center",
+  form:{
+    display:"flex",
+    flexDirection:"column",
+    gap:"10px"
   },
 
-  backBtn: {
-    position: "absolute",
-    marginTop: "-10px",
-    marginLeft: "-10px",
-    background: "transparent",
-    border: "none",
-    fontSize: "14px",
-    cursor: "pointer",
-    color: "#555",
+  input:{
+    padding:"12px"
   },
 
-  title: {
-    marginBottom: "5px",
-    color: "#111",
+  textarea:{
+    padding:"12px",
+    minHeight:"100px"
   },
 
-  subtitle: {
-    fontSize: "14px",
-    color: "#666",
+  button:{
+    padding:"12px",
+    cursor:"pointer"
   },
 
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-
-  label: {
-    fontSize: "13px",
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: "10px",
-  },
-
-  input: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    outline: "none",
-    transition: "0.2s",
-  },
-
-  textarea: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    minHeight: "100px",
-    outline: "none",
-    resize: "none",
-  },
-
-  select: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    outline: "none",
-  },
-
-backBtn: {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "6px",
-  background: "transparent",
-  border: "1px solid #e5e7eb",
-  padding: "8px 12px",
-  borderRadius: "8px",
-  fontSize: "14px",
-  cursor: "pointer",
-  color: "#374151",
-  transition: "all 0.2s ease",
-},
+  backBtn:{
+    marginBottom:"20px"
+  }
 };
 
-export default PostForm;
+export default PostFoundForm;
