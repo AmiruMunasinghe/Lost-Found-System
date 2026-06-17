@@ -2,3 +2,6 @@
 /env
 /admin/nbproject/private/
 /frontend/nbproject/private/
+
+# Local staging folder
+add to github/
