@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 import ForgotPassword from "./pages/ForgotPassword";
 import BrowseItems from "./pages/BrowseItems";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 import Dashboard from "./pages/Dashboard";
 import PostLostForm from "./components/PostLostForm";
@@ -18,9 +20,10 @@ import MatchResults from "./pages/MatchResults";
 import ClaimItem from "./pages/ClaimItem";
 import ReturnItem from "./pages/ReturnItem";
 import Chat from "./pages/Chat";
-import Notifications from "./pages/Notifications";
 import Rewards from "./pages/Rewards";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import HelpSupport from "./pages/HelpSupport";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminReports from "./pages/AdminReports";
@@ -29,24 +32,27 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 
 const PAGES = {
   // Public
-  "home": { component: Home, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
-  "login": { component: Login, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "register": { component: Registration, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "forgot": { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "browse": { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
+  home: { component: Home, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
+  about: { component: About, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
+  contact: { component: Contact, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
+  login: { component: Login, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
+  register: { component: Registration, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
+  forgot: { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
+  browse: { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
 
   // Authenticated Student/Staff
-  "dashboard": { component: Dashboard, authRequired: true, allowedRoles: ["student", "admin"] },
-  "postlost": { component: PostLostForm, authRequired: true, allowedRoles: ["student"] },
-  "postfound": { component: PostFoundForm, authRequired: true, allowedRoles: ["student"] },
-  "reports": { component: MyReports, authRequired: true, allowedRoles: ["student"] },
-  "matchresults": { component: MatchResults, authRequired: true, allowedRoles: ["student"] },
-  "claim": { component: ClaimItem, authRequired: true, allowedRoles: ["student"] },
-  "return": { component: ReturnItem, authRequired: true, allowedRoles: ["student"] },
-  "chat": { component: Chat, authRequired: true, allowedRoles: ["student"] },
-  "notifications": { component: Notifications, authRequired: true, allowedRoles: ["student"] },
-  "rewards": { component: Rewards, authRequired: true, allowedRoles: ["student"] },
-  "profile": { component: Profile, authRequired: true, allowedRoles: ["student", "admin"] },
+  dashboard: { component: Dashboard, authRequired: true, allowedRoles: ["student", "admin"] },
+  postlost: { component: PostLostForm, authRequired: true, allowedRoles: ["student"] },
+  postfound: { component: PostFoundForm, authRequired: true, allowedRoles: ["student"] },
+  reports: { component: MyReports, authRequired: true, allowedRoles: ["student"] },
+  matchresults: { component: MatchResults, authRequired: true, allowedRoles: ["student"] },
+  claim: { component: ClaimItem, authRequired: true, allowedRoles: ["student"] },
+  return: { component: ReturnItem, authRequired: true, allowedRoles: ["student"] },
+  chat: { component: Chat, authRequired: true, allowedRoles: ["student"] },
+  rewards: { component: Rewards, authRequired: true, allowedRoles: ["student"] },
+  profile: { component: Profile, authRequired: true, allowedRoles: ["student", "admin"] },
+  settings: { component: Settings, authRequired: true, allowedRoles: ["student", "admin"] },
+  "help-support": { component: HelpSupport, authRequired: true, allowedRoles: ["student", "admin"] },
 
   // Admin
   "admin-dashboard": { component: AdminDashboard, authRequired: true, allowedRoles: ["admin"] },
@@ -55,81 +61,154 @@ const PAGES = {
   "admin-analytics": { component: AdminAnalytics, authRequired: true, allowedRoles: ["admin"] },
 };
 
-function App() {
-  const [currentPage, setCurrentPage] = useState(() => {
-    const path = window.location.pathname.replace(/^\//, "");
-    return path === "" ? "home" : path;
-  });
+function getStoredUser() {
+  try {
+    const savedUser = localStorage.getItem("lostFoundUser");
+    return savedUser ? JSON.parse(savedUser) : null;
+  } catch (error) {
+    localStorage.removeItem("lostFoundUser");
+    return null;
+  }
+}
 
-  const [userState, setUserState] = useState(null);
+function getPageFromUrl() {
+  const path = window.location.pathname.replace(/^\//, "");
+  const page = path === "" ? "home" : path;
+  return PAGES[page] ? page : "home";
+}
+
+function getInitialIsMobile() {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth <= 768;
+}
+
+function App() {
+  const [currentPage, setCurrentPage] = useState(getPageFromUrl);
+  const [userState, setUserState] = useState(getStoredUser);
   const userRef = React.useRef(userState);
-  
+  const [pageParams, setPageParams] = useState({});
+  const [isMobile, setIsMobile] = useState(getInitialIsMobile);
+  const [sidebarOpen, setSidebarOpen] = useState(() => !getInitialIsMobile());
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("lostFoundDarkMode") === "true");
+
   const setUser = React.useCallback((newUser) => {
     userRef.current = newUser;
     setUserState(newUser);
+
+    if (newUser) {
+      localStorage.setItem("lostFoundUser", JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem("lostFoundUser");
+    }
   }, []);
 
-  const user = userState;
-
-  const [pageParams, setPageParams] = useState({});
-
-  React.useEffect(() => {
-    // Record initial state
-    window.history.replaceState({ params: {} }, "", window.location.pathname);
-
-    const handlePopState = (event) => {
-      const path = window.location.pathname.replace(/^\//, "");
-      setCurrentPage(path === "" ? "home" : path);
-      if (event.state?.params) {
-        setPageParams(event.state.params);
-      } else {
-        setPageParams({});
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  const navigateTo = (pathOrKey, params = {}, replace = false) => {
+  const navigateTo = React.useCallback((pathOrKey, params = {}, replace = false) => {
     let pageKey = pathOrKey.replace(/^\//, "");
     if (pageKey === "") pageKey = "home";
 
     const pageConfig = PAGES[pageKey];
     let targetPage = pageKey;
+    let nextParams = params;
 
     if (!pageConfig) {
       targetPage = "home";
-      params = {};
+      nextParams = {};
     } else {
       const currentUser = userRef.current;
       const isLoggedIn = !!currentUser;
+
       if (pageConfig.authRequired && !isLoggedIn) {
         targetPage = "login";
-        params = { next: pageKey, nextParams: params };
+        nextParams = { next: pageKey, nextParams: params };
       } else if (pageConfig.guestOnly && isLoggedIn) {
-        targetPage = currentUser.role === "admin" ? "admin-dashboard" : "home";
-        params = {};
+        targetPage = currentUser.role === "admin" ? "admin-dashboard" : "browse";
+        nextParams = {};
       } else if (!pageConfig.allowedRoles.includes(currentUser ? currentUser.role : "guest")) {
-        targetPage = currentUser ? (currentUser.role === "admin" ? "admin-dashboard" : "home") : "home";
-        params = {};
+        targetPage = currentUser ? (currentUser.role === "admin" ? "admin-dashboard" : "browse") : "home";
+        nextParams = {};
       }
     }
 
     setCurrentPage(targetPage);
-    setPageParams(params);
+    setPageParams(nextParams);
 
     const url = `/${targetPage === "home" ? "" : targetPage}`;
     if (replace || window.location.pathname === url) {
-      window.history.replaceState({ params }, "", url);
+      window.history.replaceState({ params: nextParams }, "", url);
     } else {
-      window.history.pushState({ params }, "", url);
+      window.history.pushState({ params: nextParams }, "", url);
     }
-  };
+  }, []);
 
-  const PageComponent = PAGES[currentPage]?.component || PAGES["home"].component;
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  React.useEffect(() => {
+    userRef.current = userState;
+  }, [userState]);
+
+  React.useEffect(() => {
+    localStorage.setItem("lostFoundDarkMode", darkMode ? "true" : "false");
+  }, [darkMode]);
+
+  React.useEffect(() => {
+    const updateViewport = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      setSidebarOpen((previous) => {
+        if (mobile) return false;
+        if (!mobile && previous === false) return true;
+        return previous;
+      });
+    };
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
+
+  React.useEffect(() => {
+    window.history.replaceState({ params: pageParams }, "", window.location.pathname);
+
+    const handlePopState = (event) => {
+      const path = window.location.pathname.replace(/^\//, "");
+      const page = path === "" ? "home" : path;
+      setCurrentPage(PAGES[page] ? page : "home");
+      setPageParams(event.state?.params || {});
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  React.useEffect(() => {
+    const pageConfig = PAGES[currentPage];
+
+    if (!pageConfig) {
+      navigateTo("/", {}, true);
+      return;
+    }
+
+    const isLoggedIn = !!userState;
+    const role = userState ? userState.role : "guest";
+
+    if (pageConfig.authRequired && !isLoggedIn) {
+      navigateTo("/login", { next: currentPage, nextParams: pageParams }, true);
+      return;
+    }
+
+    if (pageConfig.guestOnly && isLoggedIn) {
+      navigateTo(role === "admin" ? "/admin-dashboard" : "/browse", {}, true);
+      return;
+    }
+
+    if (!pageConfig.allowedRoles.includes(role)) {
+      navigateTo(isLoggedIn ? (role === "admin" ? "/admin-dashboard" : "/browse") : "/", {}, true);
+    }
+  }, [currentPage, userState, navigateTo]);
+
+  const PageComponent = PAGES[currentPage]?.component || PAGES.home.component;
+  const user = userState;
   const userRole = user ? user.role : "guest";
+  const dm = darkMode;
 
   const floatAnimation = `
     @keyframes float {
@@ -139,49 +218,87 @@ function App() {
     }
   `;
 
-  const dm = darkMode;
+  const shellResponsiveCss = `
+    @media (max-width: 768px) {
+      input, textarea, select, button { font-size: 16px; }
+    }
+  `;
+
   const darkTransition = "background-color 0.3s ease, color 0.3s ease";
 
   return (
     <NavigationContext.Provider value={{ navigate: navigateTo, currentPage, pageParams }}>
       <style>{floatAnimation}</style>
-      <div style={{ ...styles.appContainer, backgroundColor: dm ? "#0f172a" : "#eef4fb", transition: darkTransition }}>
+      <style>{shellResponsiveCss}</style>
+
+      <div
+        style={{
+          ...styles.appContainer,
+          backgroundColor: dm ? "#0f172a" : "#eef4fb",
+          transition: darkTransition,
+        }}
+      >
+        {user && isMobile && sidebarOpen && (
+          <button
+            aria-label="Close sidebar"
+            style={styles.mobileBackdrop}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {user && (
-          <Sidebar 
-            role={userRole} 
-            currentPage={currentPage} 
-            navigateTo={navigateTo} 
+          <Sidebar
+            role={userRole}
+            currentPage={currentPage}
+            navigateTo={navigateTo}
             setUser={setUser}
             sidebarOpen={sidebarOpen}
             darkMode={darkMode}
             setDarkMode={setDarkMode}
+            isMobile={isMobile}
+            onNavigate={() => {
+              if (isMobile) setSidebarOpen(false);
+            }}
           />
         )}
+
         <div style={styles.mainWrapper}>
-          <Navbar 
-            user={user} 
-            currentPage={currentPage} 
-            navigateTo={navigateTo} 
+          <Navbar
+            user={user}
+            currentPage={currentPage}
+            navigateTo={navigateTo}
+            setUser={setUser}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
             darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            isMobile={isMobile}
           />
-          <main style={{ ...styles.contentArea, backgroundColor: dm ? "#0f172a" : "transparent", transition: darkTransition }}>
-            {/* BACKGROUND BLOBS — only visible in light mode */}
-            {!dm && <>
-              <div style={{ ...styles.blob, width: 400, height: 400, background: "rgba(15,95,255,0.08)", top: "-50px", left: "-50px", animationDelay: "0s" }} />
-              <div style={{ ...styles.blob, width: 300, height: 300, background: "rgba(99,102,241,0.08)", top: "-20px", right: "10%", animationDelay: "2s" }} />
-              <div style={{ ...styles.blob, width: 350, height: 350, background: "rgba(16,185,129,0.06)", bottom: "-50px", left: "30%", animationDelay: "4s" }} />
-            </>}
 
-            {/* MAIN CONTENT */}
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <PageComponent 
-                user={user} 
-                setUser={setUser} 
-                navigateTo={navigateTo} 
+          <main
+            style={{
+              ...styles.contentArea,
+              padding: isMobile ? "16px" : "24px 32px",
+              backgroundColor: dm ? "#0f172a" : "transparent",
+              transition: darkTransition,
+            }}
+          >
+            {!dm && !isMobile && (
+              <>
+                <div style={{ ...styles.blob, width: 400, height: 400, background: "rgba(15,95,255,0.08)", top: "-50px", left: "-50px", animationDelay: "0s" }} />
+                <div style={{ ...styles.blob, width: 300, height: 300, background: "rgba(99,102,241,0.08)", top: "-20px", right: "10%", animationDelay: "2s" }} />
+                <div style={{ ...styles.blob, width: 350, height: 350, background: "rgba(16,185,129,0.06)", bottom: "-50px", left: "30%", animationDelay: "4s" }} />
+              </>
+            )}
+
+            <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
+              <PageComponent
+                user={user}
+                setUser={setUser}
+                navigateTo={navigateTo}
                 pageParams={pageParams}
                 darkMode={darkMode}
+                setDarkMode={setDarkMode}
               />
             </div>
           </main>
@@ -194,7 +311,10 @@ function App() {
 const styles = {
   appContainer: {
     display: "flex",
-    minHeight: "100vh",
+    height: "100dvh",
+    width: "100%",
+    minWidth: 0,
+    overflow: "hidden",
     backgroundColor: "#eef4fb",
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
   },
@@ -202,13 +322,30 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    minWidth: 0, // Fixes flex child overflow
+    minWidth: 0,
+    width: "100%",
+    height: "100dvh",
+    overflow: "hidden",
   },
   contentArea: {
     flex: 1,
-    padding: "24px 32px",
+    minHeight: 0,
     overflowY: "auto",
+    overflowX: "hidden",
     position: "relative",
+    width: "100%",
+    minWidth: 0,
+    boxSizing: "border-box",
+    WebkitOverflowScrolling: "touch",
+  },
+  mobileBackdrop: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(15, 23, 42, 0.45)",
+    border: "none",
+    padding: 0,
+    margin: 0,
+    zIndex: 899,
   },
   blob: {
     position: "absolute",
@@ -217,7 +354,7 @@ const styles = {
     pointerEvents: "none",
     animation: "float 12s ease-in-out infinite",
     zIndex: 0,
-  }
+  },
 };
 
 export default App;
