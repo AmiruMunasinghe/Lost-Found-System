@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Bell, ChevronDown, Menu } from "lucide-react";
 
 const C = {
@@ -13,9 +13,31 @@ const C = {
   danger: "#E24B4A",
 };
 
+const MOCK_NOTIFICATIONS = [
+  { id: 1, text: "A match was found for your lost Dell Laptop!", time: "10 min ago", unread: true },
+  { id: 2, text: "Your claim for 'Leather Wallet' was approved.", time: "2 hours ago", unread: true },
+  { id: 3, text: "Reminder: Return 'Keys with Red Lanyard' tomorrow.", time: "1 day ago", unread: false },
+];
+
 export default function Navbar({ user, currentPage, navigateTo, setUser, sidebarOpen, setSidebarOpen, darkMode }) {
   const isLoggedIn = !!user;
   const userRole = user ? user.role : "guest";
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef(null);
+
+  // Close notifications if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    if (showNotifications) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifications]);
 
   // Dark mode tokens for Navbar
   const nb = darkMode ? {
@@ -24,12 +46,18 @@ export default function Navbar({ user, currentPage, navigateTo, setUser, sidebar
     titleColor: "#e2e8f0",
     iconColor: "#94a3b8",
     namColor: "#e2e8f0",
+    dropdownBg: "#0f172a",
+    dropdownBorder: "#334155",
+    itemHover: "rgba(255,255,255,0.05)",
   } : {
     bg: "#FFFFFF",
     border: C.border,
     titleColor: C.primaryDk,
     iconColor: "#667085",
     namColor: C.body,
+    dropdownBg: "#FFFFFF",
+    dropdownBorder: C.border,
+    itemHover: "#f8fafc",
   };
 
   const handleSignOut = () => {
@@ -61,6 +89,8 @@ export default function Navbar({ user, currentPage, navigateTo, setUser, sidebar
   };
 
   if (isLoggedIn) {
+    const unreadCount = MOCK_NOTIFICATIONS.filter(n => n.unread).length;
+
     return (
       <header style={{ ...styles.headerAuth, background: nb.bg, borderBottom: `1px solid ${nb.border}` }}>
         {/* LEFT: PAGE TITLE AND MENU TOGGLE */}
@@ -79,13 +109,95 @@ export default function Navbar({ user, currentPage, navigateTo, setUser, sidebar
 
         {/* RIGHT: CONTROLS */}
         <div style={styles.actions}>
-          <button 
-            onClick={() => navigateTo("/notifications")}
-            style={styles.bellBtn}
-          >
-            <Bell size={20} color={nb.iconColor} />
-            <span style={styles.badgeCountAuth}>3</span>
-          </button>
+          {/* NOTIFICATION BELL */}
+          <div style={{ position: "relative" }} ref={notifRef}>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              style={{...styles.bellBtn, marginRight: "20px"}}
+            >
+              <Bell size={20} color={nb.iconColor} />
+              {unreadCount > 0 && (
+                <span style={styles.badgeCountAuth}>{unreadCount}</span>
+              )}
+            </button>
+
+            {/* NOTIFICATION DROPDOWN */}
+            {showNotifications && (
+              <div style={{
+                position: "absolute",
+                top: "calc(100% + 12px)",
+                right: "10px",
+                width: "320px",
+                background: nb.dropdownBg,
+                border: `1px solid ${nb.dropdownBorder}`,
+                borderRadius: "12px",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                zIndex: 1000,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+              }}>
+                <div style={{ padding: "16px", borderBottom: `1px solid ${nb.dropdownBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ margin: 0, fontSize: "16px", color: nb.titleColor, fontWeight: 700 }}>Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span style={{ fontSize: "12px", color: C.primary, fontWeight: 600 }}>{unreadCount} new</span>
+                  )}
+                </div>
+                
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                  {MOCK_NOTIFICATIONS.length > 0 ? MOCK_NOTIFICATIONS.map((n) => (
+                    <div 
+                      key={n.id}
+                      style={{
+                        padding: "12px 16px",
+                        borderBottom: `1px solid ${nb.dropdownBorder}`,
+                        background: n.unread ? (darkMode ? "rgba(15,95,255,0.1)" : "#f0f5ff") : "transparent",
+                        cursor: "pointer",
+                        transition: "background-color 0.2s",
+                        textAlign: "left"
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!n.unread) e.currentTarget.style.backgroundColor = nb.itemHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!n.unread) e.currentTarget.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      <p style={{ margin: "0 0 4px 0", fontSize: "14px", color: nb.namColor, lineHeight: "1.4" }}>{n.text}</p>
+                      <span style={{ fontSize: "12px", color: nb.iconColor }}>{n.time}</span>
+                    </div>
+                  )) : (
+                    <div style={{ padding: "20px", textAlign: "center", color: nb.iconColor, fontSize: "14px" }}>
+                      No new notifications
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowNotifications(false);
+                    navigateTo("/notifications");
+                  }}
+                  style={{
+                    padding: "12px",
+                    background: "transparent",
+                    border: "none",
+                    color: C.primary,
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    borderTop: `1px solid ${nb.dropdownBorder}`
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = nb.itemHover}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  See all notifications
+                </button>
+              </div>
+            )}
+          </div>
 
           <div style={styles.profileAuth} onClick={() => navigateTo("/profile")}>
             <div style={styles.avatarAuth}>
@@ -118,12 +230,6 @@ export default function Navbar({ user, currentPage, navigateTo, setUser, sidebar
         >
           Home
         </button>
-        <button 
-          style={{...styles.navLinkPublic, color: currentPage === "browse" ? C.primary : "white"}} 
-          onClick={() => navigateTo("/browse")}
-        >
-          Browse Items
-        </button>
       </nav>
 
       {/* AUTH CONTROLS */}
@@ -151,6 +257,8 @@ const styles = {
     borderBottom: `1px solid ${C.border}`,
     zIndex: 100,
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    position: "sticky",
+    top: 0,
   },
   pageTitle: {
     fontSize: "22px",
@@ -232,6 +340,8 @@ const styles = {
     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
     zIndex: 100,
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    position: "sticky",
+    top: 0,
   },
   brand: {
     cursor: "pointer",

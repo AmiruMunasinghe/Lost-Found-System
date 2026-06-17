@@ -24,7 +24,7 @@ const INITIAL_ITEMS = [
   { id: 6, title: "Student Identity Card", type: "found", category: "Documents", location: "Library Entrance", date: "2026-06-09", desc: "Card belongs to student initials A.M." },
 ];
 
-export default function BrowseItems({ navigateTo }) {
+export default function BrowseItems({ navigateTo, darkMode }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [type, setType] = useState("All"); // All, lost, found
@@ -41,6 +41,38 @@ export default function BrowseItems({ navigateTo }) {
   });
 
   const categories = ["All", "Electronics", "Bags & Wallets", "Keys", "Documents", "Other"];
+
+  const t = darkMode ? {
+    bg: "#0f172a",
+    card: "#1e293b",
+    text: "#e2e8f0",
+    muted: "#94a3b8",
+    border: "#334155",
+    inputBg: "#0f172a",
+    metaBorder: "#334155",
+    categoryBadgeBg: "#334155",
+    categoryBadgeText: "#cbd5e1",
+    greenBg: "rgba(16, 185, 129, 0.15)",
+    green: "#34d399",
+    redBg: "rgba(239, 68, 68, 0.15)",
+    red: "#f87171",
+  } : {
+    bg: "transparent",
+    card: "white",
+    text: C.primaryDk,
+    muted: C.muted,
+    border: C.border,
+    inputBg: "white",
+    metaBorder: "#F3F4F6",
+    categoryBadgeBg: "#F3F4F6",
+    categoryBadgeText: "#4B5563",
+    greenBg: C.greenBg,
+    green: C.green,
+    redBg: C.redBg,
+    red: C.red,
+  };
+
+  const styles = getStyles(t);
 
   return (
     <div style={styles.container}>
@@ -75,20 +107,23 @@ export default function BrowseItems({ navigateTo }) {
           <div style={styles.filterGroup}>
             <label style={styles.label}>Type</label>
             <div style={styles.btnGroup}>
-              {["All", "Lost", "Found"].map((t) => (
-                <button
-                  key={t}
-                  style={{
-                    ...styles.btnGroupItem,
-                    background: type === t.toLowerCase() || (t === "All" && type === "All") ? C.primary : "white",
-                    color: type === t.toLowerCase() || (t === "All" && type === "All") ? "white" : C.text,
-                    border: `1px solid ${type === t.toLowerCase() || (t === "All" && type === "All") ? C.primary : C.border}`,
-                  }}
-                  onClick={() => setType(t === "All" ? "All" : t.toLowerCase())}
-                >
-                  {t}
-                </button>
-              ))}
+              {["All", "Lost", "Found"].map((btnType) => {
+                const isActive = type === btnType.toLowerCase() || (btnType === "All" && type === "All");
+                return (
+                  <button
+                    key={btnType}
+                    style={{
+                      ...styles.btnGroupItem,
+                      background: isActive ? C.primary : t.inputBg,
+                      color: isActive ? "white" : t.text,
+                      border: `1px solid ${isActive ? C.primary : t.border}`,
+                    }}
+                    onClick={() => setType(btnType === "All" ? "All" : btnType.toLowerCase())}
+                  >
+                    {btnType}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -103,8 +138,8 @@ export default function BrowseItems({ navigateTo }) {
                 <span 
                   style={{
                     ...styles.badge,
-                    background: item.type === "lost" ? C.redBg : C.greenBg,
-                    color: item.type === "lost" ? C.red : C.green,
+                    background: item.type === "lost" ? t.redBg : t.greenBg,
+                    color: item.type === "lost" ? t.red : t.green,
                   }}
                 >
                   {item.type === "lost" ? "🔴 Lost" : "🟢 Found"}
@@ -142,7 +177,7 @@ export default function BrowseItems({ navigateTo }) {
   );
 }
 
-const styles = {
+const getStyles = (t) => ({
   container: {
     maxWidth: "1200px",
     margin: "0 auto",
@@ -156,20 +191,20 @@ const styles = {
   title: {
     fontSize: "36px",
     fontWeight: "800",
-    color: C.primaryDk,
+    color: t.text,
     margin: "0 0 10px",
   },
   subtitle: {
     fontSize: "16px",
-    color: C.muted,
+    color: t.muted,
     margin: 0,
   },
   controls: {
-    background: "white",
+    background: t.card,
     borderRadius: "16px",
     padding: "20px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${t.border}`,
     marginBottom: "30px",
     display: "flex",
     flexDirection: "column",
@@ -180,7 +215,9 @@ const styles = {
     padding: "16px 20px",
     fontSize: "16px",
     borderRadius: "12px",
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${t.border}`,
+    background: t.inputBg,
+    color: t.text,
     outline: "none",
     boxSizing: "border-box",
     transition: "border-color 0.2s",
@@ -200,14 +237,15 @@ const styles = {
   label: {
     fontSize: "13px",
     fontWeight: "700",
-    color: C.text,
+    color: t.text,
   },
   select: {
     padding: "10px 16px",
     fontSize: "14px",
     borderRadius: "10px",
-    border: `1px solid ${C.border}`,
-    background: "white",
+    border: `1px solid ${t.border}`,
+    background: t.inputBg,
+    color: t.text,
     minWidth: "180px",
     outline: "none",
   },
@@ -221,7 +259,6 @@ const styles = {
     fontSize: "14px",
     fontWeight: "700",
     cursor: "pointer",
-    border: `1px solid ${C.border}`,
     transition: "all 0.2s",
     fontFamily: "inherit",
   },
@@ -231,9 +268,9 @@ const styles = {
     gap: "24px",
   },
   card: {
-    background: "white",
+    background: t.card,
     borderRadius: "18px",
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${t.border}`,
     padding: "24px",
     display: "flex",
     flexDirection: "column",
@@ -253,8 +290,8 @@ const styles = {
     fontWeight: "700",
   },
   categoryBadge: {
-    background: "#F3F4F6",
-    color: "#4B5563",
+    background: t.categoryBadgeBg,
+    color: t.categoryBadgeText,
     padding: "4px 10px",
     borderRadius: "12px",
     fontSize: "11px",
@@ -263,12 +300,12 @@ const styles = {
   cardTitle: {
     fontSize: "18px",
     fontWeight: "700",
-    color: C.text,
+    color: t.text,
     margin: "0 0 10px",
   },
   cardDesc: {
     fontSize: "14px",
-    color: C.muted,
+    color: t.muted,
     lineHeight: "1.5",
     margin: "0 0 18px",
     flex: 1,
@@ -278,12 +315,12 @@ const styles = {
     flexDirection: "column",
     gap: "6px",
     marginBottom: "20px",
-    borderTop: "1px solid #F3F4F6",
+    borderTop: `1px solid ${t.metaBorder}`,
     paddingTop: "12px",
   },
   metaItem: {
     fontSize: "13px",
-    color: "#6B7280",
+    color: t.muted,
     fontWeight: "500",
   },
   actionBtn: {
@@ -304,9 +341,9 @@ const styles = {
     gridColumn: "1 / -1",
     textAlign: "center",
     padding: "60px 20px",
-    background: "white",
+    background: t.card,
     borderRadius: "18px",
-    border: `1px solid ${C.border}`,
-    color: C.text,
+    border: `1px solid ${t.border}`,
+    color: t.text,
   },
-};
+});

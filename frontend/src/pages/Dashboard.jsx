@@ -62,17 +62,17 @@ export default function Dashboard({ navigateTo, darkMode }) {
   const t = useDark(darkMode);
 
   const stats = [
-    { num: "3", label: "Active reports",  color: "#0F5FFF" },
-    { num: "1", label: "Matches found",   color: "#3B6D11" },
+    { num: "3", label: "Active reports", color: "#0F5FFF" },
+    { num: "1", label: "Matches found", color: "#3B6D11" },
     { num: "250", label: "Reward points", color: "#BA7517" },
   ];
 
   const actions = [
-    { title: "Report lost item",  desc: "Lost something? File a report",          iconBg: "#FCEBEB", icon: "🔴", nav: "postlost" },
-    { title: "Report found item", desc: "Found something? Help reunite it",        iconBg: "#EAF3DE", icon: "🟢", nav: "postfound" },
-    { title: "My reports",        desc: "View & manage your submitted reports",    iconBg: "#E6F1FB", icon: "📄", nav: "reports" },
-    { title: "My profile",        desc: "Update your info & settings",             iconBg: "#EEEDFE", icon: "👤", nav: "profile" },
-    { title: "Match results",     desc: "Display match results",                   iconBg: "#E6F1FB", icon: "🔗", nav: "matchresults" },
+    { title: "Report lost item", desc: "Lost something? File a report", iconBg: "#FCEBEB", icon: "🔴", nav: "postlost" },
+    { title: "Report found item", desc: "Found something? Help reunite it", iconBg: "#EAF3DE", icon: "🟢", nav: "postfound" },
+    { title: "My reports", desc: "View & manage your submitted reports", iconBg: "#E6F1FB", icon: "📄", nav: "reports" },
+    { title: "My profile", desc: "Update your info & settings", iconBg: "#EEEDFE", icon: "👤", nav: "profile" },
+    { title: "Match results", desc: "Display match results", iconBg: "#E6F1FB", icon: "🔗", nav: "matchresults" },
   ];
 
   return (

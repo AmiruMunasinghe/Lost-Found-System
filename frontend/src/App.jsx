@@ -33,7 +33,7 @@ const PAGES = {
   "login": { component: Login, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   "register": { component: Registration, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   "forgot": { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "browse": { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
+  "browse": { component: BrowseItems, authRequired: true, allowedRoles: ["student", "admin"] },
 
   // Authenticated Student/Staff
   "dashboard": { component: Dashboard, authRequired: true, allowedRoles: ["student", "admin"] },
@@ -207,7 +207,6 @@ const styles = {
   contentArea: {
     flex: 1,
     padding: "24px 32px",
-    overflowY: "auto",
     position: "relative",
   },
   blob: {
