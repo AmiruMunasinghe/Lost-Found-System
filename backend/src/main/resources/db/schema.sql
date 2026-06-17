@@ -54,3 +54,35 @@ CREATE TABLE IF NOT EXISTS item_matches (
 CREATE INDEX IF NOT EXISTS idx_item_matches_status ON item_matches(status);
 CREATE INDEX IF NOT EXISTS idx_item_matches_confidence_score ON item_matches(confidence_score);
 CREATE INDEX IF NOT EXISTS idx_item_matches_created_at ON item_matches(created_at);
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    channel VARCHAR(20) NOT NULL,
+    reference_item_id BIGINT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+
+-- Reward Ledger table
+CREATE TABLE IF NOT EXISTS reward_ledger (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    points INT NOT NULL,
+    transaction_type VARCHAR(10) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    reference_id BIGINT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_reward_ledger_user_id ON reward_ledger(user_id);
+CREATE INDEX IF NOT EXISTS idx_reward_ledger_created_at ON reward_ledger(created_at);
