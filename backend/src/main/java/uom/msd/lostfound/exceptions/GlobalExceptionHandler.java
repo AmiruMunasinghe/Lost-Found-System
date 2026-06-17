@@ -57,10 +57,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception ex) {
+
+        ex.printStackTrace(); // 🔥 THIS IS WHAT YOU ARE MISSING
+
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
-                List.of()
+                List.of(ex.getMessage()) // optional but useful
         );
     }
 
