@@ -1,17 +1,40 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import authPanel from "../assets/left_panel.png";
 
-export default function Login({ setPage }) {
+export default function Login({ setUser, pageParams }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [errors, setErrors] = useState({});
 
   function handleLogin() {
-    if (!email || !pass) {
-      alert("Please enter email and password.");
+    const newErrors = {};
+    if (!email) newErrors.email = "Email is required.";
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email address.";
+    
+    if (!pass) newErrors.pass = "Password is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    setPage("dashboard");
+    setErrors({});
+    
+    // Simulate user login payload based on entered email
+    const role = email.includes("admin") ? "admin" : "student";
+    const name = email.split("@")[0].replace(".", " ");
+    
+    if (setUser) {
+      setUser({ token: "mock-jwt-token", name, role });
+    }
+    
+    if (pageParams && pageParams.next) {
+      navigate(`/${pageParams.next}`, { state: pageParams.nextParams });
+    } else {
+      navigate(role === "admin" ? "/admin-dashboard" : "/");
+    }
   }
 
   const styles = {
@@ -102,9 +125,17 @@ export default function Login({ setPage }) {
       border: "1px solid #d0d5dd",
       padding: "0 18px",
       fontSize: "16px",
-      marginBottom: "22px",
+      marginBottom: "6px",
       boxSizing: "border-box",
       outline: "none",
+    },
+
+    errorText: {
+      color: "#E24B4A",
+      fontSize: "13px",
+      marginBottom: "16px",
+      marginLeft: "4px",
+      display: "block",
     },
 
     forgot: {
@@ -207,29 +238,31 @@ export default function Login({ setPage }) {
             </label>
 
             <input
-              style={styles.input}
+              style={{...styles.input, borderColor: errors.email ? "#E24B4A" : "#d0d5dd", marginBottom: errors.email ? "6px" : "22px"}}
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setErrors({...errors, email: null}); }}
             />
+            {errors.email && <span style={styles.errorText}>{errors.email}</span>}
 
             <label style={styles.label}>
               Password
             </label>
 
             <input
-              style={styles.input}
+              style={{...styles.input, borderColor: errors.pass ? "#E24B4A" : "#d0d5dd", marginBottom: errors.pass ? "6px" : "22px"}}
               type="password"
               placeholder="Enter your password"
               value={pass}
-              onChange={(e) => setPass(e.target.value)}
+              onChange={(e) => { setPass(e.target.value); setErrors({...errors, pass: null}); }}
             />
+            {errors.pass && <span style={styles.errorText}>{errors.pass}</span>}
 
             <div style={styles.forgot}>
               <button
                 style={styles.forgotLink}
-                onClick={() => setPage("forgot")}
+                onClick={() => navigate("/forgot")}
               >
                 Forgot Password?
               </button>
@@ -254,7 +287,7 @@ export default function Login({ setPage }) {
               Don't have an account?{" "}
               <span
                 style={styles.registerLink}
-                onClick={() => setPage("register")}
+                onClick={() => navigate("/register")}
               >
                 Create Account
               </span>

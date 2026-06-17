@@ -1,47 +1,19 @@
 import { useState } from "react";
 
-const C = {
-  primary: "#0F5FFF",
-  primaryDk: "#0b3470",
-  bg: "#eef4fb",
-  card: "#FFFFFF",
-  text: "#0b3470",
-  body: "#344054",
-  muted: "#667085",
-  border: "#d0d5dd",
-  fieldBg: "#f6f9ff",
-  link: "#2563eb",
-};
+function useDark(dm) {
+  return dm ? {
+    card: "#1e293b", border: "#334155", text: "#e2e8f0",
+    muted: "#94a3b8", body: "#cbd5e1", fieldBg: "#0f172a",
+    link: "#60a5fa", unread: "#1a2d47",
+  } : {
+    card: "#FFFFFF", border: "#d0d5dd", text: "#0b3470",
+    muted: "#667085", body: "#344054", fieldBg: "#f6f9ff",
+    link: "#2563eb", unread: "#f0f5ff",
+  };
+}
 
-const css = {
-  page: {
-    minHeight: "100vh",
-    background: C.bg,
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    padding: "30px 16px",
-  },
-  container: {
-    width: "100%",
-    maxWidth: 640,
-    margin: "0 auto",
-  },
-  backLink: {
-    background: "none",
-    border: "none",
-    color: C.link,
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    marginBottom: 18,
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    padding: 0,
-    fontFamily: "inherit",
-  },
-};
-
-export default function Notifications({ go }) {
+export default function Notifications({ navigateTo, darkMode }) {
+  const t = useDark(darkMode);
   const [notifications, setNotifications] = useState([
     { id: 1, message: "🔔 Your lost laptop has a potential match! Click to view.", time: "2 minutes ago", read: false, type: "match" },
     { id: 2, message: "⭐ You earned 50 points for reporting a found item", time: "1 hour ago", read: false, type: "reward" },
@@ -51,117 +23,59 @@ export default function Notifications({ go }) {
     { id: 6, message: "⭐ You earned 25 points for uploading a photo", time: "5 days ago", read: true, type: "reward" },
   ]);
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
-
+  const markAsRead = (id) => setNotifications(ns => ns.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllAsRead = () => setNotifications(ns => ns.map(n => ({ ...n, read: true })));
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const getTypeIcon = (type) => {
-    switch(type) {
-      case "match": return "🔔";
-      case "reward": return "⭐";
-      case "resolved": return "✅";
-      case "badge": return "🏆";
-      default: return "📢";
-    }
-  };
-
   return (
-    <div style={css.page}>
-      <div style={css.container}>
-        <button style={css.backLink} onClick={() => go("dashboard")}>← Back to Dashboard</button>
+    <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
+      <div style={{ width: "100%", maxWidth: 640, margin: "0 auto" }}>
+        <button
+          style={{ background: "none", border: "none", color: t.link, fontSize: 14, fontWeight: 600, cursor: "pointer", marginBottom: 18, display: "flex", alignItems: "center", gap: 6, padding: 0, fontFamily: "inherit" }}
+          onClick={() => navigateTo("dashboard")}
+        >← Back to Dashboard</button>
 
-        <div style={{
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          borderRadius: 22,
-          overflow: "hidden",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
-        }}>
+        <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 22, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.04)", transition: "background 0.3s, border-color 0.3s" }}>
           {/* Header */}
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "18px 24px",
-            borderBottom: `1px solid ${C.border}`,
-            background: C.fieldBg,
-          }}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: `1px solid ${t.border}`, background: t.fieldBg }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: t.text }}>
               Notifications {unreadCount > 0 && `(${unreadCount} new)`}
             </h2>
             {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: C.link,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
+              <button onClick={markAllAsRead} style={{ background: "none", border: "none", color: t.link, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                 Mark all as read
               </button>
             )}
           </div>
 
-          {/* Notifications list */}
+          {/* List */}
           <div>
             {notifications.length === 0 ? (
-              <div style={{ padding: "48px", textAlign: "center", color: C.muted, fontSize: 15 }}>
-                🔕 No notifications yet
-              </div>
-            ) : (
-              notifications.map(notif => (
-                <div
-                  key={notif.id}
-                  onClick={() => markAsRead(notif.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 14,
-                    padding: "16px 24px",
-                    borderBottom: `1px solid ${C.border}`,
-                    background: notif.read ? C.card : "#f0f5ff",
-                    cursor: "pointer",
-                    transition: "background 0.2s",
-                  }}
-                >
-                  <div style={{ fontSize: 20, marginTop: 2 }}>{getTypeIcon(notif.type)}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontSize: 14,
-                      color: C.body,
-                      marginBottom: 5,
-                      fontWeight: notif.read ? 400 : 700,
-                    }}>
-                      {notif.message}
-                    </div>
-                    <div style={{ fontSize: 12, color: C.muted }}>{notif.time}</div>
-                  </div>
-                  {!notif.read && (
-                    <div style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: C.primary,
-                      flexShrink: 0,
-                      marginTop: 6,
-                    }} />
-                  )}
+              <div style={{ padding: "48px", textAlign: "center", color: t.muted, fontSize: 15 }}>🔕 No notifications yet</div>
+            ) : notifications.map(notif => (
+              <div
+                key={notif.id}
+                onClick={() => markAsRead(notif.id)}
+                style={{
+                  display: "flex", alignItems: "flex-start", gap: 14,
+                  padding: "16px 24px",
+                  borderBottom: `1px solid ${t.border}`,
+                  background: notif.read ? t.card : t.unread,
+                  cursor: "pointer", transition: "background 0.2s",
+                }}
+              >
+                <div style={{ fontSize: 20, marginTop: 2 }}>
+                  {{ match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆" }[notif.type] || "📢"}
                 </div>
-              ))
-            )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, color: t.body, marginBottom: 5, fontWeight: notif.read ? 400 : 700 }}>{notif.message}</div>
+                  <div style={{ fontSize: 12, color: t.muted }}>{notif.time}</div>
+                </div>
+                {!notif.read && (
+                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#0F5FFF", flexShrink: 0, marginTop: 6 }} />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>

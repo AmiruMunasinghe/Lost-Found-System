@@ -1,19 +1,38 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import authPanel from "../assets/left_panel.png";
 
-export default function Registration({ go }) {
+export default function Registration() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [id, setId] = useState("");
   const [role, setRole] = useState("Student");
   const [pass, setPass] = useState("");
   const [conf, setConf] = useState("");
+  const [errors, setErrors] = useState({});
 
   function handleRegister() {
-    if (!name || !email || !id || !pass) return alert("Please fill in all fields.");
-    if (pass !== conf) return alert("Passwords do not match.");
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = "Full Name is required.";
+    if (!email.trim()) newErrors.email = "Email is required.";
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email address.";
+    
+    if (!id.trim()) newErrors.id = "ID is required.";
+    if (!pass) newErrors.pass = "Password is required.";
+    else if (pass.length < 8) newErrors.pass = "Password must be at least 8 characters.";
+    
+    if (!conf) newErrors.conf = "Confirm Password is required.";
+    else if (pass !== conf) newErrors.conf = "Passwords do not match.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     alert("Registration successful! Please sign in.");
-    go("login");
+    navigate("/login");
   }
 
   const styles = {
@@ -96,7 +115,15 @@ export default function Registration({ go }) {
     },
 
     fieldGap: {
-      marginBottom: "20px",
+      marginBottom: "16px",
+    },
+
+    errorText: {
+      color: "#E24B4A",
+      fontSize: "13px",
+      marginTop: "6px",
+      marginLeft: "4px",
+      display: "block",
     },
 
     label: {
@@ -214,11 +241,12 @@ export default function Registration({ go }) {
               <div style={styles.fieldGap}>
                 <label style={styles.label}>Full Name</label>
                 <input
-                  style={styles.input}
+                  style={{...styles.input, borderColor: errors.name ? "#E24B4A" : "#d0d5dd"}}
                   placeholder="John Doe"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => { setName(e.target.value); setErrors({...errors, name: null}); }}
                 />
+                {errors.name && <span style={styles.errorText}>{errors.name}</span>}
               </div>
               <div style={styles.fieldGap}>
                 <label style={styles.label}>Role</label>
@@ -237,21 +265,23 @@ export default function Registration({ go }) {
               <div style={styles.fieldGap}>
                 <label style={styles.label}>University Email</label>
                 <input
-                  style={styles.input}
+                  style={{...styles.input, borderColor: errors.email ? "#E24B4A" : "#d0d5dd"}}
                   type="email"
                   placeholder="john@uom.lk"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => { setEmail(e.target.value); setErrors({...errors, email: null}); }}
                 />
+                {errors.email && <span style={styles.errorText}>{errors.email}</span>}
               </div>
               <div style={styles.fieldGap}>
                 <label style={styles.label}>Student / Staff ID</label>
                 <input
-                  style={styles.input}
+                  style={{...styles.input, borderColor: errors.id ? "#E24B4A" : "#d0d5dd"}}
                   placeholder="e.g. 230224V"
                   value={id}
-                  onChange={e => setId(e.target.value)}
+                  onChange={e => { setId(e.target.value); setErrors({...errors, id: null}); }}
                 />
+                {errors.id && <span style={styles.errorText}>{errors.id}</span>}
               </div>
             </div>
 
@@ -259,22 +289,24 @@ export default function Registration({ go }) {
               <div style={styles.fieldGap}>
                 <label style={styles.label}>Password</label>
                 <input
-                  style={styles.input}
+                  style={{...styles.input, borderColor: errors.pass ? "#E24B4A" : "#d0d5dd"}}
                   type="password"
                   placeholder="Min. 8 characters"
                   value={pass}
-                  onChange={e => setPass(e.target.value)}
+                  onChange={e => { setPass(e.target.value); setErrors({...errors, pass: null}); }}
                 />
+                {errors.pass && <span style={styles.errorText}>{errors.pass}</span>}
               </div>
               <div style={styles.fieldGap}>
                 <label style={styles.label}>Confirm Password</label>
                 <input
-                  style={styles.input}
+                  style={{...styles.input, borderColor: errors.conf ? "#E24B4A" : "#d0d5dd"}}
                   type="password"
                   placeholder="Repeat password"
                   value={conf}
-                  onChange={e => setConf(e.target.value)}
+                  onChange={e => { setConf(e.target.value); setErrors({...errors, conf: null}); }}
                 />
+                {errors.conf && <span style={styles.errorText}>{errors.conf}</span>}
               </div>
             </div>
 
@@ -289,7 +321,7 @@ export default function Registration({ go }) {
               Already have an account?{" "}
               <span
                 style={styles.loginLink}
-                onClick={() => go("login")}
+                onClick={() => navigate("/login")}
               >
                 Sign In
               </span>

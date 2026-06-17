@@ -1,13 +1,25 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import authPanel from "../assets/left_panel.png";
 
-export default function ForgotPassword({ go }) {
+export default function ForgotPassword() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [errors, setErrors] = useState({});
 
   function handleSend() {
-    if (!email) return alert("Please enter your email address.");
+    const newErrors = {};
+    if (!email.trim()) newErrors.email = "Email is required.";
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email address.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     alert(`Reset link sent to ${email}`);
-    go("login");
+    navigate("/login");
   }
 
   const styles = {
@@ -110,10 +122,18 @@ export default function ForgotPassword({ go }) {
       border: "1px solid #d0d5dd",
       padding: "0 18px",
       fontSize: "16px",
-      marginBottom: "22px",
+      marginBottom: "6px",
       boxSizing: "border-box",
       outline: "none",
       fontFamily: "inherit",
+    },
+
+    errorText: {
+      color: "#E24B4A",
+      fontSize: "13px",
+      marginBottom: "16px",
+      marginLeft: "4px",
+      display: "block",
     },
 
     sendBtn: {
@@ -202,12 +222,13 @@ export default function ForgotPassword({ go }) {
             </label>
 
             <input
-              style={styles.input}
+              style={{...styles.input, borderColor: errors.email ? "#E24B4A" : "#d0d5dd", marginBottom: errors.email ? "6px" : "22px"}}
               type="email"
               placeholder="john@uom.lk"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => { setEmail(e.target.value); setErrors({...errors, email: null}); }}
             />
+            {errors.email && <span style={styles.errorText}>{errors.email}</span>}
 
             <button
               style={styles.sendBtn}
@@ -218,9 +239,9 @@ export default function ForgotPassword({ go }) {
 
             <button
               style={styles.backBtn}
-              onClick={() => go("login")}
+              onClick={() => navigate("/login")}
             >
-              Back to Sign In
+              ← Back to login
             </button>
 
             <div style={styles.loginText}>
