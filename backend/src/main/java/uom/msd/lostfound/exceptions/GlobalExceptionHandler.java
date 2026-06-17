@@ -55,6 +55,15 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), List.of());
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception ex) {
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred",
+                List.of()
+        );
+    }
+
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
             String message,
