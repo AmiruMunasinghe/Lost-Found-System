@@ -13,7 +13,7 @@ function useDark(dm) {
   };
 }
 
-function PostFoundForm({ navigateTo, darkMode }) {
+function PostFoundForm({ navigateTo, darkMode, user }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -30,7 +30,13 @@ function PostFoundForm({ navigateTo, darkMode }) {
     if (!venue.trim()) newErrors.venue = "Venue/Location is required.";
     if (!time) newErrors.time = "Time is required.";
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
-    createItem({ type: "Found", title, desc, color, venue, time });
+    createItem({
+      title,
+      description: desc,
+      category: color || "Other",
+      location: venue,
+      reportType: "FOUND",
+    }, user?.token);
     alert("Found item posted!");
     setTitle(""); setDesc(""); setColor(""); setVenue(""); setTime(""); setErrors({});
   };

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authPanel from "../assets/left_panel.png";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+
 export default function Registration() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -11,8 +13,9 @@ export default function Registration() {
   const [pass, setPass] = useState("");
   const [conf, setConf] = useState("");
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  function handleRegister() {
+  async function handleRegister() {
     const newErrors = {};
     if (!name.trim()) newErrors.name = "Full Name is required.";
     if (!email.trim()) newErrors.email = "Email is required.";
@@ -31,8 +34,39 @@ export default function Registration() {
     }
 
     setErrors({});
-    alert("Registration successful! Please sign in.");
-    navigate("/login");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/register/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: name.trim(),
+          password: pass,
+          email: email.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          setErrors({ name: data.message ?? "Username is already taken." });
+        } else if (data.details && data.details.length > 0) {
+          setErrors({ name: data.details.join(", ") });
+        } else {
+          setErrors({ name: data.message ?? "Registration failed. Please try again." });
+        }
+        return;
+      }
+
+      alert("Registration successful! Please sign in.");
+      navigate("/login");
+    } catch {
+      setErrors({ name: "Could not reach the server. Please try again." });
+    } finally {
+      setLoading(false);
+    }
   }
 
   const styles = {
@@ -311,10 +345,11 @@ export default function Registration() {
             </div>
 
             <button
-              style={styles.signUpBtn}
+              style={{...styles.signUpBtn, opacity: loading ? 0.7 : 1}}
               onClick={handleRegister}
+              disabled={loading}
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
 
             <div style={styles.loginText}>

@@ -1,6 +1,7 @@
 // src/services/itemService.js
 
-const BASE_URL = "http://localhost:8080/items";
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+const BASE_URL = `${API_BASE}/items`;
 
 export const getAllItems = async () => {
   const response = await fetch(BASE_URL);

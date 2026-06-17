@@ -2,17 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authPanel from "../assets/left_panel.png";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+
 export default function Login({ setUser, pageParams }) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [pass, setPass] = useState("");
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  function handleLogin() {
+  async function handleLogin() {
     const newErrors = {};
-    if (!email) newErrors.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email address.";
-    
+    if (!username.trim()) newErrors.email = "Username is required.";
     if (!pass) newErrors.pass = "Password is required.";
 
     if (Object.keys(newErrors).length > 0) {
@@ -21,19 +22,42 @@ export default function Login({ setUser, pageParams }) {
     }
 
     setErrors({});
-    
-    // Simulate user login payload based on entered email
-    const role = email.includes("admin") ? "admin" : "student";
-    const name = email.split("@")[0].replace(".", " ");
-    
-    if (setUser) {
-      setUser({ token: "mock-jwt-token", name, role });
-    }
-    
-    if (pageParams && pageParams.next) {
-      navigate(`/${pageParams.next}`, { state: pageParams.nextParams });
-    } else {
-      navigate(role === "admin" ? "/admin-dashboard" : "/");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/login/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password: pass }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors({ pass: data.message ?? "Invalid username or password." });
+        return;
+      }
+
+      const role = data.user?.role ?? "student";
+      if (setUser) {
+        setUser({
+          token: data.accessToken,
+          name: data.user?.username ?? username,
+          role,
+          email: data.user?.email,
+          id: data.user?.id,
+        });
+      }
+
+      if (pageParams && pageParams.next) {
+        navigate(`/${pageParams.next}`, { state: pageParams.nextParams });
+      } else {
+        navigate(role === "admin" ? "/admin-dashboard" : "/");
+      }
+    } catch {
+      setErrors({ pass: "Could not reach the server. Please try again." });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -234,15 +258,15 @@ export default function Login({ setUser, pageParams }) {
             </p>
 
             <label style={styles.label}>
-              Email Address
+              Username
             </label>
 
             <input
               style={{...styles.input, borderColor: errors.email ? "#E24B4A" : "#d0d5dd", marginBottom: errors.email ? "6px" : "22px"}}
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setErrors({...errors, email: null}); }}
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setErrors({...errors, email: null}); }}
             />
             {errors.email && <span style={styles.errorText}>{errors.email}</span>}
 
@@ -269,10 +293,11 @@ export default function Login({ setUser, pageParams }) {
             </div>
 
             <button
-              style={styles.signInBtn}
+              style={{...styles.signInBtn, opacity: loading ? 0.7 : 1}}
               onClick={handleLogin}
+              disabled={loading}
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
 
             <div style={styles.divider}>
