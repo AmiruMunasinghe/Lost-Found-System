@@ -24,8 +24,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findByUserIdAndReportType(Long userId, ReportType reportType);
 
-    @Query("SELECT i FROM Item i WHERE i.title LIKE %:searchTerm% OR i.description LIKE %:searchTerm%")
-    List<Item> searchByTitleOrDescription(@Param("searchTerm") String searchTerm);
+        @Query("SELECT i FROM Item i WHERE " +
+            "LOWER(i.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(COALESCE(i.description, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(COALESCE(i.category, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(COALESCE(i.location, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+        List<Item> searchByKeyword(@Param("keyword") String keyword);
 
     @Query("SELECT i FROM Item i WHERE i.category = :category AND i.reportType = :type")
     List<Item> findBysCategoryAndType(@Param("category") String category, @Param("type") ReportType type);

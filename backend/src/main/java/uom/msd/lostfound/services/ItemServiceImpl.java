@@ -15,7 +15,10 @@ import uom.msd.lostfound.models.User;
 import uom.msd.lostfound.repositories.ItemRepository;
 import uom.msd.lostfound.repositories.UserRepository;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -101,7 +104,22 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemResponseDTO> searchItems(String searchTerm) {
-        return itemRepository.searchByTitleOrDescription(searchTerm).stream()
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return List.of();
+        }
+
+        String normalizedTerm = normalize(searchTerm);
+        List<String> keywords = Arrays.stream(normalizedTerm.split("\\s+"))
+            .filter(term -> !term.isBlank())
+            .distinct()
+            .collect(Collectors.toList());
+
+        return itemRepository.searchByKeyword(normalizedTerm).stream()
+            .sorted(Comparator
+                .comparingInt((Item item) -> calculateRelevanceScore(item, normalizedTerm, keywords))
+                .reversed()
+                .thenComparing(Item::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Item::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -178,5 +196,50 @@ public class ItemServiceImpl implements ItemService {
                 item.getUpdatedAt(),
                 imageUrls
         );
+    }
+
+    private int calculateRelevanceScore(Item item, String normalizedTerm, List<String> keywords) {
+        int score = 0;
+
+        String title = normalize(item.getTitle());
+        String description = normalize(item.getDescription());
+        String category = normalize(item.getCategory());
+        String location = normalize(item.getLocation());
+
+        if (title.equals(normalizedTerm)) {
+            score += 300;
+        } else if (title.contains(normalizedTerm)) {
+            score += 180;
+        }
+
+        if (description.contains(normalizedTerm)) {
+            score += 90;
+        }
+
+        if (category.contains(normalizedTerm) || location.contains(normalizedTerm)) {
+            score += 70;
+        }
+
+        for (String keyword : keywords) {
+            if (title.startsWith(keyword)) {
+                score += 50;
+            } else if (title.contains(keyword)) {
+                score += 30;
+            }
+
+            if (description.contains(keyword)) {
+                score += 15;
+            }
+
+            if (category.contains(keyword) || location.contains(keyword)) {
+                score += 10;
+            }
+        }
+
+        return score;
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT).trim();
     }
 }
