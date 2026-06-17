@@ -45,7 +45,18 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user);
-        UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+        UserResponse userResponse = UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .phone(user.getPhone())
+                .studentId(user.getStudentId())
+                .faculty(user.getFaculty())
+                .department(user.getDepartment())
+                .yearOfStudy(user.getYearOfStudy())
+                .profileImageUrl(user.getProfileImageUrl())
+                .build();
         return new AuthResponse(token, userResponse);
     }
 
@@ -78,14 +89,36 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         String token = jwtUtil.generateToken(savedUser);
-        UserResponse userResponse = new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+        UserResponse userResponse = UserResponse.builder()
+                .id(savedUser.getId())
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
+                .fullName(savedUser.getFullName())
+                .phone(savedUser.getPhone())
+                .studentId(savedUser.getStudentId())
+                .faculty(savedUser.getFaculty())
+                .department(savedUser.getDepartment())
+                .yearOfStudy(savedUser.getYearOfStudy())
+                .profileImageUrl(savedUser.getProfileImageUrl())
+                .build();
         return new AuthResponse(token, userResponse);
     }
 
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser(Long id) {
         User user = findUserById(id);
-        return new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .phone(user.getPhone())
+                .studentId(user.getStudentId())
+                .faculty(user.getFaculty())
+                .department(user.getDepartment())
+                .yearOfStudy(user.getYearOfStudy())
+                .profileImageUrl(user.getProfileImageUrl())
+                .build();
     }
 
     @Transactional(readOnly = true)

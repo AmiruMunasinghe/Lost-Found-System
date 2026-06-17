@@ -13,4 +13,11 @@ public class UserResponse {
     private Long id;
     private String username;
     private String email;
+    private String fullName;
+    private String phone;
+    private String studentId;
+    private String faculty;
+    private String department;
+    private String yearOfStudy;
+    private String profileImageUrl;
 }

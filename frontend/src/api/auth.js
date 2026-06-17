@@ -49,3 +49,28 @@ export function logoutUser() {
 export function getCurrentUserFromStorage() {
   return getSavedUser();
 }
+
+export async function updateProfile(profileData) {
+  const response = await apiRequest("/users/me", {
+    method: "PUT",
+    body: JSON.stringify(profileData),
+  });
+  
+  // Create a pseudo-auth response to reuse saveUserSession
+  // Since updateProfile returns UserResponse, we need to preserve the token
+  const currentUser = getSavedUser();
+  return saveUserSession({ user: response, token: currentUser?.token || currentUser?.accessToken }, currentUser);
+}
+
+export async function uploadProfilePhoto(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiRequest("/users/me/photo", {
+    method: "POST",
+    body: formData,
+  });
+
+  const currentUser = getSavedUser();
+  return saveUserSession({ user: response, token: currentUser?.token || currentUser?.accessToken }, currentUser);
+}

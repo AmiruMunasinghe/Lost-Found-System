@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { Camera, Edit2, Shield, Search, Package, MapPin, CheckCircle, Clock, Lock } from "lucide-react";
 
+import { updateProfile, uploadProfilePhoto } from "../api/auth";
+
 function useDark(dm) {
   return dm ? {
     pageBg: "#0f172a",
@@ -27,18 +29,30 @@ function useDark(dm) {
   };
 }
 
-export default function Profile({ user, darkMode }) {
+export default function Profile({ user, setUser, darkMode }) {
   const t = useDark(darkMode);
   const role = user?.role || "student";
   
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return `http://localhost:8085${url}`;
+  };
+
   // Profile Photo State
-  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(getImageUrl(user?.profileImageUrl));
   const fileInputRef = useRef(null);
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProfilePhoto(URL.createObjectURL(file));
+      try {
+        const updatedUser = await uploadProfilePhoto(file);
+        setUser(updatedUser);
+        setProfilePhoto(getImageUrl(updatedUser.profileImageUrl));
+      } catch (err) {
+        alert("Failed to upload photo: " + err.message);
+      }
     }
   };
 
@@ -47,13 +61,13 @@ export default function Profile({ user, darkMode }) {
   const [showToast, setShowToast] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    fullName: user?.name || "Kumar Sangakkara",
-    email: user?.email || "kumars.23@uom.lk",
-    phone: "+94 77 123 4567",
-    studentId: "230224V",
-    faculty: "Engineering",
-    department: "Electronic & Telecommunication",
-    year: "Year 2",
+    fullName: user?.fullName || user?.name || "New User",
+    email: user?.email || "No Email",
+    phone: user?.phone || "",
+    studentId: user?.studentId || "",
+    faculty: user?.faculty || "",
+    department: user?.department || "",
+    year: user?.yearOfStudy || "",
     accountType: role === "admin" ? "Administrator" : "Student",
   });
 
@@ -79,13 +93,29 @@ export default function Profile({ user, darkMode }) {
     setIsEditing(false);
   };
 
-  const handleSave = () => {
-    setProfileData(draftData);
-    setIsEditing(false);
-    
-    // Show toast
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+  const handleSave = async () => {
+    try {
+      const updateData = {
+        fullName: draftData.fullName,
+        phone: draftData.phone,
+        studentId: draftData.studentId,
+        faculty: draftData.faculty,
+        department: draftData.department,
+        yearOfStudy: draftData.year,
+      };
+
+      const updatedUser = await updateProfile(updateData);
+      setUser(updatedUser);
+
+      setProfileData(draftData);
+      setIsEditing(false);
+      
+      // Show toast
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err) {
+      alert("Failed to update profile: " + err.message);
+    }
   };
 
   const stats = [
@@ -143,10 +173,6 @@ export default function Profile({ user, darkMode }) {
             </div>
             <div style={styles.email}>{profileData.email}</div>
           </div>
-          <button style={{ ...styles.editBtn, background: t.card, border: `1px solid ${t.border}`, color: t.body }} onClick={() => {}}>
-            <Edit2 size={16} />
-            <span>Edit Profile</span>
-          </button>
         </div>
       </div>
 

@@ -21,6 +21,13 @@ export function saveUserSession(authResponse, fallback = {}) {
     name: backendUser.name || backendUser.username || fallback.name || "User",
     email: backendUser.email || fallback.email || "",
     role: backendUser.role || fallback.role || "student",
+    fullName: backendUser.fullName || fallback.fullName || "",
+    phone: backendUser.phone || fallback.phone || "",
+    studentId: backendUser.studentId || fallback.studentId || "",
+    faculty: backendUser.faculty || fallback.faculty || "",
+    department: backendUser.department || fallback.department || "",
+    yearOfStudy: backendUser.yearOfStudy || fallback.yearOfStudy || "",
+    profileImageUrl: backendUser.profileImageUrl || fallback.profileImageUrl || "",
     accessToken: token,
     token,
   };
@@ -52,6 +59,12 @@ export async function apiRequest(path, options = {}) {
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearUserSession();
+      window.location.href = "/login";
+      throw new Error("Session expired. Please log in again.");
+    }
+
     const contentType = response.headers.get("content-type") || "";
     let message = `Request failed with status ${response.status}`;
 
