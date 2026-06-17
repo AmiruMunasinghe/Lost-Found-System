@@ -16,19 +16,19 @@ function useDark(dm) {
 function PostFoundForm({ navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
-  const [desc,  setDesc]  = useState("");
+  const [desc, setDesc] = useState("");
   const [color, setColor] = useState("");
   const [venue, setVenue] = useState("");
-  const [time,  setTime]  = useState("");
+  const [time, setTime] = useState("");
   const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!title.trim()) newErrors.title = "Item Title is required.";
-    if (!desc.trim())  newErrors.desc  = "Description is required.";
+    if (!desc.trim()) newErrors.desc = "Description is required.";
     if (!venue.trim()) newErrors.venue = "Venue/Location is required.";
-    if (!time)         newErrors.time  = "Time is required.";
+    if (!time) newErrors.time = "Time is required.";
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     createItem({ type: "Found", title, desc, color, venue, time });
     alert("Found item posted!");

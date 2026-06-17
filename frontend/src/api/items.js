@@ -1,26 +1,61 @@
-const KEY = "lost_found_items";
+// src/services/itemService.js
 
-// 🔹 Get all items
-export function getItems() {
-  return JSON.parse(localStorage.getItem(KEY)) || [];
-}
+const BASE_URL = "http://localhost:8080/items";
 
-// 🔹 Save new item
-export function createItem(item) {
-  const items = getItems();
+export const getAllItems = async () => {
+  const response = await fetch(BASE_URL);
 
-  const newItem = {
-    id: Date.now(),
-    ...item,
-  };
+  if (!response.ok) {
+    throw new Error("Failed to fetch items");
+  }
 
-  items.push(newItem);
-  localStorage.setItem(KEY, JSON.stringify(items));
+  return response.json();
+};
 
-  return newItem;
-}
+export const getItemById = async (id) => {
+  const response = await fetch(`${BASE_URL}/${id}`);
 
-// 🔹 Clear all (optional for testing)
-export function clearItems() {
-  localStorage.removeItem(KEY);
-}
+  if (!response.ok) {
+    throw new Error("Item not found");
+  }
+
+  return response.json();
+};
+
+export const searchItems = async (searchTerm) => {
+  const response = await fetch(
+    `${BASE_URL}/search?q=${searchTerm}`
+  );
+
+  return response.json();
+};
+
+export const getItemsByType = async (type) => {
+  const response = await fetch(
+    `${BASE_URL}/type/${type}`
+  );
+
+  return response.json();
+};
+
+export const createItem = async (itemData, token) => {
+  console.log("🔥 createItem ENTERED");
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(itemData)
+  });
+
+  return response.json();
+};
+
+export const deleteItem = async (id) => {
+  const response = await fetch(`${BASE_URL}/${id}`, {
+    method: "DELETE"
+  });
+
+  return response;
+};
