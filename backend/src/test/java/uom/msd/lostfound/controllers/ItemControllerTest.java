@@ -9,7 +9,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import uom.msd.lostfound.auth.AuthenticatedUser;
+import uom.msd.lostfound.auth.JwtAuthenticationFilter;
 import uom.msd.lostfound.dto.ItemRequestDTO;
 import uom.msd.lostfound.dto.ItemResponseDTO;
 import uom.msd.lostfound.enums.ItemStatus;
@@ -38,6 +42,9 @@ class ItemControllerTest {
 
     @MockBean
     private ItemService itemService;
+
+        @MockBean
+        private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -78,10 +85,10 @@ class ItemControllerTest {
         // Arrange
         when(itemService.createItem(eq(1L), org.mockito.ArgumentMatchers.any(ItemRequestDTO.class)))
                 .thenReturn(itemResponseDTO);
+        SecurityContextHolder.getContext().setAuthentication(authToken(1L));
 
         // Act & Assert
         mockMvc.perform(post("/items")
-                .param("userId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(itemRequestDTO)))
                 .andExpect(status().isCreated())
@@ -89,17 +96,22 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.title").value("Lost Car Keys"))
                 .andExpect(jsonPath("$.reportType").value("LOST"))
                 .andExpect(jsonPath("$.status").value("OPEN"));
+        SecurityContextHolder.clearContext();
 
         verify(itemService, times(1)).createItem(eq(1L), org.mockito.ArgumentMatchers.any(ItemRequestDTO.class));
     }
 
     @Test
-    @DisplayName("Should return 400 when userId parameter is missing")
-    void testCreateItem_MissingUserId() throws Exception {
-        mockMvc.perform(post("/items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(itemRequestDTO)))
-                .andExpect(status().isBadRequest());
+        @DisplayName("Should fail create when request is unauthenticated")
+        void testCreateItem_Unauthenticated() throws Exception {
+                SecurityContextHolder.clearContext();
+
+                mockMvc.perform(post("/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(itemRequestDTO)))
+                                .andExpect(status().isInternalServerError());
+
+                verify(itemService, never()).createItem(anyLong(), org.mockito.ArgumentMatchers.any(ItemRequestDTO.class));
     }
 
     @Test
@@ -108,12 +120,14 @@ class ItemControllerTest {
         // Arrange
         when(itemService.createItem(eq(999L), org.mockito.ArgumentMatchers.any(ItemRequestDTO.class)))
                 .thenThrow(new RuntimeException("User not found"));
+        SecurityContextHolder.getContext().setAuthentication(authToken(999L));
 
         // Act & Assert
-        assertThrows(Exception.class, () -> mockMvc.perform(post("/items")
-                .param("userId", "999")
+        mockMvc.perform(post("/items")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(itemRequestDTO))).andReturn());
+                .content(objectMapper.writeValueAsString(itemRequestDTO)))
+                .andExpect(status().isInternalServerError());
+        SecurityContextHolder.clearContext();
     }
 
     // ==================== Get Item Tests ====================
@@ -141,7 +155,8 @@ class ItemControllerTest {
         when(itemService.getItemById(999L)).thenThrow(new RuntimeException("Item not found"));
 
         // Act & Assert
-                assertThrows(Exception.class, () -> mockMvc.perform(get("/items/999")).andReturn());
+        mockMvc.perform(get("/items/999"))
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -411,9 +426,9 @@ class ItemControllerTest {
                 .thenThrow(new RuntimeException("Item not found"));
 
         // Act & Assert
-        assertThrows(Exception.class, () -> mockMvc.perform(put("/items/999/status")
+        mockMvc.perform(put("/items/999/status")
                 .param("status", "CLAIMED"))
-                .andReturn());
+                .andExpect(status().isInternalServerError());
     }
 
     // ==================== Image Tests ====================
@@ -444,10 +459,10 @@ class ItemControllerTest {
                 .thenThrow(new RuntimeException("Item not found"));
 
         // Act & Assert
-        assertThrows(Exception.class, () -> mockMvc.perform(post("/items/999/images")
+        mockMvc.perform(post("/items/999/images")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(imageJson))
-                .andReturn());
+                .andExpect(status().isInternalServerError());
     }
 
     // ==================== Delete Tests ====================
@@ -472,7 +487,8 @@ class ItemControllerTest {
         doThrow(new RuntimeException("Item not found")).when(itemService).deleteItem(999L);
 
         // Act & Assert
-                assertThrows(Exception.class, () -> mockMvc.perform(delete("/items/999")).andReturn());
+        mockMvc.perform(delete("/items/999"))
+                .andExpect(status().isInternalServerError());
     }
 
     // ==================== Pagination Tests ====================
@@ -552,5 +568,10 @@ class ItemControllerTest {
                                 LocalDateTime.now(),
                                 new ArrayList<>()
                 );
+        }
+
+        private UsernamePasswordAuthenticationToken authToken(Long userId) {
+                AuthenticatedUser authenticatedUser = new AuthenticatedUser(userId, "testuser", "test@example.com");
+                return new UsernamePasswordAuthenticationToken(authenticatedUser, null, authenticatedUser.getAuthorities());
         }
 }
