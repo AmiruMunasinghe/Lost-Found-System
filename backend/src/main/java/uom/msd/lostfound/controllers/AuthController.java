@@ -1,26 +1,45 @@
 package uom.msd.lostfound.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import uom.msd.lostfound.auth.AuthenticatedUser;
+import uom.msd.lostfound.dto.AuthResponse;
 import uom.msd.lostfound.dto.LoginRequest;
-import uom.msd.lostfound.dto.LoginResponse;
-import uom.msd.lostfound.models.User;
+import uom.msd.lostfound.dto.RegisterRequest;
+import uom.msd.lostfound.dto.UserResponse;
 import uom.msd.lostfound.services.AuthService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request){
-        String token = authService.login(request);
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
-        return ResponseEntity.ok(new LoginResponse(token));
+    @PostMapping("/register/")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        System.out.println("Register request received");
+        AuthResponse response = authService.register(request);
+        System.out.println("Response received");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login/")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        System.out.println("Logged In");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me/")
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        return ResponseEntity.ok(authService.getCurrentUser(authenticatedUser.getId()));
     }
 }

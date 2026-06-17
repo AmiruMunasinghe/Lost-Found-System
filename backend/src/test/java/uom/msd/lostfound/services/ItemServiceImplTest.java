@@ -387,7 +387,7 @@ class ItemServiceImplTest {
     @DisplayName("Should search items by term")
     void testSearchItems() {
         // Arrange
-        when(itemRepository.searchByTitleOrDescription("keys")).thenReturn(Arrays.asList(testItem));
+        when(itemRepository.searchByKeyword("keys")).thenReturn(Arrays.asList(testItem));
 
         // Act
         List<ItemResponseDTO> results = itemService.searchItems("keys");
@@ -402,13 +402,55 @@ class ItemServiceImplTest {
     @DisplayName("Should return empty list for search with no matches")
     void testSearchItems_NoMatches() {
         // Arrange
-        when(itemRepository.searchByTitleOrDescription("nonexistent")).thenReturn(new ArrayList<>());
+        when(itemRepository.searchByKeyword("nonexistent")).thenReturn(new ArrayList<>());
 
         // Act
         List<ItemResponseDTO> results = itemService.searchItems("nonexistent");
 
         // Assert
         assertTrue(results.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should return best matches first for keyword search")
+    void testSearchItems_BestMatchesFirst() {
+        // Arrange
+        Item titleMatch = new Item();
+        titleMatch.setId(1L);
+        titleMatch.setTitle("Lost Car Keys");
+        titleMatch.setDescription("Found near parking lot");
+        titleMatch.setCategory("Accessories");
+        titleMatch.setLocation("Gate");
+        titleMatch.setReportType(ReportType.LOST);
+        titleMatch.setStatus(ItemStatus.OPEN);
+        titleMatch.setUser(testUser);
+        titleMatch.setImages(new ArrayList<>());
+        titleMatch.setCreatedAt(LocalDateTime.now().minusHours(2));
+        titleMatch.setUpdatedAt(LocalDateTime.now().minusHours(2));
+
+        Item descriptionMatch = new Item();
+        descriptionMatch.setId(2L);
+        descriptionMatch.setTitle("Lost Wallet");
+        descriptionMatch.setDescription("Wallet had home keys inside");
+        descriptionMatch.setCategory("Accessories");
+        descriptionMatch.setLocation("Library");
+        descriptionMatch.setReportType(ReportType.LOST);
+        descriptionMatch.setStatus(ItemStatus.OPEN);
+        descriptionMatch.setUser(testUser);
+        descriptionMatch.setImages(new ArrayList<>());
+        descriptionMatch.setCreatedAt(LocalDateTime.now().minusHours(1));
+        descriptionMatch.setUpdatedAt(LocalDateTime.now().minusHours(1));
+
+        when(itemRepository.searchByKeyword("keys"))
+                .thenReturn(Arrays.asList(descriptionMatch, titleMatch));
+
+        // Act
+        List<ItemResponseDTO> results = itemService.searchItems("keys");
+
+        // Assert
+        assertEquals(2, results.size());
+        assertEquals("Lost Car Keys", results.get(0).getTitle());
+        assertEquals("Lost Wallet", results.get(1).getTitle());
     }
 
     // ==================== Update Tests ====================

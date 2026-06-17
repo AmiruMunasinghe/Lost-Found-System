@@ -5,6 +5,17 @@ CREATE TYPE report_type_enum AS ENUM ('LOST', 'FOUND');
 CREATE TYPE item_status_enum AS ENUM ('OPEN', 'MATCHED', 'CLAIMED', 'PENDING_REVIEW', 'AWAITING_PICKUP', 'SCHEDULED_FOR_AUCTION', 'SCHEDULED_FOR_DONATION', 'CLOSED');
 CREATE TYPE match_status_enum AS ENUM ('SUGGESTED', 'ACCEPTED', 'REJECTED', 'PENDING_REVIEW');
 
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255),
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
 -- Items table (main report data)
 CREATE TABLE IF NOT EXISTS items (
     id BIGSERIAL PRIMARY KEY,
@@ -54,3 +65,35 @@ CREATE TABLE IF NOT EXISTS item_matches (
 CREATE INDEX IF NOT EXISTS idx_item_matches_status ON item_matches(status);
 CREATE INDEX IF NOT EXISTS idx_item_matches_confidence_score ON item_matches(confidence_score);
 CREATE INDEX IF NOT EXISTS idx_item_matches_created_at ON item_matches(created_at);
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    channel VARCHAR(20) NOT NULL,
+    reference_item_id BIGINT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+
+-- Reward Ledger table
+CREATE TABLE IF NOT EXISTS reward_ledger (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    points INT NOT NULL,
+    transaction_type VARCHAR(10) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    reference_id BIGINT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_reward_ledger_user_id ON reward_ledger(user_id);
+CREATE INDEX IF NOT EXISTS idx_reward_ledger_created_at ON reward_ledger(created_at);
