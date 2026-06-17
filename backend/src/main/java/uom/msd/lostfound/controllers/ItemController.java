@@ -26,7 +26,7 @@ public class ItemController {
      */
     @PostMapping
     public ResponseEntity<ItemResponseDTO> createItem(
-            @RequestParam Long userId,
+            @RequestParam(defaultValue = "1") Long userId,
             @RequestBody ItemRequestDTO request) {
         ItemResponseDTO response = itemService.createItem(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
