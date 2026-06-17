@@ -107,7 +107,7 @@ export default function HelpSupport({ darkMode }) {
 
           <div style={{ ...styles.contactBox, background: t.soft, border: `1px solid ${t.border}` }}>
             <p style={{ ...styles.contactLine, color: t.body }}>
-              <Mail size={16} /> lostfound@uom.lk
+              <Mail size={16} /> lostandfound.uom@gmail.com
             </p>
             <p style={{ ...styles.contactLine, color: t.body }}>
               <MapPin size={16} /> University of Moratuwa Lost & Found Office
