@@ -32,7 +32,6 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 
 const PAGES = {
   // Public
-<<<<<<< HEAD
   home: { component: Home, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
   about: { component: About, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
   contact: { component: Contact, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
@@ -40,13 +39,6 @@ const PAGES = {
   register: { component: Registration, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   forgot: { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   browse: { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
-=======
-  "home": { component: Home, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
-  "login": { component: Login, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "register": { component: Registration, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "forgot": { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  "browse": { component: BrowseItems, authRequired: true, allowedRoles: ["student", "admin"] },
->>>>>>> 22244ec37671c610752bd735d6539a8a3edb3ec0
 
   // Authenticated Student/Staff
   dashboard: { component: Dashboard, authRequired: true, allowedRoles: ["student", "admin"] },
@@ -337,13 +329,9 @@ const styles = {
   },
   contentArea: {
     flex: 1,
-<<<<<<< HEAD
     minHeight: 0,
     overflowY: "auto",
     overflowX: "hidden",
-=======
-    padding: "24px 32px",
->>>>>>> 22244ec37671c610752bd735d6539a8a3edb3ec0
     position: "relative",
     width: "100%",
     minWidth: 0,
