@@ -53,11 +53,11 @@ export default function Registration({ setUser, navigateTo, darkMode }) {
     }
   }
 
-  const input = (err) => ({ width: "100%", height: 58, borderRadius: 14, border: `1px solid ${err ? "#E24B4A" : t.inputBorder}`, padding: "0 18px", fontSize: 16, boxSizing: "border-box", outline: "none", fontFamily: "inherit", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" });
-  const label = { display: "block", marginBottom: 9, color: t.body, fontWeight: 700, fontSize: 15 };
+  const input = (err) => ({ width: "100%", height: 48, borderRadius: 12, border: `1px solid ${err ? "#E24B4A" : t.inputBorder}`, padding: "0 16px", fontSize: 15, boxSizing: "border-box", outline: "none", fontFamily: "inherit", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" });
+  const label = { display: "block", marginBottom: 6, color: t.body, fontWeight: 700, fontSize: 14 };
 
   return (
-    <div style={{ minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 30, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
       <style>{`
         @media (max-width: 850px) {
           .auth-grid { grid-template-columns: 1fr !important; }
@@ -65,46 +65,45 @@ export default function Registration({ setUser, navigateTo, darkMode }) {
           .auth-right { padding: 32px 22px !important; }
         }
       `}</style>
-      <div className="auth-grid" style={{ width: 1200, maxWidth: "100%", minHeight: 720, background: t.card, borderRadius: 30, overflow: "hidden", display: "grid", gridTemplateColumns: "45% 55%", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: `1px solid ${t.border}` }}>
+      <div className="auth-grid" style={{ width: 1000, maxWidth: "100%", minHeight: 560, background: t.card, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: "45% 55%", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: `1px solid ${t.border}` }}>
         <div className="auth-left" style={{ background: darkMode ? "#0f172a" : "#eef4fb" }}>
           <img src={authPanel} alt="Lost and Found" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
-        <div className="auth-right" style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: 60, background: t.panel }}>
-          <form onSubmit={handleRegister} style={{ width: "100%", maxWidth: 520 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: t.text }}>UniLost & Found</div>
-            <div style={{ fontSize: 13, color: t.muted }}>University of Moratuwa</div>
+        <div className="auth-right" style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: 40, background: t.panel }}>
+          <form onSubmit={handleRegister} style={{ width: "100%", maxWidth: 440 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: t.text }}>UniLost & Found</div>
+            <div style={{ fontSize: 12, color: t.muted }}>University of Moratuwa</div>
 
-            <h1 style={{ fontSize: 44, fontWeight: 800, color: t.text, margin: "28px 0 10px", lineHeight: 1.1 }}>Create Account</h1>
-            <p style={{ fontSize: 16, color: t.muted, marginBottom: 28 }}>Register using the backend `/auth/register` API.</p>
+            <h1 style={{ fontSize: 36, fontWeight: 800, color: t.text, margin: "16px 0 24px", lineHeight: 1.1 }}>Create Account</h1>
 
-            {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
+            {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 12, fontSize: 13 }}>{apiError}</div>}
 
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={label}>Username / Full Name</label>
               <input value={name} onChange={(e) => { setName(e.target.value); setErrors({ ...errors, name: null }); }} style={input(errors.name)} />
-              {errors.name && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.name}</span>}
+              {errors.name && <span style={{ color: "#E24B4A", fontSize: 12 }}>{errors.name}</span>}
             </div>
 
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={label}>Email</label>
               <input value={email} onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: null }); }} style={input(errors.email)} />
-              {errors.email && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.email}</span>}
+              {errors.email && <span style={{ color: "#E24B4A", fontSize: 12 }}>{errors.email}</span>}
             </div>
 
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={label}>Password</label>
               <input type="password" value={pass} onChange={(e) => { setPass(e.target.value); setErrors({ ...errors, pass: null }); }} style={input(errors.pass)} />
-              {errors.pass && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.pass}</span>}
+              {errors.pass && <span style={{ color: "#E24B4A", fontSize: 12 }}>{errors.pass}</span>}
             </div>
 
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={label}>Confirm Password</label>
               <input type="password" value={conf} onChange={(e) => { setConf(e.target.value); setErrors({ ...errors, conf: null }); }} style={input(errors.conf)} />
-              {errors.conf && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.conf}</span>}
+              {errors.conf && <span style={{ color: "#E24B4A", fontSize: 12 }}>{errors.conf}</span>}
             </div>
 
-            <button type="submit" disabled={loading} style={{ width: "100%", height: 62, border: "none", borderRadius: 14, background: loading ? "#94a3b8" : "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff", fontSize: 18, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", marginTop: 8 }}>{loading ? "Creating..." : "Create Account"}</button>
-            <p style={{ textAlign: "center", marginTop: 24, color: t.muted }}>Already have an account? <button type="button" onClick={() => navigateTo && navigateTo("login")} style={{ border: "none", background: "none", color: t.link, fontWeight: 800, cursor: "pointer" }}>Sign in</button></p>
+            <button type="submit" disabled={loading} style={{ width: "100%", height: 52, border: "none", borderRadius: 12, background: loading ? "#94a3b8" : "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff", fontSize: 16, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", marginTop: 4 }}>{loading ? "Creating..." : "Create Account"}</button>
+            <p style={{ textAlign: "center", marginTop: 16, color: t.muted, fontSize: 14 }}>Already have an account? <button type="button" onClick={() => navigateTo && navigateTo("login")} style={{ border: "none", background: "none", color: t.link, fontWeight: 800, cursor: "pointer", fontSize: 14 }}>Sign in</button></p>
           </form>
         </div>
       </div>

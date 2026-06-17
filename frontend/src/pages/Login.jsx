@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import authPanel from "../assets/left_panel.png";
 import { loginUser } from "../api/auth";
 
@@ -21,6 +22,8 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [showPass, setShowPass] = useState(false);
 
   async function handleLogin(e) {
     e?.preventDefault?.();
@@ -46,25 +49,28 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
       }
     } catch (err) {
       setApiError(err.message || "Login failed. Check backend and credentials.");
+      setFailedAttempts(prev => prev + 1);
     } finally {
       setLoading(false);
     }
   }
 
   const styles = {
-    page: { minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 30, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" },
-    container: { width: 1200, maxWidth: "100%", minHeight: 720, background: t.card, borderRadius: 30, overflow: "hidden", display: "grid", gridTemplateColumns: "45% 55%", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: `1px solid ${t.border}` },
+    page: { minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" },
+    container: { width: 1000, maxWidth: "100%", minHeight: 560, background: t.card, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: "45% 55%", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: `1px solid ${t.border}` },
     leftPanel: { background: darkMode ? "#0f172a" : "#eef4fb" },
-    rightPanel: { display: "flex", justifyContent: "center", alignItems: "center", padding: 60, background: t.panel },
-    form: { width: "100%", maxWidth: 520 },
-    logoTitle: { fontSize: 18, fontWeight: 800, color: t.text },
-    logoSub: { fontSize: 13, color: t.muted },
-    heading: { fontSize: 52, fontWeight: 800, color: t.text, margin: "30px 0 10px", lineHeight: 1.1 },
-    subtitle: { fontSize: 17, color: t.muted, marginBottom: 36 },
-    label: { display: "block", marginBottom: 10, color: t.body, fontWeight: 700, fontSize: 15 },
-    input: { width: "100%", height: 60, borderRadius: 14, border: `1px solid ${t.inputBorder}`, padding: "0 18px", fontSize: 16, marginBottom: 6, boxSizing: "border-box", outline: "none", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" },
-    errorText: { color: "#E24B4A", fontSize: 13, marginBottom: 14, marginLeft: 4, display: "block" },
-    signInBtn: { width: "100%", height: 62, border: "none", borderRadius: 14, background: loading ? "#94a3b8" : "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff", fontSize: 18, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", marginTop: 12 },
+    rightPanel: { display: "flex", justifyContent: "center", alignItems: "center", padding: 40, background: t.panel },
+    form: { width: "100%", maxWidth: 440 },
+    logoTitle: { fontSize: 16, fontWeight: 800, color: t.text },
+    logoSub: { fontSize: 12, color: t.muted },
+    heading: { fontSize: 40, fontWeight: 800, color: t.text, margin: "20px 0 8px", lineHeight: 1.1 },
+    subtitle: { fontSize: 15, color: t.muted, marginBottom: 24 },
+    label: { display: "block", marginBottom: 8, color: t.body, fontWeight: 700, fontSize: 14 },
+    input: { width: "100%", height: 50, borderRadius: 12, border: `1px solid ${t.inputBorder}`, padding: "0 16px", fontSize: 15, marginBottom: 6, boxSizing: "border-box", outline: "none", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" },
+    pwInput: { width: "100%", height: 50, borderRadius: 12, border: `1px solid ${t.inputBorder}`, padding: "0 40px 0 16px", fontSize: 15, marginBottom: 6, boxSizing: "border-box", outline: "none", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" },
+    eyeIcon: { position: "absolute", right: 14, top: 40, cursor: "pointer", color: t.muted },
+    errorText: { color: "#E24B4A", fontSize: 13, marginBottom: 10, marginLeft: 4, display: "block" },
+    signInBtn: { width: "100%", height: 52, border: "none", borderRadius: 12, background: loading ? "#94a3b8" : "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff", fontSize: 16, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", marginTop: 8 },
     secondaryBtn: { border: "none", background: "none", color: t.link, fontWeight: 800, cursor: "pointer" },
   };
 
@@ -90,7 +96,6 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
             </div>
 
             <h1 style={styles.heading}>Welcome Back 👋</h1>
-            <p style={styles.subtitle}>Sign in using your backend account</p>
 
             {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
 
@@ -98,15 +103,27 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
             <input value={email} onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: null }); }} placeholder="abdul@test.com" style={styles.input} />
             {errors.email && <span style={styles.errorText}>{errors.email}</span>}
 
-            <label style={styles.label}>Password</label>
-            <input type="password" value={pass} onChange={(e) => { setPass(e.target.value); setErrors({ ...errors, pass: null }); }} placeholder="••••••••" style={styles.input} />
+            <div style={{ position: "relative", marginBottom: errors.pass ? 0 : 16 }}>
+              <label style={styles.label}>Password</label>
+              <input type={showPass ? "text" : "password"} value={pass} onChange={(e) => { setPass(e.target.value); setErrors({ ...errors, pass: null }); }} placeholder="••••••••" style={styles.pwInput} />
+              <div style={styles.eyeIcon} onClick={() => setShowPass(!showPass)}>
+                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+              </div>
+            </div>
             {errors.pass && <span style={styles.errorText}>{errors.pass}</span>}
 
             <button type="submit" disabled={loading} style={styles.signInBtn}>{loading ? "Signing in..." : "Sign In"}</button>
 
-            <p style={{ textAlign: "center", marginTop: 24, color: t.muted }}>
-              No account? <button type="button" style={styles.secondaryBtn} onClick={() => navigateTo && navigateTo("register")}>Create account</button>
-            </p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 24, gap: "12px" }}>
+              {failedAttempts > 0 && (
+                <button type="button" style={{ ...styles.secondaryBtn, fontSize: 14 }} onClick={() => navigateTo && navigateTo("forgot")}>
+                  Forgot password?
+                </button>
+              )}
+              <p style={{ margin: 0, color: t.muted, fontSize: 14 }}>
+                No account? <button type="button" style={styles.secondaryBtn} onClick={() => navigateTo && navigateTo("register")}>Create account</button>
+              </p>
+            </div>
           </form>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { HelpCircle, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { apiRequest } from "../api/client";
 
 export default function HelpSupport({ darkMode }) {
   const [form, setForm] = useState({ subject: "", message: "" });
@@ -27,10 +28,30 @@ export default function HelpSupport({ darkMode }) {
         soft: "#f0f5ff",
       };
 
-  const submit = (e) => {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setForm({ subject: "", message: "" });
+    setSent(false);
+    setError("");
+    setLoading(true);
+    
+    try {
+      await apiRequest("/support", {
+        method: "POST",
+        body: JSON.stringify({
+          subject: form.subject,
+          message: form.message
+        }),
+      });
+      setSent(true);
+      setForm({ subject: "", message: "" });
+    } catch (err) {
+      setError(err.message || "Failed to send support request. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const faqs = [
@@ -115,11 +136,19 @@ export default function HelpSupport({ darkMode }) {
               required
             />
 
-            <button style={styles.submitBtn} type="submit">Send Request</button>
+            {error && (
+              <p style={{ ...styles.sentMsg, color: "#E24B4A" }}>
+                {error}
+              </p>
+            )}
+
+            <button style={{ ...styles.submitBtn, opacity: loading ? 0.7 : 1 }} type="submit" disabled={loading}>
+              {loading ? "Sending..." : "Send Request"}
+            </button>
 
             {sent && (
               <p style={{ ...styles.sentMsg, color: "#10B981" }}>
-                Request saved locally. Backend API can be connected later.
+                Request sent successfully! Our support team will reply to your email.
               </p>
             )}
           </form>

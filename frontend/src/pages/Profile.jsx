@@ -77,7 +77,7 @@ export default function Profile({ user, setUser, darkMode }) {
     { key: "fullName", label: "Full Name", editable: true },
     { key: "email", label: "Email", editable: false },
     { key: "phone", label: "Phone Number", editable: true },
-    { key: "studentId", label: "Student ID", editable: false },
+    { key: "studentId", label: "Student ID", editable: true },
     { key: "faculty", label: "Faculty", editable: true },
     { key: "department", label: "Department", editable: true },
     { key: "year", label: "Year of Study", editable: true },

@@ -60,9 +60,12 @@ export async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     if (response.status === 401) {
-      clearUserSession();
-      window.location.href = "/login";
-      throw new Error("Session expired. Please log in again.");
+      // Don't redirect if we're actually trying to log in (wrong password)
+      if (!path.includes("/auth/login")) {
+        clearUserSession();
+        window.location.href = "/login";
+        throw new Error("Session expired. Please log in again.");
+      }
     }
 
     const contentType = response.headers.get("content-type") || "";

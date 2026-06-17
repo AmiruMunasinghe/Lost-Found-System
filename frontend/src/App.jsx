@@ -12,6 +12,8 @@ import BrowseItems from "./pages/BrowseItems";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 
+import ResetPassword from "./pages/ResetPassword";
+
 import Dashboard from "./pages/Dashboard";
 import PostLostForm from "./components/PostLostForm";
 import PostFoundForm from "./components/PostFoundtForm";
@@ -38,6 +40,8 @@ const PAGES = {
   login: { component: Login, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   register: { component: Registration, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   forgot: { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
+  reset: { component: ResetPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
+  "reset-password": { component: ResetPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   browse: { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
 
   // Authenticated Student/Staff

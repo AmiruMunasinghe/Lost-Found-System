@@ -1,24 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import authPanel from "../assets/left_panel.png";
-import { requestPasswordReset } from "../api/auth";
+import { confirmPasswordReset } from "../api/auth";
 
-export default function ForgotPassword({ navigateTo, darkMode }) {
+export default function ResetPassword({ navigateTo, darkMode }) {
   const fallbackNavigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
+  const [tokenFromUrl, setTokenFromUrl] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tokenParam = searchParams.get("token");
+    if (tokenParam) {
+      setToken(tokenParam);
+      setTokenFromUrl(true);
+    }
+  }, []);
 
   const go = (path) => {
     if (navigateTo) navigateTo(path);
     else fallbackNavigate(path);
   };
 
-  async function handleSend() {
+  async function handleReset() {
     const newErrors = {};
-    if (!email.trim()) newErrors.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email address.";
+    if (!token.trim()) newErrors.token = "Reset token is required.";
+    if (!newPassword.trim()) newErrors.newPassword = "New password is required.";
+    else if (newPassword.length < 6) newErrors.newPassword = "Password must be at least 6 characters.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -28,10 +39,11 @@ export default function ForgotPassword({ navigateTo, darkMode }) {
     setErrors({});
     setLoading(true);
     try {
-      await requestPasswordReset(email);
-      setSuccess(true);
+      await confirmPasswordReset(token, newPassword);
+      alert("Password has been successfully reset! You can now log in.");
+      go("/login");
     } catch (error) {
-      setErrors({ email: error.message || "Failed to request password reset" });
+      setErrors({ token: error.message || "Failed to reset password. Token may be invalid or expired." });
     } finally {
       setLoading(false);
     }
@@ -51,7 +63,7 @@ export default function ForgotPassword({ navigateTo, darkMode }) {
         input: "#0f172a",
         inputText: "#e2e8f0",
         secondaryButton: "#1e293b",
-        iconBox: "linear-gradient(135deg, #1d4ed8, #0f172a)",
+        iconBox: "linear-gradient(135deg, #10b981, #0f172a)",
         shadow: "0 20px 60px rgba(0,0,0,0.35)",
       }
     : {
@@ -67,7 +79,7 @@ export default function ForgotPassword({ navigateTo, darkMode }) {
         input: "#ffffff",
         inputText: "#101828",
         secondaryButton: "#ffffff",
-        iconBox: "linear-gradient(135deg, #E8F0FE, #D6E4FF)",
+        iconBox: "linear-gradient(135deg, #d1fae5, #ecfdf5)",
         shadow: "0 20px 60px rgba(0,0,0,0.08)",
       };
 
@@ -186,7 +198,7 @@ export default function ForgotPassword({ navigateTo, darkMode }) {
       height: "52px",
       border: "none",
       borderRadius: "12px",
-      background: "linear-gradient(90deg,#0F5FFF,#4A8BFF)",
+      background: "linear-gradient(90deg,#10b981,#34d399)",
       color: "#fff",
       fontSize: "16px",
       fontWeight: "700",
@@ -198,26 +210,15 @@ export default function ForgotPassword({ navigateTo, darkMode }) {
       width: "100%",
       height: "50px",
       borderRadius: "12px",
-      border: "2px solid #2563eb",
+      border: "2px solid #10b981",
       background: T.secondaryButton,
-      color: darkMode ? "#93c5fd" : "#2563eb",
+      color: darkMode ? "#34d399" : "#10b981",
       fontSize: "15px",
       fontWeight: "600",
       cursor: "pointer",
       marginTop: "12px",
       fontFamily: "inherit",
       transition: "background-color 0.3s ease, color 0.3s ease",
-    },
-    loginText: {
-      textAlign: "center",
-      marginTop: "24px",
-      color: T.muted,
-      fontSize: "14px",
-    },
-    loginLink: {
-      color: "#60a5fa",
-      fontWeight: "700",
-      cursor: "pointer",
     },
   };
 
@@ -243,40 +244,41 @@ export default function ForgotPassword({ navigateTo, darkMode }) {
             </div>
 
             <div style={styles.iconBox}>
-              <span style={{ fontSize: "32px" }}>✉️</span>
+              <span style={{ fontSize: "32px" }}>🔑</span>
             </div>
 
-            <h1 className="auth-heading" style={styles.heading}>Reset Password 🔐</h1>
-            <p style={styles.subtitle}>Enter your university email and we'll send you a reset link.</p>
+            <h1 className="auth-heading" style={styles.heading}>New Password</h1>
+            <p style={styles.subtitle}>{tokenFromUrl ? "Enter your new password below." : "Enter the reset token and your new password."}</p>
 
-            {success ? (
-              <div style={{ background: "#dcfce7", color: "#166534", padding: 16, borderRadius: 12, marginBottom: 20, fontSize: 15, border: "1px solid #bbf7d0" }}>
-                We've sent a password reset link to <strong>{email}</strong>. Please check your inbox.
-              </div>
-            ) : (
+            {!tokenFromUrl && (
               <>
-                <label style={styles.label}>University Email</label>
+                <label style={styles.label}>Reset Token</label>
                 <input
-                  style={{ ...styles.input, borderColor: errors.email ? "#E24B4A" : T.border, marginBottom: errors.email ? "6px" : "22px" }}
-                  type="email"
-                  placeholder="john@uom.lk"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: null }); }}
+                  style={{ ...styles.input, borderColor: errors.token ? "#E24B4A" : T.border, marginBottom: errors.token ? "6px" : "22px" }}
+                  type="text"
+                  placeholder="Paste your reset token here"
+                  value={token}
+                  onChange={(e) => { setToken(e.target.value); setErrors({ ...errors, token: null }); }}
                 />
-                {errors.email && <span style={styles.errorText}>{errors.email}</span>}
+                {errors.token && <span style={styles.errorText}>{errors.token}</span>}
               </>
             )}
 
-            <button style={styles.sendBtn} onClick={handleSend} disabled={loading}>
-              {loading ? "Sending..." : "Send Reset Link"}
+            <label style={styles.label}>New Password</label>
+            <input
+              style={{ ...styles.input, borderColor: errors.newPassword ? "#E24B4A" : T.border, marginBottom: errors.newPassword ? "6px" : "22px" }}
+              type="password"
+              placeholder="••••••••"
+              value={newPassword}
+              onChange={(e) => { setNewPassword(e.target.value); setErrors({ ...errors, newPassword: null }); }}
+            />
+            {errors.newPassword && <span style={styles.errorText}>{errors.newPassword}</span>}
+
+            <button style={styles.sendBtn} onClick={handleReset} disabled={loading}>
+              {loading ? "Resetting..." : "Reset Password"}
             </button>
 
             <button style={styles.backBtn} onClick={() => go("/login")}>← Back to login</button>
-
-            <div style={styles.loginText}>
-              Remember your password?{" "}
-              <span style={styles.loginLink} onClick={() => go("/login")}>Sign In</span>
-            </div>
           </div>
         </div>
       </div>

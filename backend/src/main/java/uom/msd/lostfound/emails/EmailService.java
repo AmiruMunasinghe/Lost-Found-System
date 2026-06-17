@@ -70,6 +70,20 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+    /**
+     * Sends a password reset email asynchronously.
+     */
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String resetToken) {
+        Context ctx = new Context();
+        // Assuming the frontend runs on localhost:5173 for development
+        String resetUrl = "http://localhost:5173/reset-password?token=" + resetToken;
+        ctx.setVariable("resetUrl", resetUrl);
+
+        String html = templateEngine.process("email/password-reset", ctx);
+        sendHtmlEmail(toEmail, "Reset Your Password - UniLost & Found", html);
+    }
+
     private void sendHtmlEmail(String toEmail, String subject, String htmlBody) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -82,6 +96,30 @@ public class EmailService {
             log.info("Email sent to {} with subject '{}'", toEmail, subject);
         } catch (MessagingException e) {
             log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+    /**
+     * Sends a support request email to the admin team.
+     */
+    @Async
+    public void sendSupportEmail(String userEmail, String subject, String message) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(fromEmail); // Send to the support email itself
+            helper.setReplyTo(userEmail); // Allow replying directly to the user
+            helper.setSubject("Support Request: " + subject);
+            
+            String textBody = "New support request from: " + userEmail + "\n\n"
+                            + "Subject: " + subject + "\n\n"
+                            + "Message:\n" + message;
+                            
+            helper.setText(textBody, false);
+            mailSender.send(mimeMessage);
+            log.info("Support email sent from {}", userEmail);
+        } catch (MessagingException e) {
+            log.error("Failed to send support email from {}: {}", userEmail, e.getMessage());
         }
     }
 }

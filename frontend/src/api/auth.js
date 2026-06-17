@@ -56,8 +56,6 @@ export async function updateProfile(profileData) {
     body: JSON.stringify(profileData),
   });
   
-  // Create a pseudo-auth response to reuse saveUserSession
-  // Since updateProfile returns UserResponse, we need to preserve the token
   const currentUser = getSavedUser();
   return saveUserSession({ user: response, token: currentUser?.token || currentUser?.accessToken }, currentUser);
 }
@@ -73,4 +71,25 @@ export async function uploadProfilePhoto(file) {
 
   const currentUser = getSavedUser();
   return saveUserSession({ user: response, token: currentUser?.token || currentUser?.accessToken }, currentUser);
+}
+
+export async function requestPasswordReset(email) {
+  return await apiRequest("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function confirmPasswordReset(token, newPassword) {
+  return await apiRequest("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  return await apiRequest("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
 }
