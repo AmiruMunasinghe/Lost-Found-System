@@ -13,26 +13,48 @@ function useDark(dm) {
   };
 }
 
-function PostFoundForm({ navigateTo, darkMode }) {
+function PostFoundForm({ user, navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
-  const [desc,  setDesc]  = useState("");
-  const [color, setColor] = useState("");
-  const [venue, setVenue] = useState("");
-  const [time,  setTime]  = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Electronics");
+  const [location, setLocation] = useState("");
+  const [reportType, setReportType] = useState("FOUND");
+  const [imageUrlInput, setImageUrlInput] = useState("");
+  const [imageUrls, setImageUrls] = useState([]);
   const [errors, setErrors] = useState({});
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!title.trim()) newErrors.title = "Item Title is required.";
-    if (!desc.trim())  newErrors.desc  = "Description is required.";
-    if (!venue.trim()) newErrors.venue = "Venue/Location is required.";
-    if (!time)         newErrors.time  = "Time is required.";
+    if (!description.trim()) newErrors.description = "Description is required.";
+    if (!location.trim()) newErrors.location = "Location is required.";
+    if (!category.trim()) newErrors.category = "Category is required.";
+    if (!reportType.trim()) newErrors.reportType = "Report Type is required.";
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
-    createItem({ type: "Found", title, desc, color, venue, time });
-    alert("Found item posted!");
-    setTitle(""); setDesc(""); setColor(""); setVenue(""); setTime(""); setErrors({});
+
+    try {
+      await createItem({
+        title,
+        description,
+        category,
+        location,
+        reportType,
+        imageUrls
+      }, user?.token);
+      alert("Found item report submitted successfully!");
+      setTitle("");
+      setDescription("");
+      setCategory("Electronics");
+      setLocation("");
+      setImageUrls([]);
+      setImageUrlInput("");
+      setErrors({});
+    } catch (err) {
+      console.error("Failed to post found item:", err);
+      alert("Failed to submit report. Please check if the backend is running.");
+    }
   };
 
   const inputStyle = (err) => ({
@@ -64,6 +86,8 @@ function PostFoundForm({ navigateTo, darkMode }) {
   };
 
   const fieldWrap = { marginBottom: 16 };
+
+  const categories = ["Electronics", "Bags & Wallets", "Keys", "Documents", "Other"];
 
   return (
     <>
@@ -99,34 +123,78 @@ function PostFoundForm({ navigateTo, darkMode }) {
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Color (If applicable)</label>
-                <input placeholder="e.g. Black, Red" value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  style={inputStyle(false)} />
+                <label style={labelStyle}>Category</label>
+                <select value={category}
+                  onChange={(e) => { setCategory(e.target.value); setErrors({ ...errors, category: null }); }}
+                  style={inputStyle(errors.category)}>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                {errors.category && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.category}</span>}
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Venue / Location</label>
-                <input placeholder="e.g. Library, Bus stop" value={venue}
-                  onChange={(e) => { setVenue(e.target.value); setErrors({ ...errors, venue: null }); }}
-                  style={inputStyle(errors.venue)} />
-                {errors.venue && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.venue}</span>}
+                <label style={labelStyle}>Location</label>
+                <input placeholder="e.g. Library, Sumanadasa Building L2" value={location}
+                  onChange={(e) => { setLocation(e.target.value); setErrors({ ...errors, location: null }); }}
+                  style={inputStyle(errors.location)} />
+                {errors.location && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.location}</span>}
               </div>
 
               <div style={fieldWrap}>
                 <label style={labelStyle}>Description</label>
-                <textarea placeholder="Add details like location, time, color..." value={desc}
-                  onChange={(e) => { setDesc(e.target.value); setErrors({ ...errors, desc: null }); }}
-                  style={textareaStyle(errors.desc)} />
-                {errors.desc && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.desc}</span>}
+                <textarea placeholder="Add details like unique marks, brand, serial number..." value={description}
+                  onChange={(e) => { setDescription(e.target.value); setErrors({ ...errors, description: null }); }}
+                  style={textareaStyle(errors.description)} />
+                {errors.description && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.description}</span>}
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Time</label>
-                <input type="datetime-local" value={time}
-                  onChange={(e) => { setTime(e.target.value); setErrors({ ...errors, time: null }); }}
-                  style={inputStyle(errors.time)} />
-                {errors.time && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.time}</span>}
+                <label style={labelStyle}>Report Type</label>
+                <select value={reportType}
+                  onChange={(e) => { setReportType(e.target.value); setErrors({ ...errors, reportType: null }); }}
+                  style={inputStyle(errors.reportType)}>
+                  <option value="LOST">Lost</option>
+                  <option value="FOUND">Found</option>
+                </select>
+                {errors.reportType && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.reportType}</span>}
+              </div>
+
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Image URLs</label>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <input placeholder="e.g. https://images.unsplash.com/photo..." value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    style={{ ...inputStyle(false), flex: 1 }} />
+                  <button type="button"
+                    onClick={() => {
+                      if (imageUrlInput.trim()) {
+                        setImageUrls([...imageUrls, imageUrlInput.trim()]);
+                        setImageUrlInput("");
+                      }
+                    }}
+                    style={{
+                      background: "linear-gradient(90deg,#16a34a,#22c55e)", color: "#fff", border: "none",
+                      borderRadius: "14px", padding: "0 22px", fontWeight: "700", cursor: "pointer", fontFamily: "inherit"
+                    }}>Add</button>
+                </div>
+                {imageUrls.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px" }}>
+                    {imageUrls.map((url, idx) => (
+                      <div key={idx} style={{
+                        background: darkMode ? "#334155" : "#E6F1FB",
+                        color: t.text, padding: "6px 12px", borderRadius: "10px",
+                        display: "flex", alignItems: "center", gap: "8px", fontSize: "13px",
+                        border: `1px solid ${t.border}`
+                      }}>
+                        <span style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{url}</span>
+                        <button type="button" onClick={() => setImageUrls(imageUrls.filter((_, i) => i !== idx))}
+                          style={{ background: "none", border: "none", color: "#E24B4A", fontWeight: "700", cursor: "pointer", padding: "0 2px" }}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button type="submit" style={{
