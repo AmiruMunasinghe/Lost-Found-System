@@ -1,95 +1,176 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { confirmMatch, getMatches, rejectMatch } from "../api/matches";
 
 function useDark(dm) {
   return dm ? {
     card: "#1e293b", border: "#334155", text: "#e2e8f0",
     muted: "#94a3b8", body: "#cbd5e1", fieldBg: "#0f172a",
-    link: "#60a5fa", green: "#34d399",
+    green: "#22c55e", red: "#f87171",
   } : {
     card: "#FFFFFF", border: "#d0d5dd", text: "#0b3470",
-    muted: "#667085", body: "#344054", fieldBg: "#f6f9ff",
-    link: "#2563eb", green: "#16a34a",
+    muted: "#667085", body: "#344054", fieldBg: "#f8fafc",
+    green: "#16a34a", red: "#dc2626",
   };
 }
 
-const isSame = (a, b) => a && b && a.toLowerCase() === b.toLowerCase();
-const getMatchScore = (u, m) => (isSame(u.color, m.color) ? 1 : 0) + (isSame(u.venue, m.venue) ? 1 : 0);
+function itemTitle(item) {
+  return item?.title || `Item #${item?.id || "—"}`;
+}
 
-function MatchResults({ navigateTo, darkMode }) {
+function itemDesc(item) {
+  return item?.description || item?.desc || "No description available";
+}
+
+function itemType(item) {
+  return String(item?.reportType || item?.type || "").toUpperCase();
+}
+
+export default function MatchResults({ pageParams, navigateTo, darkMode }) {
   const t = useDark(darkMode);
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState(null);
 
-  const matches = [
-    {
-      id: 1,
-      userItem:    { title: "Black Wallet", desc: "Lost near library around 10 AM", color: "Black", venue: "Library",     time: "2026-05-06T10:00" },
-      matchedItem: { title: "Wallet Found", desc: "Found at cafeteria counter",     color: "Black", venue: "Cafeteria",   time: "2026-05-06T10:30" },
-      status: "Matched",
-    },
-    {
-      id: 2,
-      userItem:    { title: "iPhone 13",    desc: "Lost in lecture hall A", color: "Blue", venue: "Lecture Hall A", time: "2026-05-06T09:00" },
-      matchedItem: { title: "No Match Yet", desc: "Still searching in system", color: "", venue: "", time: "" },
-      status: "Pending",
-    },
-  ];
+  const itemId = pageParams?.itemId;
+  const type = pageParams?.type;
+
+  async function loadMatches() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const filters = {};
+      if (itemId) {
+        if (type === "lost") filters.lostItemId = itemId;
+        else if (type === "found") filters.foundItemId = itemId;
+        else filters.itemId = itemId;
+      }
+
+      const data = await getMatches(filters);
+      setMatches(data);
+    } catch (err) {
+      setError(err.message || "Failed to load matches.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId, type]);
+
+  const handleConfirm = async (matchId) => {
+    try {
+      setActionLoading(matchId);
+      await confirmMatch(matchId);
+      await loadMatches();
+    } catch (err) {
+      alert(err.message || "Failed to confirm match.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (matchId) => {
+    try {
+      setActionLoading(matchId);
+      await rejectMatch(matchId);
+      await loadMatches();
+    } catch (err) {
+      alert(err.message || "Failed to reject match.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   return (
-    <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
-      <div style={{ width: "100%", maxWidth: 780, margin: "0 auto" }}>
-        <button
-          style={{ background: "none", border: "none", color: t.link, fontSize: 14, fontWeight: 600, cursor: "pointer", marginBottom: 18, padding: 0, fontFamily: "inherit" }}
-          onClick={() => navigateTo("dashboard")}
-        >← Back to Dashboard</button>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "10px 20px 40px", fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
+      <button
+        type="button"
+        onClick={() => navigateTo && navigateTo("browse")}
+        style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 700, cursor: "pointer", marginBottom: 20 }}
+      >← Back to Browse Items</button>
 
-        <h2 style={{ margin: "0 0 6px", fontSize: 28, fontWeight: 800, color: t.text }}>Match Results</h2>
-        <p style={{ margin: "0 0 22px", fontSize: 15, color: t.muted }}>View potential matches for your reported items</p>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <h1 style={{ color: t.text, fontSize: 36, margin: "0 0 8px", fontWeight: 800 }}>Match Results</h1>
+        <p style={{ color: t.muted, margin: 0 }}>
+          {itemId ? `Showing backend matches for item ID ${itemId}.` : "Showing all backend matches."}
+        </p>
+      </div>
 
-        {matches.map((m) => (
-          <div key={m.id} style={{
-            background: t.card, padding: "24px", borderRadius: 22,
-            border: `1px solid ${t.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
-            marginBottom: 16, transition: "background 0.3s, border-color 0.3s",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-              {/* USER ITEM */}
-              <div style={{ flex: 1, padding: 18, borderRadius: 16, background: t.fieldBg, border: `1px solid ${t.border}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: t.muted, marginBottom: 8 }}>🔴 Your Item</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: t.text, marginBottom: 6 }}>{m.userItem.title}</div>
-                <div style={{ fontSize: 13, color: t.muted, marginBottom: 12, lineHeight: 1.4 }}>{m.userItem.desc}</div>
-                <p style={{ fontSize: 13, color: t.body, marginBottom: 4 }}><b>Color:</b> {m.userItem.color}</p>
-                <p style={{ fontSize: 13, color: t.body, marginBottom: 4 }}><b>Venue:</b> {m.userItem.venue}</p>
-                <p style={{ fontSize: 13, color: t.body, marginBottom: 4 }}><b>Time:</b> {m.userItem.time}</p>
+      {loading && <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>Loading matches...</div>}
+
+      {error && <div style={styles.error}>{error}</div>}
+
+      {!loading && !error && matches.length === 0 && (
+        <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>
+          <h3 style={{ marginTop: 0 }}>No matches found yet</h3>
+          <p style={{ color: t.muted, marginBottom: 0 }}>
+            Create one LOST item and one similar FOUND item using the forms. Then come back here.
+          </p>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {matches.map((match) => {
+          const lostItem = match.lostItem || match.lost || {};
+          const foundItem = match.foundItem || match.found || {};
+          const matchId = match.id || match.matchId;
+          const score = match.confidenceScore ?? match.score ?? "—";
+          const status = match.status || "SUGGESTED";
+
+          return (
+            <div key={matchId} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 22, padding: 24, boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
+                <div>
+                  <div style={{ color: t.muted, fontSize: 13, fontWeight: 700 }}>MATCH #{matchId}</div>
+                  <h2 style={{ color: t.text, margin: "4px 0 0", fontSize: 22 }}>Score: {score}</h2>
+                </div>
+                <span style={{ alignSelf: "flex-start", padding: "6px 14px", borderRadius: 999, background: "#dbeafe", color: "#1d4ed8", fontWeight: 800, fontSize: 13 }}>
+                  {status}
+                </span>
               </div>
 
-              {/* MATCHED ITEM */}
-              <div style={{ flex: 1, padding: 18, borderRadius: 16, background: t.fieldBg, border: `1px solid ${t.border}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: t.muted, marginBottom: 8 }}>🟢 Matched Item</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: t.text, marginBottom: 6 }}>{m.matchedItem.title}</div>
-                <div style={{ fontSize: 13, color: t.muted, marginBottom: 12, lineHeight: 1.4 }}>{m.matchedItem.desc}</div>
-                <p style={{ fontSize: 13, color: isSame(m.userItem.color, m.matchedItem.color) ? t.green : t.body, fontWeight: isSame(m.userItem.color, m.matchedItem.color) ? 700 : 400, marginBottom: 4 }}>
-                  <b>Color:</b> {m.matchedItem.color || "—"}
-                </p>
-                <p style={{ fontSize: 13, color: isSame(m.userItem.venue, m.matchedItem.venue) ? t.green : t.body, fontWeight: isSame(m.userItem.venue, m.matchedItem.venue) ? 700 : 400, marginBottom: 4 }}>
-                  <b>Venue:</b> {m.matchedItem.venue || "—"}
-                </p>
-                <p style={{ fontSize: 13, color: t.body, marginBottom: 4 }}><b>Time:</b> {m.matchedItem.time || "—"}</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+                <div style={{ background: t.fieldBg, border: `1px solid ${t.border}`, borderRadius: 16, padding: 18 }}>
+                  <div style={{ color: t.red, fontSize: 12, fontWeight: 800, marginBottom: 8 }}>🔴 LOST ITEM</div>
+                  <h3 style={{ color: t.text, margin: "0 0 8px" }}>{itemTitle(lostItem)}</h3>
+                  <p style={{ color: t.muted, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{itemDesc(lostItem)}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>ID:</b> {lostItem.id || "—"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Type:</b> {itemType(lostItem) || "LOST"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Location:</b> {lostItem.location || "—"}</p>
+                </div>
+
+                <div style={{ background: t.fieldBg, border: `1px solid ${t.border}`, borderRadius: 16, padding: 18 }}>
+                  <div style={{ color: t.green, fontSize: 12, fontWeight: 800, marginBottom: 8 }}>🟢 FOUND ITEM</div>
+                  <h3 style={{ color: t.text, margin: "0 0 8px" }}>{itemTitle(foundItem)}</h3>
+                  <p style={{ color: t.muted, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{itemDesc(foundItem)}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>ID:</b> {foundItem.id || "—"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Type:</b> {itemType(foundItem) || "FOUND"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Location:</b> {foundItem.location || "—"}</p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+                <button disabled={actionLoading === matchId} onClick={() => handleConfirm(matchId)} style={{ ...styles.action, background: "#16a34a" }}>
+                  Confirm Match
+                </button>
+                <button disabled={actionLoading === matchId} onClick={() => handleReject(matchId)} style={{ ...styles.action, background: "#dc2626" }}>
+                  Reject Match
+                </button>
               </div>
             </div>
-
-            <p style={{ marginTop: 14, fontSize: 14, color: t.body, fontWeight: 600 }}>
-              📊 Match Score: {getMatchScore(m.userItem, m.matchedItem)} / 2
-            </p>
-            <span style={{
-              display: "inline-block", marginTop: 14, padding: "6px 16px",
-              borderRadius: 22, fontSize: 13, fontWeight: 600,
-              background: m.status === "Matched" ? "#E6F1FB" : "#FAEEDA",
-              color: m.status === "Matched" ? "#0b3470" : "#633806",
-            }}>{m.status}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export default MatchResults;
+const styles = {
+  info: { padding: 28, borderRadius: 18, textAlign: "center" },
+  error: { padding: 16, borderRadius: 14, background: "#fee2e2", border: "1px solid #fecaca", color: "#991b1b", marginBottom: 18 },
+  action: { border: "none", color: "white", borderRadius: 12, padding: "11px 16px", fontWeight: 800, cursor: "pointer" },
+};

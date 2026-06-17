@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { createItem } from "../api/items";
 
+const categories = ["Wallet", "Electronics", "Documents", "Keys", "Bags & Wallets", "Books", "Other"];
+
 function useDark(dm) {
   return dm ? {
     card: "#1e293b", border: "#334155", text: "#e2e8f0",
@@ -16,23 +18,64 @@ function useDark(dm) {
 function PostFoundForm({ navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Wallet");
   const [color, setColor] = useState("");
-  const [venue, setVenue] = useState("");
+  const [location, setLocation] = useState("");
   const [time, setTime] = useState("");
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
 
-  const handleSubmit = (e) => {
+  const validate = () => {
+    const next = {};
+    if (!title.trim()) next.title = "Item title is required.";
+    if (!description.trim()) next.description = "Description is required.";
+    if (!category.trim()) next.category = "Category is required.";
+    if (!location.trim()) next.location = "Location is required.";
+    return next;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
-    if (!title.trim()) newErrors.title = "Item Title is required.";
-    if (!desc.trim()) newErrors.desc = "Description is required.";
-    if (!venue.trim()) newErrors.venue = "Venue/Location is required.";
-    if (!time) newErrors.time = "Time is required.";
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
-    createItem({ type: "Found", title, desc, color, venue, time });
-    alert("Found item posted!");
-    setTitle(""); setDesc(""); setColor(""); setVenue(""); setTime(""); setErrors({});
+    setApiError("");
+
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const savedItem = await createItem({
+        title,
+        description,
+        category,
+        color,
+        location,
+        time,
+        reportType: "FOUND",
+        imageUrls: [],
+      });
+
+      alert(`Found item saved successfully. Item ID: ${savedItem.id}`);
+      setTitle("");
+      setDescription("");
+      setCategory("Wallet");
+      setColor("");
+      setLocation("");
+      setTime("");
+      setErrors({});
+
+      if (navigateTo) {
+        navigateTo("matchresults", { itemId: savedItem.id, type: "found" });
+      }
+    } catch (err) {
+      setApiError(err.message || "Failed to save found item. Please check backend and token.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputStyle = (err) => ({
@@ -43,19 +86,14 @@ function PostFoundForm({ navigateTo, darkMode }) {
     background: t.inputBg,
     color: t.text,
     colorScheme: darkMode ? "dark" : "light",
-    WebkitTextFillColor: t.text,
-    boxShadow: `inset 0 0 0 1000px ${t.inputBg}`,
   });
 
   const textareaStyle = (err) => ({
-    width: "100%", borderRadius: "14px",
-    border: `1px solid ${err ? "#E24B4A" : t.inputBorder}`,
-    padding: "14px 18px", fontSize: "15px", minHeight: "110px",
-    boxSizing: "border-box", outline: "none", resize: "none", fontFamily: "inherit",
-    background: t.inputBg,
-    color: t.text,
-    WebkitTextFillColor: t.text,
-    boxShadow: `inset 0 0 0 1000px ${t.inputBg}`,
+    ...inputStyle(err),
+    height: "auto",
+    minHeight: "110px",
+    padding: "14px 18px",
+    resize: "vertical",
   });
 
   const labelStyle = {
@@ -73,67 +111,71 @@ function PostFoundForm({ navigateTo, darkMode }) {
       `}</style>
 
       <div className="found-form" style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", display: "flex", justifyContent: "center", padding: "8px 0" }}>
-        <div style={{ width: "100%", maxWidth: "540px" }}>
+        <div style={{ width: "100%", maxWidth: "560px" }}>
           <button
+            type="button"
             style={{ background: "none", border: "none", color: t.link, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", marginBottom: 20 }}
-            onClick={() => navigateTo("dashboard")}
+            onClick={() => navigateTo && navigateTo("dashboard")}
           >← Back to Dashboard</button>
 
           <div style={{
             background: t.card, borderRadius: "22px", padding: "36px 32px",
             boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: `1px solid ${t.border}`,
-            transition: "background 0.3s, border-color 0.3s",
           }}>
             <div style={{ marginBottom: "24px", textAlign: "center" }}>
               <h2 style={{ fontSize: 26, fontWeight: 800, color: t.text, margin: "0 0 6px" }}>Report Found Item 🟢</h2>
-              <p style={{ fontSize: 15, color: t.muted, margin: 0 }}>Help others by reporting a found item</p>
+              <p style={{ fontSize: 15, color: t.muted, margin: 0 }}>This will save to the backend `/items` API.</p>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
+
+            <form onSubmit={handleSubmit}>
               <div style={fieldWrap}>
                 <label style={labelStyle}>Item Title</label>
-                <input placeholder="e.g. Black Wallet, iPhone 13" value={title}
+                <input placeholder="e.g. Black Wallet Found" value={title}
                   onChange={(e) => { setTitle(e.target.value); setErrors({ ...errors, title: null }); }}
                   style={inputStyle(errors.title)} />
-                {errors.title && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.title}</span>}
+                {errors.title && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.title}</span>}
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Color (If applicable)</label>
-                <input placeholder="e.g. Black, Red" value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  style={inputStyle(false)} />
+                <label style={labelStyle}>Category</label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle(errors.category)}>
+                  {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Venue / Location</label>
-                <input placeholder="e.g. Library, Bus stop" value={venue}
-                  onChange={(e) => { setVenue(e.target.value); setErrors({ ...errors, venue: null }); }}
-                  style={inputStyle(errors.venue)} />
-                {errors.venue && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.venue}</span>}
+                <label style={labelStyle}>Location Found</label>
+                <input placeholder="e.g. Library" value={location}
+                  onChange={(e) => { setLocation(e.target.value); setErrors({ ...errors, location: null }); }}
+                  style={inputStyle(errors.location)} />
+                {errors.location && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.location}</span>}
+              </div>
+
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Color / Identifying Detail</label>
+                <input placeholder="e.g. Black, red strap" value={color} onChange={(e) => setColor(e.target.value)} style={inputStyle(false)} />
               </div>
 
               <div style={fieldWrap}>
                 <label style={labelStyle}>Description</label>
-                <textarea placeholder="Add details like location, time, color..." value={desc}
-                  onChange={(e) => { setDesc(e.target.value); setErrors({ ...errors, desc: null }); }}
-                  style={textareaStyle(errors.desc)} />
-                {errors.desc && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.desc}</span>}
+                <textarea placeholder="Add details that can help matching..." value={description}
+                  onChange={(e) => { setDescription(e.target.value); setErrors({ ...errors, description: null }); }}
+                  style={textareaStyle(errors.description)} />
+                {errors.description && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.description}</span>}
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Time</label>
-                <input type="datetime-local" value={time}
-                  onChange={(e) => { setTime(e.target.value); setErrors({ ...errors, time: null }); }}
-                  style={inputStyle(errors.time)} />
-                {errors.time && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.time}</span>}
+                <label style={labelStyle}>Approximate Time Found</label>
+                <input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle(false)} />
               </div>
 
-              <button type="submit" style={{
+              <button type="submit" disabled={submitting} style={{
                 width: "100%", height: "60px", border: "none", borderRadius: "14px",
-                background: "linear-gradient(90deg,#16a34a,#22c55e)", color: "#fff",
-                fontSize: "17px", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", marginTop: 8,
-              }}>Submit Report</button>
+                background: submitting ? "#94a3b8" : "linear-gradient(90deg,#16a34a,#22c55e)", color: "#fff",
+                fontSize: "17px", fontWeight: "700", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", marginTop: 8,
+              }}>{submitting ? "Saving..." : "Submit Found Item"}</button>
             </form>
           </div>
         </div>
