@@ -1,0 +1,500 @@
+{
+  "info": {
+    "name": "Lost-Found Item Management API",
+    "description": "Postman collection for testing Item Management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Item Creation",
+      "item": [
+        {
+          "name": "Create Item - Lost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Lost Car Keys\",\n  \"description\": \"Silver car keys with keychain\",\n  \"reportType\": \"LOST\",\n  \"category\": \"Electronics\",\n  \"location\": \"Library\",\n  \"imageUrls\": [\n    \"https://example.com/images/lost-keys.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/items?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Create a new LOST item"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Item - Found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Found Student ID Card\",\n  \"description\": \"Blue student ID card, name visible\",\n  \"reportType\": \"FOUND\",\n  \"category\": \"Documents\",\n  \"location\": \"Student Center\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/items?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Create a new FOUND item"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Item Retrieval",
+      "item": [
+        {
+          "name": "Get All Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items"
+              ]
+            },
+            "description": "Retrieve all items in the system"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Item by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "1"
+              ]
+            },
+            "description": "Get a specific item by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User's Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/user/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "user",
+                "1"
+              ]
+            },
+            "description": "Get all items reported by a specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items with Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/paginated?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "paginated"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get items with pagination"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Item Filtering & Search",
+      "item": [
+        {
+          "name": "Get Items by Type - LOST",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/type/LOST",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "type",
+                "LOST"
+              ]
+            },
+            "description": "Get all LOST items"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items by Type - FOUND",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/type/FOUND",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "type",
+                "FOUND"
+              ]
+            },
+            "description": "Get all FOUND items"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items by Status - OPEN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/status/OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "status",
+                "OPEN"
+              ]
+            },
+            "description": "Get all OPEN items"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items by Status - CLAIMED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/status/CLAIMED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "status",
+                "CLAIMED"
+              ]
+            },
+            "description": "Get all CLAIMED items"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items by Type and Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/filter?type=LOST&status=OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "filter"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "LOST"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                }
+              ]
+            },
+            "description": "Get items filtered by both type and status"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Items by Term",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/search?q=keys",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "keys"
+                }
+              ]
+            },
+            "description": "Search items by title or description"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/category?category=Electronics&type=LOST",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "category"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Electronics"
+                },
+                {
+                  "key": "type",
+                  "value": "LOST"
+                }
+              ]
+            },
+            "description": "Get items by category and report type"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Items by Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/location?location=Library&status=OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "location"
+              ],
+              "query": [
+                {
+                  "key": "location",
+                  "value": "Library"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                }
+              ]
+            },
+            "description": "Get items by location and status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Item Updates",
+      "item": [
+        {
+          "name": "Update Item Status - CLAIMED",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/1/status?status=CLAIMED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "1",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "CLAIMED"
+                }
+              ]
+            },
+            "description": "Update item status to CLAIMED"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Item Status - CLOSED",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/1/status?status=CLOSED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "1",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "CLOSED"
+                }
+              ]
+            },
+            "description": "Update item status to CLOSED"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Item Images",
+      "item": [
+        {
+          "name": "Add Image to Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://example.com/images/car-keys.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/items/1/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "1",
+                "images"
+              ]
+            },
+            "description": "Add an image to an existing item"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Item Deletion",
+      "item": [
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "items",
+                "1"
+              ]
+            },
+            "description": "Delete an item by ID"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "itemId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

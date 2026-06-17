@@ -9,7 +9,7 @@ public class ItemRequestDTO {
     private String category;
     private String location;
     private ReportType reportType;
-    private List<String> imageUrls;
+    private List<String> imageUrls = new java.util.ArrayList<>();
 
     public ItemRequestDTO() {
     }
