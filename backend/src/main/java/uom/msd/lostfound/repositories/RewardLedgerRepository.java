@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.repositories;
+package uom.msd.lostfound.repositories;
 
 import uom.msd.lostfound.models.RewardLedgerEntry;
 import org.springframework.data.jpa.repository.JpaRepository;

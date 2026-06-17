@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.controllers;
+package uom.msd.lostfound.controllers;
 
 import uom.msd.lostfound.dto.NotificationResponse;
 import uom.msd.lostfound.dto.SendNotificationRequest;

@@ -1,4 +1,4 @@
-﻿package uom.msd.lostfound.enums;
+package uom.msd.lostfound.enums;
 
 public enum RewardTransactionType {
     CREDIT,   // Points added (e.g., submitted a found item)

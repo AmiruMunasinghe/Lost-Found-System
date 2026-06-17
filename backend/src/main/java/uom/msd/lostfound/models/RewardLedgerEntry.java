@@ -1,5 +1,5 @@
-﻿package uom.msd.lostfound.models;
-
+package uom.msd.lostfound.models;
+import uom.msd.lostfound.enums.RewardTransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
