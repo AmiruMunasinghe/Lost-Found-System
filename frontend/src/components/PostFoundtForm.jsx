@@ -16,7 +16,7 @@ function useDark(dm) {
   };
 }
 
-function PostFoundForm({ navigateTo, darkMode }) {
+function PostFoundForm({ navigateTo, darkMode, user }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

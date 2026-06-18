@@ -1,4 +1,16 @@
 
 /env
+
+# Environment variable files (never commit secrets)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
+
 /admin/nbproject/private/
 /frontend/nbproject/private/
+
+# Local staging folder
+add to github/
