@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Bell, CheckCircle, Eye, EyeOff, Lock, Moon, Save, Sun, User } from "lucide-react";
-import { changePassword } from "../api/auth";
+import { Bell, Eye, Moon, Save, Sun, User } from "lucide-react";
 
 const defaultSettings = {
-  emailNotifications: true,
   matchAlerts: true,
-  rewardAlerts: true,
   showContactDetails: false,
   twoStepVerification: false,
 };
@@ -115,24 +112,10 @@ export default function Settings({ user, darkMode, setDarkMode, navigateTo }) {
           </div>
 
           <SettingRow
-            label="Email Notifications"
-            description="Receive important updates through email."
-            checked={settings.emailNotifications}
-            onChange={() => updateSetting("emailNotifications")}
-            t={t}
-          />
-          <SettingRow
             label="Match Alerts"
             description="Notify me when a possible lost/found match is detected."
             checked={settings.matchAlerts}
             onChange={() => updateSetting("matchAlerts")}
-            t={t}
-          />
-          <SettingRow
-            label="Reward Alerts"
-            description="Notify me about points and badges."
-            checked={settings.rewardAlerts}
-            onChange={() => updateSetting("rewardAlerts")}
             t={t}
           />
         </section>
@@ -155,7 +138,6 @@ export default function Settings({ user, darkMode, setDarkMode, navigateTo }) {
           />
         </section>
 
-        <SecuritySection t={t} darkMode={darkMode} settings={settings} updateSetting={updateSetting} />
       </div>
 
       <div style={{ ...styles.saveBar, background: t.card, border: `1px solid ${t.border}` }}>
@@ -170,125 +152,7 @@ export default function Settings({ user, darkMode, setDarkMode, navigateTo }) {
   );
 }
 
-function SecuritySection({ t, darkMode, settings, updateSetting }) {
-  const [showForm, setShowForm] = useState(false);
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const [showCurrentPw, setShowCurrentPw] = useState(false);
-  const [showNewPw, setShowNewPw] = useState(false);
-  const [showConfirmPw, setShowConfirmPw] = useState(false);
-
-  const handleChangePassword = async () => {
-    setError("");
-    setSuccess("");
-
-    if (!currentPw.trim()) { setError("Current password is required."); return; }
-    if (!newPw.trim()) { setError("New password is required."); return; }
-    if (newPw.length < 6) { setError("New password must be at least 6 characters."); return; }
-    if (newPw !== confirmPw) { setError("New passwords do not match."); return; }
-    if (currentPw === newPw) { setError("New password must be different from current password."); return; }
-
-    setLoading(true);
-    try {
-      await changePassword(currentPw, newPw);
-      setSuccess("Password changed successfully!");
-      setCurrentPw(""); setNewPw(""); setConfirmPw("");
-      setTimeout(() => { setShowForm(false); setSuccess(""); }, 2000);
-    } catch (err) {
-      setError(err.message || "Failed to change password.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "10px 14px",
-    borderRadius: "10px",
-    border: `1px solid ${t.border}`,
-    background: t.input,
-    color: t.text,
-    fontSize: "14px",
-    fontFamily: "inherit",
-    outline: "none",
-    boxSizing: "border-box",
-    marginTop: "6px",
-    paddingRight: "40px",
-  };
-
-  const eyeIconStyle = {
-    position: "absolute",
-    right: "12px",
-    top: "38px",
-    cursor: "pointer",
-    color: t.muted,
-  };
-
-  return (
-    <section style={{ ...styles.card, background: t.card, border: `1px solid ${t.border}` }}>
-      <div style={styles.cardHeader}>
-        <Lock size={22} color="#0F5FFF" />
-        <div>
-          <h2 style={{ ...styles.cardTitle, color: t.text }}>Security</h2>
-          <p style={{ ...styles.cardSub, color: t.muted }}>Password and account safety</p>
-        </div>
-      </div>
-
-      <SettingRow
-        label="Two-step Verification"
-        description="Adds an extra layer of security to your account."
-        checked={settings.twoStepVerification}
-        onChange={() => updateSetting("twoStepVerification")}
-        t={t}
-      />
-
-      {!showForm ? (
-        <button style={styles.secondaryBtn} onClick={() => { setShowForm(true); setError(""); setSuccess(""); }}>
-          Change Password
-        </button>
-      ) : (
-        <div style={{ marginTop: "18px", borderTop: `1px solid ${t.border}`, paddingTop: "18px" }}>
-          <div style={{ marginBottom: "14px", position: "relative" }}>
-            <label style={{ fontSize: "13px", fontWeight: 700, color: t.text }}>Current Password</label>
-            <input type={showCurrentPw ? "text" : "password"} style={inputStyle} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="Enter current password" />
-            <div style={eyeIconStyle} onClick={() => setShowCurrentPw(!showCurrentPw)}>
-              {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
-            </div>
-          </div>
-          <div style={{ marginBottom: "14px", position: "relative" }}>
-            <label style={{ fontSize: "13px", fontWeight: 700, color: t.text }}>New Password</label>
-            <input type={showNewPw ? "text" : "password"} style={inputStyle} value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="Enter new password" />
-            <div style={eyeIconStyle} onClick={() => setShowNewPw(!showNewPw)}>
-              {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
-            </div>
-          </div>
-          <div style={{ marginBottom: "14px", position: "relative" }}>
-            <label style={{ fontSize: "13px", fontWeight: 700, color: t.text }}>Confirm New Password</label>
-            <input type={showConfirmPw ? "text" : "password"} style={inputStyle} value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="Re-enter new password" />
-            <div style={eyeIconStyle} onClick={() => setShowConfirmPw(!showConfirmPw)}>
-              {showConfirmPw ? <EyeOff size={16} /> : <Eye size={16} />}
-            </div>
-          </div>
-
-          {error && <div style={{ color: "#E24B4A", fontSize: "13px", marginBottom: "12px", fontWeight: 600 }}>{error}</div>}
-          {success && <div style={{ color: "#10B981", fontSize: "13px", marginBottom: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}><CheckCircle size={14} /> {success}</div>}
-
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button style={{ ...styles.secondaryBtn, flex: 1, borderColor: t.border, color: t.body }} onClick={() => { setShowForm(false); setError(""); setSuccess(""); setCurrentPw(""); setNewPw(""); setConfirmPw(""); }}>Cancel</button>
-            <button style={{ ...styles.saveBtn, flex: 1, marginTop: "14px" }} onClick={handleChangePassword} disabled={loading}>
-              {loading ? "Changing..." : "Update Password"}
-            </button>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
 
 function SettingRow({ label, description, checked, onChange, t }) {
   return (
