@@ -1,126 +1,151 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { getAllItems } from "../api/items";
 
 const C = {
   primary: "#0F5FFF",
   primaryDk: "#0b3470",
-  bg: "#eef4fb",
-  card: "#FFFFFF",
-  text: "#0b3470",
-  body: "#344054",
-  muted: "#667085",
-  border: "#d0d5dd",
   green: "#10B981",
   greenBg: "#E6F4EA",
   red: "#EF4444",
   redBg: "#FCEBEB",
 };
 
-const INITIAL_ITEMS = [
-  { id: 1, title: "Black Dell Laptop", type: "lost", category: "Electronics", location: "Sumanadasa Building, L2", date: "2026-06-15", desc: "Latitude model with a Moratuwa sticker on the cover." },
-  { id: 2, title: "Keys with Red Lanyard", type: "found", category: "Keys", location: "Civil Common Room", date: "2026-06-14", desc: "A bundle of 3 keys with an orange keychain." },
-  { id: 3, title: "Leather Wallet", type: "lost", category: "Bags & Wallets", location: "Canteen Area", date: "2026-06-13", desc: "Brown leather wallet containing national identity card." },
-  { id: 4, title: "Calculater fx-991ES Plus", type: "found", category: "Electronics", location: "EN classrooms", date: "2026-06-12", desc: "Scientific calculator with UOM student id sticker behind." },
-  { id: 5, title: "Blue Water Bottle", type: "lost", category: "Other", location: "Gymnasium", date: "2026-06-10", desc: "Decathlon metallic water bottle with a small dent on top." },
-  { id: 6, title: "Student Identity Card", type: "found", category: "Documents", location: "Library Entrance", date: "2026-06-09", desc: "Card belongs to student initials A.M." },
-];
-
-export default function BrowseItems({ navigateTo, darkMode }) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [type, setType] = useState("All"); // All, lost, found
-
-  const filteredItems = INITIAL_ITEMS.filter((item) => {
-    const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || 
-                          item.desc.toLowerCase().includes(search.toLowerCase()) || 
-                          item.location.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesCategory = category === "All" || item.category === category;
-    const matchesType = type === "All" || item.type === type;
-    
-    return matchesSearch && matchesCategory && matchesType;
-  });
-
-  const categories = ["All", "Electronics", "Bags & Wallets", "Keys", "Documents", "Other"];
-
-  const t = darkMode ? {
-    bg: "#0f172a",
+function theme(darkMode) {
+  return darkMode ? {
+    page: "#0f172a",
     card: "#1e293b",
+    input: "#111827",
     text: "#e2e8f0",
     muted: "#94a3b8",
     border: "#334155",
-    inputBg: "#0f172a",
-    metaBorder: "#334155",
-    categoryBadgeBg: "#334155",
-    categoryBadgeText: "#cbd5e1",
-    greenBg: "rgba(16, 185, 129, 0.15)",
-    green: "#34d399",
-    redBg: "rgba(239, 68, 68, 0.15)",
-    red: "#f87171",
+    tab: "#111827",
+    tabText: "#cbd5e1",
+    badge: "#334155",
+    shadow: "0 4px 20px rgba(0,0,0,0.25)",
   } : {
-    bg: "transparent",
-    card: "white",
-    text: C.primaryDk,
-    muted: C.muted,
-    border: C.border,
-    inputBg: "white",
-    metaBorder: "#F3F4F6",
-    categoryBadgeBg: "#F3F4F6",
-    categoryBadgeText: "#4B5563",
-    greenBg: C.greenBg,
-    green: C.green,
-    redBg: C.redBg,
-    red: C.red,
+    page: "transparent",
+    card: "#ffffff",
+    input: "#ffffff",
+    text: "#0b3470",
+    muted: "#667085",
+    border: "#d0d5dd",
+    tab: "#ffffff",
+    tabText: "#0b3470",
+    badge: "#f3f4f6",
+    shadow: "0 4px 20px rgba(0,0,0,0.03)",
+  };
+}
+
+export default function BrowseItems({ navigateTo, darkMode, user }) {
+  const T = theme(darkMode);
+  const [items, setItems] = useState([]);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
+  const [type, setType] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadItems() {
+      try {
+        setLoading(true);
+        setError("");
+        const data = await getAllItems();
+        if (active) setItems(data);
+      } catch (err) {
+        if (active) setError(err.message || "Failed to load items from backend.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadItems();
+    return () => { active = false; };
+  }, []);
+
+  const categories = useMemo(() => {
+    const values = new Set(["All"]);
+    items.forEach((item) => values.add(item.category || "Other"));
+    return Array.from(values);
+  }, [items]);
+
+  const filteredItems = items.filter((item) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      item.title.toLowerCase().includes(q) ||
+      item.desc.toLowerCase().includes(q) ||
+      item.location.toLowerCase().includes(q);
+
+    const matchesCategory = category === "All" || item.category === category;
+    const matchesType = type === "All" || item.type === type;
+
+    return matchesSearch && matchesCategory && matchesType;
+  });
+
+  const openMatches = (item) => {
+    if (!user) {
+      navigateTo && navigateTo("login", { next: "browse" });
+      return;
+    }
+
+    navigateTo && navigateTo("matchresults", {
+      itemId: item.id,
+      type: item.type,
+    });
   };
 
-  const styles = getStyles(t);
-
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, background: T.page }}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Public Lost & Found Directory</h1>
-        <p style={styles.subtitle}>
-          Browse items reported lost or found at the University of Moratuwa.
+        <h1 style={{ ...styles.title, color: T.text }}>Lost & Found Directory</h1>
+        <p style={{ ...styles.subtitle, color: T.muted }}>
+          Items are loaded from the Spring Boot backend.
         </p>
       </div>
 
-      {/* FILTER CONTROLS PANEL */}
-      <div style={styles.controls}>
+      <div style={{ ...styles.controls, background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
         <input
-          style={styles.searchBar}
+          style={{ ...styles.searchBar, background: T.input, color: T.text, border: `1px solid ${T.border}` }}
           placeholder="🔍 Search by name, description, or location..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        
+
         <div style={styles.filtersRow}>
-          {/* Category Filters */}
           <div style={styles.filterGroup}>
-            <label style={styles.label}>Category</label>
-            <select style={styles.select} value={category} onChange={(e) => setCategory(e.target.value)}>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+            <label style={{ ...styles.label, color: T.text }}>Category</label>
+            <select
+              style={{ ...styles.select, background: T.input, color: T.text, border: `1px solid ${T.border}` }}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
 
-          {/* Type Filters */}
           <div style={styles.filterGroup}>
-            <label style={styles.label}>Type</label>
+            <label style={{ ...styles.label, color: T.text }}>Type</label>
             <div style={styles.btnGroup}>
-              {["All", "Lost", "Found"].map((btnType) => {
-                const isActive = type === btnType.toLowerCase() || (btnType === "All" && type === "All");
+              {[
+                ["All", "All"],
+                ["Lost", "lost"],
+                ["Found", "found"],
+              ].map(([label, value]) => {
+                const active = type === value;
                 return (
                   <button
-                    key={btnType}
+                    key={label}
                     style={{
                       ...styles.btnGroupItem,
-                      background: isActive ? C.primary : t.inputBg,
-                      color: isActive ? "white" : t.text,
-                      border: `1px solid ${isActive ? C.primary : t.border}`,
+                      background: active ? C.primary : T.tab,
+                      color: active ? "white" : T.tabText,
+                      border: `1px solid ${active ? C.primary : T.border}`,
                     }}
-                    onClick={() => setType(btnType === "All" ? "All" : btnType.toLowerCase())}
+                    onClick={() => setType(value)}
                   >
-                    {btnType}
+                    {label}
                   </button>
                 );
               })}
@@ -129,221 +154,67 @@ export default function BrowseItems({ navigateTo, darkMode }) {
         </div>
       </div>
 
-      {/* ITEM GRID */}
-      <div style={styles.grid}>
-        {filteredItems.length > 0 ? (
-          filteredItems.map((item) => (
-            <div key={item.id} style={styles.card}>
+      {loading && <div style={{ ...styles.infoBox, background: T.card, color: T.text, border: `1px solid ${T.border}` }}>Loading backend items...</div>}
+      {error && <div style={{ ...styles.errorBox }}>{error}</div>}
+
+      {!loading && !error && (
+        <div style={styles.grid}>
+          {filteredItems.length > 0 ? filteredItems.map((item) => (
+            <div key={item.id} style={{ ...styles.card, background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
               <div style={styles.cardHeader}>
-                <span 
-                  style={{
-                    ...styles.badge,
-                    background: item.type === "lost" ? t.redBg : t.greenBg,
-                    color: item.type === "lost" ? t.red : t.green,
-                  }}
-                >
+                <span style={{ ...styles.badge, background: item.type === "lost" ? C.redBg : C.greenBg, color: item.type === "lost" ? C.red : C.green }}>
                   {item.type === "lost" ? "🔴 Lost" : "🟢 Found"}
                 </span>
-                <span style={styles.categoryBadge}>{item.category}</span>
-              </div>
-              
-              <h3 style={styles.cardTitle}>{item.title}</h3>
-              <p style={styles.cardDesc}>{item.desc}</p>
-              
-              <div style={styles.metaRow}>
-                <span style={styles.metaItem}>📍 {item.location}</span>
-                <span style={styles.metaItem}>📅 {item.date}</span>
+                <span style={{ ...styles.categoryBadge, background: T.badge, color: T.muted }}>{item.category}</span>
               </div>
 
-              <button 
-                style={styles.actionBtn}
-                onClick={() => {
-                  // If logged in, go to match/claim, else prompt login
-                  navigateTo("/login");
-                }}
-              >
-                {item.type === "lost" ? "I Found This" : "Claim Belongs to Me"}
+              <h3 style={{ ...styles.cardTitle, color: T.text }}>{item.title}</h3>
+              <p style={{ ...styles.cardDesc, color: T.muted }}>{item.desc}</p>
+
+              <div style={{ ...styles.metaRow, borderTop: `1px solid ${T.border}` }}>
+                <span style={{ ...styles.metaItem, color: T.muted }}>📍 {item.location || "No location"}</span>
+                <span style={{ ...styles.metaItem, color: T.muted }}>📅 {item.date || "No date"}</span>
+                <span style={{ ...styles.metaItem, color: T.muted }}>#ID: {item.id}</span>
+              </div>
+
+              <button style={styles.actionBtn} onClick={() => openMatches(item)}>
+                View Matches
               </button>
             </div>
-          ))
-        ) : (
-          <div style={styles.noResults}>
-            <h3>No matching items found</h3>
-            <p>Try refining your search query or modifying the category filters.</p>
-          </div>
-        )}
-      </div>
+          )) : (
+            <div style={{ ...styles.infoBox, background: T.card, color: T.text, border: `1px solid ${T.border}`, gridColumn: "1 / -1" }}>
+              No matching items found.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-const getStyles = (t) => ({
-  container: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "10px 20px 40px",
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: "32px",
-  },
-  title: {
-    fontSize: "36px",
-    fontWeight: "800",
-    color: t.text,
-    margin: "0 0 10px",
-  },
-  subtitle: {
-    fontSize: "16px",
-    color: t.muted,
-    margin: 0,
-  },
-  controls: {
-    background: t.card,
-    borderRadius: "16px",
-    padding: "20px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-    border: `1px solid ${t.border}`,
-    marginBottom: "30px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-  searchBar: {
-    width: "100%",
-    padding: "16px 20px",
-    fontSize: "16px",
-    borderRadius: "12px",
-    border: `1px solid ${t.border}`,
-    background: t.inputBg,
-    color: t.text,
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.2s",
-  },
-  filtersRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: "16px",
-  },
-  filterGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  label: {
-    fontSize: "13px",
-    fontWeight: "700",
-    color: t.text,
-  },
-  select: {
-    padding: "10px 16px",
-    fontSize: "14px",
-    borderRadius: "10px",
-    border: `1px solid ${t.border}`,
-    background: t.inputBg,
-    color: t.text,
-    minWidth: "180px",
-    outline: "none",
-  },
-  btnGroup: {
-    display: "flex",
-    borderRadius: "10px",
-    overflow: "hidden",
-  },
-  btnGroupItem: {
-    padding: "10px 20px",
-    fontSize: "14px",
-    fontWeight: "700",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    fontFamily: "inherit",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-    gap: "24px",
-  },
-  card: {
-    background: t.card,
-    borderRadius: "18px",
-    border: `1px solid ${t.border}`,
-    padding: "24px",
-    display: "flex",
-    flexDirection: "column",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
-    transition: "transform 0.25s, box-shadow 0.25s",
-  },
-  cardHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "16px",
-  },
-  badge: {
-    padding: "4px 10px",
-    borderRadius: "12px",
-    fontSize: "12px",
-    fontWeight: "700",
-  },
-  categoryBadge: {
-    background: t.categoryBadgeBg,
-    color: t.categoryBadgeText,
-    padding: "4px 10px",
-    borderRadius: "12px",
-    fontSize: "11px",
-    fontWeight: "700",
-  },
-  cardTitle: {
-    fontSize: "18px",
-    fontWeight: "700",
-    color: t.text,
-    margin: "0 0 10px",
-  },
-  cardDesc: {
-    fontSize: "14px",
-    color: t.muted,
-    lineHeight: "1.5",
-    margin: "0 0 18px",
-    flex: 1,
-  },
-  metaRow: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-    marginBottom: "20px",
-    borderTop: `1px solid ${t.metaBorder}`,
-    paddingTop: "12px",
-  },
-  metaItem: {
-    fontSize: "13px",
-    color: t.muted,
-    fontWeight: "500",
-  },
-  actionBtn: {
-    width: "100%",
-    padding: "12px",
-    background: "linear-gradient(90deg, #0F5FFF, #4A8BFF)",
-    color: "white",
-    border: "none",
-    borderRadius: "12px",
-    fontWeight: "700",
-    fontSize: "14px",
-    cursor: "pointer",
-    fontFamily: "inherit",
-    boxShadow: "0 4px 12px rgba(15, 95, 255, 0.15)",
-    transition: "all 0.2s",
-  },
-  noResults: {
-    gridColumn: "1 / -1",
-    textAlign: "center",
-    padding: "60px 20px",
-    background: t.card,
-    borderRadius: "18px",
-    border: `1px solid ${t.border}`,
-    color: t.text,
-  },
-});
+const styles = {
+  container: { maxWidth: "1200px", margin: "0 auto", padding: "10px 20px 40px", fontFamily: "'DM Sans', 'Segoe UI', sans-serif" },
+  header: { textAlign: "center", marginBottom: "32px" },
+  title: { fontSize: "36px", fontWeight: "800", margin: "0 0 10px" },
+  subtitle: { fontSize: "16px", margin: 0 },
+  controls: { borderRadius: "16px", padding: "20px", marginBottom: "30px", display: "flex", flexDirection: "column", gap: "16px" },
+  searchBar: { width: "100%", padding: "16px 20px", fontSize: "16px", borderRadius: "12px", outline: "none", boxSizing: "border-box" },
+  filtersRow: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" },
+  filterGroup: { display: "flex", flexDirection: "column", gap: "6px" },
+  label: { fontSize: "13px", fontWeight: "700" },
+  select: { padding: "10px 16px", fontSize: "14px", borderRadius: "10px", minWidth: "180px", outline: "none" },
+  btnGroup: { display: "flex", borderRadius: "10px", overflow: "hidden" },
+  btnGroupItem: { padding: "10px 20px", fontSize: "14px", fontWeight: "700", cursor: "pointer", fontFamily: "inherit" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" },
+  card: { borderRadius: "18px", padding: "24px", display: "flex", flexDirection: "column" },
+  cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
+  badge: { padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "700" },
+  categoryBadge: { padding: "4px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "700" },
+  cardTitle: { fontSize: "18px", fontWeight: "700", margin: "0 0 10px" },
+  cardDesc: { fontSize: "14px", lineHeight: "1.5", margin: "0 0 18px", flex: 1, whiteSpace: "pre-wrap" },
+  metaRow: { display: "flex", flexDirection: "column", gap: "6px", marginBottom: "20px", paddingTop: "12px" },
+  metaItem: { fontSize: "13px", fontWeight: "500" },
+  actionBtn: { width: "100%", padding: "12px", background: "linear-gradient(90deg, #0F5FFF, #4A8BFF)", color: "white", border: "none", borderRadius: "12px", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" },
+  infoBox: { padding: "24px", borderRadius: "16px", textAlign: "center" },
+  errorBox: { padding: "16px", borderRadius: "16px", background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca", marginBottom: "20px" },
+};

@@ -1,301 +1,131 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import authPanel from "../assets/left_panel.png";
+import { loginUser } from "../api/auth";
 
-export default function Login({ setUser, pageParams }) {
-  const navigate = useNavigate();
+function useDark(dm) {
+  return dm ? {
+    page: "#0f172a", card: "#1e293b", panel: "#111827", border: "#334155",
+    text: "#e2e8f0", muted: "#94a3b8", body: "#cbd5e1", inputBg: "#0f172a",
+    inputBorder: "#475569", link: "#60a5fa",
+  } : {
+    page: "#eef4fb", card: "#ffffff", panel: "#ffffff", border: "#d0d5dd",
+    text: "#0b3470", muted: "#667085", body: "#344054", inputBg: "#ffffff",
+    inputBorder: "#d0d5dd", link: "#2563eb",
+  };
+}
+
+export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
+  const t = useDark(darkMode);
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [showPass, setShowPass] = useState(false);
 
-  function handleLogin() {
-    const newErrors = {};
-    if (!email) newErrors.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email address.";
-    
-    if (!pass) newErrors.pass = "Password is required.";
+  async function handleLogin(e) {
+    e?.preventDefault?.();
+    const nextErrors = {};
+    if (!email.trim()) nextErrors.email = "Email or username is required.";
+    if (!pass) nextErrors.pass = "Password is required.";
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
-    setErrors({});
-    
-    // Simulate user login payload based on entered email
-    const role = email.includes("admin") ? "admin" : "student";
-    const name = email.split("@")[0].replace(".", " ");
-    
-    if (setUser) {
-      setUser({ token: "mock-jwt-token", name, role });
-    }
-    
-    if (pageParams && pageParams.next) {
-      navigate(`/${pageParams.next}`, { state: pageParams.nextParams });
-    } else {
-      navigate(role === "admin" ? "/admin-dashboard" : "/");
+    try {
+      setApiError("");
+      setLoading(true);
+      const user = await loginUser({ identifier: email, password: pass });
+      if (setUser) setUser(user);
+
+      if (pageParams?.next) {
+        navigateTo(pageParams.next, pageParams.nextParams || {});
+      } else {
+        navigateTo(user.role === "admin" ? "admin-dashboard" : "browse");
+      }
+    } catch (err) {
+      setApiError(err.message || "Login failed. Check backend and credentials.");
+      setFailedAttempts(prev => prev + 1);
+    } finally {
+      setLoading(false);
     }
   }
 
   const styles = {
-    page: {
-      minHeight: "100vh",
-      background: "#eef4fb",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: "30px",
-      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    },
-
-    container: {
-      width: "1400px",
-      maxWidth: "100%",
-      minHeight: "850px",
-      background: "#ffffff",
-      borderRadius: "30px",
-      overflow: "hidden",
-      display: "grid",
-      gridTemplateColumns: "45% 55%",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-    },
-
-    leftPanel: {
-      backgroundImage: `url(${authPanel})`,
-      backgroundSize: "contain",
-      backgroundPosition: "left center",
-      backgroundRepeat: "no-repeat",
-      backgroundColor: "#eef4fb",
-    },
-    
-    rightPanel: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: "70px",
-      background: "#ffffff",
-    },
-
-    form: {
-      width: "100%",
-      maxWidth: "520px",
-    },
-
-    logo: {
-      marginBottom: "30px",
-    },
-
-    logoTitle: {
-      fontSize: "18px",
-      fontWeight: "700",
-      color: "#0b3470",
-    },
-
-    logoSub: {
-      fontSize: "13px",
-      color: "#667085",
-    },
-
-    heading: {
-      fontSize: "58px",
-      fontWeight: "800",
-      color: "#0b3470",
-      marginBottom: "10px",
-      lineHeight: 1.1,
-    },
-
-    subtitle: {
-      fontSize: "18px",
-      color: "#667085",
-      marginBottom: "40px",
-    },
-
-    label: {
-      display: "block",
-      marginBottom: "10px",
-      color: "#344054",
-      fontWeight: "600",
-      fontSize: "15px",
-    },
-
-    input: {
-      width: "100%",
-      height: "62px",
-      borderRadius: "14px",
-      border: "1px solid #d0d5dd",
-      padding: "0 18px",
-      fontSize: "16px",
-      marginBottom: "6px",
-      boxSizing: "border-box",
-      outline: "none",
-    },
-
-    errorText: {
-      color: "#E24B4A",
-      fontSize: "13px",
-      marginBottom: "16px",
-      marginLeft: "4px",
-      display: "block",
-    },
-
-    forgot: {
-      textAlign: "right",
-      marginBottom: "25px",
-    },
-
-    forgotLink: {
-      color: "#2563eb",
-      cursor: "pointer",
-      fontWeight: "500",
-      fontSize: "14px",
-      border: "none",
-      background: "none",
-    },
-
-    signInBtn: {
-      width: "100%",
-      height: "64px",
-      border: "none",
-      borderRadius: "14px",
-      background: "linear-gradient(90deg,#0F5FFF,#4A8BFF)",
-      color: "#fff",
-      fontSize: "18px",
-      fontWeight: "700",
-      cursor: "pointer",
-    },
-
-    divider: {
-      textAlign: "center",
-      color: "#98A2B3",
-      margin: "28px 0",
-      fontSize: "14px",
-    },
-
-    ssoBtn: {
-      width: "100%",
-      height: "62px",
-      borderRadius: "14px",
-      border: "2px solid #2563eb",
-      background: "#ffffff",
-      color: "#2563eb",
-      fontSize: "17px",
-      fontWeight: "600",
-      cursor: "pointer",
-    },
-
-    register: {
-      textAlign: "center",
-      marginTop: "30px",
-      color: "#667085",
-      fontSize: "15px",
-    },
-
-    registerLink: {
-      color: "#2563eb",
-      fontWeight: "700",
-      cursor: "pointer",
-    },
+    page: { minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" },
+    container: { width: 1000, maxWidth: "100%", minHeight: 560, background: t.card, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: "45% 55%", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: `1px solid ${t.border}` },
+    leftPanel: { background: darkMode ? "#0f172a" : "#eef4fb" },
+    rightPanel: { display: "flex", justifyContent: "center", alignItems: "center", padding: 40, background: t.panel },
+    form: { width: "100%", maxWidth: 440 },
+    logoTitle: { fontSize: 16, fontWeight: 800, color: t.text },
+    logoSub: { fontSize: 12, color: t.muted },
+    heading: { fontSize: 40, fontWeight: 800, color: t.text, margin: "20px 0 8px", lineHeight: 1.1 },
+    subtitle: { fontSize: 15, color: t.muted, marginBottom: 24 },
+    label: { display: "block", marginBottom: 8, color: t.body, fontWeight: 700, fontSize: 14 },
+    input: { width: "100%", height: 50, borderRadius: 12, border: `1px solid ${t.inputBorder}`, padding: "0 16px", fontSize: 15, marginBottom: 6, boxSizing: "border-box", outline: "none", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" },
+    pwInput: { width: "100%", height: 50, borderRadius: 12, border: `1px solid ${t.inputBorder}`, padding: "0 40px 0 16px", fontSize: 15, marginBottom: 6, boxSizing: "border-box", outline: "none", background: t.inputBg, color: t.text, colorScheme: darkMode ? "dark" : "light" },
+    eyeIcon: { position: "absolute", right: 14, top: 40, cursor: "pointer", color: t.muted },
+    errorText: { color: "#E24B4A", fontSize: 13, marginBottom: 10, marginLeft: 4, display: "block" },
+    signInBtn: { width: "100%", height: 52, border: "none", borderRadius: 12, background: loading ? "#94a3b8" : "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff", fontSize: 16, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", marginTop: 8 },
+    secondaryBtn: { border: "none", background: "none", color: t.link, fontWeight: 800, cursor: "pointer" },
   };
 
   return (
     <div style={styles.page}>
-      <div style={styles.container}>
-
-        {/* LEFT IMAGE PANEL */}
-        <div style={styles.leftPanel}>
-        <img src={authPanel}
-        alt="Lost and Found"
-        style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-        objectPosition: "center",
-        display: "block",}}/></div>
-
-        {/* RIGHT LOGIN PANEL */}
-        <div style={styles.rightPanel}>
-          <div style={styles.form}>
-
-            <div style={styles.logo}>
-              <div style={styles.logoTitle}>
-                UniLost & Found
-              </div>
-              <div style={styles.logoSub}>
-                University of Moratuwa
-              </div>
-            </div>
-
-            <h1 style={styles.heading}>
-              Welcome Back 👋
-            </h1>
-
-            <p style={styles.subtitle}>
-              Sign in to continue to your account
-            </p>
-
-            <label style={styles.label}>
-              Email Address
-            </label>
-
-            <input
-              style={{...styles.input, borderColor: errors.email ? "#E24B4A" : "#d0d5dd", marginBottom: errors.email ? "6px" : "22px"}}
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setErrors({...errors, email: null}); }}
-            />
-            {errors.email && <span style={styles.errorText}>{errors.email}</span>}
-
-            <label style={styles.label}>
-              Password
-            </label>
-
-            <input
-              style={{...styles.input, borderColor: errors.pass ? "#E24B4A" : "#d0d5dd", marginBottom: errors.pass ? "6px" : "22px"}}
-              type="password"
-              placeholder="Enter your password"
-              value={pass}
-              onChange={(e) => { setPass(e.target.value); setErrors({...errors, pass: null}); }}
-            />
-            {errors.pass && <span style={styles.errorText}>{errors.pass}</span>}
-
-            <div style={styles.forgot}>
-              <button
-                style={styles.forgotLink}
-                onClick={() => navigate("/forgot")}
-              >
-                Forgot Password?
-              </button>
-            </div>
-
-            <button
-              style={styles.signInBtn}
-              onClick={handleLogin}
-            >
-              Sign In
-            </button>
-
-            <div style={styles.divider}>
-              OR
-            </div>
-
-            <button style={styles.ssoBtn}>
-              🎓 Sign in with University SSO
-            </button>
-
-            <div style={styles.register}>
-              Don't have an account?{" "}
-              <span
-                style={styles.registerLink}
-                onClick={() => navigate("/register")}
-              >
-                Create Account
-              </span>
-            </div>
-
-          </div>
+      <style>{`
+        @media (max-width: 850px) {
+          .auth-grid { grid-template-columns: 1fr !important; }
+          .auth-left { display: none !important; }
+          .auth-right { padding: 32px 22px !important; }
+        }
+      `}</style>
+      <div className="auth-grid" style={styles.container}>
+        <div className="auth-left" style={styles.leftPanel}>
+          <img src={authPanel} alt="Lost and Found" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
 
+        <div className="auth-right" style={styles.rightPanel}>
+          <form onSubmit={handleLogin} style={styles.form}>
+            <div>
+              <div style={styles.logoTitle}>UniLost & Found</div>
+              <div style={styles.logoSub}>University of Moratuwa</div>
+            </div>
+
+            <h1 style={styles.heading}>Welcome Back 👋</h1>
+
+            {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
+
+            <label style={styles.label}>Email or Username</label>
+            <input value={email} onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: null }); }} placeholder="abdul@test.com" style={styles.input} />
+            {errors.email && <span style={styles.errorText}>{errors.email}</span>}
+
+            <div style={{ position: "relative", marginBottom: errors.pass ? 0 : 16 }}>
+              <label style={styles.label}>Password</label>
+              <input type={showPass ? "text" : "password"} value={pass} onChange={(e) => { setPass(e.target.value); setErrors({ ...errors, pass: null }); }} placeholder="••••••••" style={styles.pwInput} />
+              <div style={styles.eyeIcon} onClick={() => setShowPass(!showPass)}>
+                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+              </div>
+            </div>
+            {errors.pass && <span style={styles.errorText}>{errors.pass}</span>}
+
+            <button type="submit" disabled={loading} style={styles.signInBtn}>{loading ? "Signing in..." : "Sign In"}</button>
+
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 24, gap: "12px" }}>
+              {failedAttempts > 0 && (
+                <button type="button" style={{ ...styles.secondaryBtn, fontSize: 14 }} onClick={() => navigateTo && navigateTo("forgot")}>
+                  Forgot password?
+                </button>
+              )}
+              <p style={{ margin: 0, color: t.muted, fontSize: 14 }}>
+                No account? <button type="button" style={styles.secondaryBtn} onClick={() => navigateTo && navigateTo("register")}>Create account</button>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

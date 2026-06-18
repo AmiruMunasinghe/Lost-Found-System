@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { createItem } from "../api/items";
 
+const categories = ["Wallet", "Electronics", "Documents", "Keys", "Bags & Wallets", "Books", "Other"];
+
 function useDark(dm) {
   return dm ? {
     card: "#1e293b", border: "#334155", text: "#e2e8f0",
@@ -13,51 +15,69 @@ function useDark(dm) {
   };
 }
 
-function PostForm({ user, navigateTo, darkMode }) {
+function PostLostForm({ navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Electronics");
+  const [category, setCategory] = useState("Wallet");
+  const [color, setColor] = useState("");
   const [location, setLocation] = useState("");
-  const [reportType, setReportType] = useState("LOST");
-  const [imageUrlInput, setImageUrlInput] = useState("");
-  const [imageUrls, setImageUrls] = useState([]);
+  const [time, setTime] = useState("");
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const validate = () => {
+    const next = {};
+    if (!title.trim()) next.title = "Item title is required.";
+    if (!description.trim()) next.description = "Description is required.";
+    if (!category.trim()) next.category = "Category is required.";
+    if (!location.trim()) next.location = "Location is required.";
+    return next;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
-    if (!title.trim()) newErrors.title = "Item Title is required.";
-    if (!description.trim()) newErrors.description = "Description is required.";
-    if (!location.trim()) newErrors.location = "Location is required.";
-    if (!category.trim()) newErrors.category = "Category is required.";
-    if (!reportType.trim()) newErrors.reportType = "Report Type is required.";
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+    setApiError("");
+
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
 
     try {
-      await createItem({
+      setSubmitting(true);
+      const savedItem = await createItem({
         title,
         description,
         category,
+        color,
         location,
-        reportType,
-        imageUrls
-      }, user?.token);
-      alert("Lost item report submitted successfully!");
+        time,
+        reportType: "LOST",
+        imageUrls: [],
+      });
+
+      alert(`Lost item saved successfully. Item ID: ${savedItem.id}`);
       setTitle("");
       setDescription("");
-      setCategory("Electronics");
+      setCategory("Wallet");
+      setColor("");
       setLocation("");
-      setImageUrls([]);
-      setImageUrlInput("");
+      setTime("");
       setErrors({});
+
+      if (navigateTo) {
+        navigateTo("matchresults", { itemId: savedItem.id, type: "lost" });
+      }
     } catch (err) {
-      console.error("Failed to post lost item:", err);
-      alert("Failed to submit report. Please check if the backend is running.");
+      setApiError(err.message || "Failed to save lost item. Please check backend and token.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // Force browser input dark mode using inline style + colorScheme
   const inputStyle = (err) => ({
     width: "100%", height: "54px", borderRadius: "14px",
     border: `1px solid ${err ? "#E24B4A" : t.inputBorder}`,
@@ -66,19 +86,14 @@ function PostForm({ user, navigateTo, darkMode }) {
     background: t.inputBg,
     color: t.text,
     colorScheme: darkMode ? "dark" : "light",
-    WebkitTextFillColor: t.text,
-    boxShadow: `inset 0 0 0 1000px ${t.inputBg}`,
   });
 
   const textareaStyle = (err) => ({
-    width: "100%", borderRadius: "14px",
-    border: `1px solid ${err ? "#E24B4A" : t.inputBorder}`,
-    padding: "14px 18px", fontSize: "15px", minHeight: "110px",
-    boxSizing: "border-box", outline: "none", resize: "none", fontFamily: "inherit",
-    background: t.inputBg,
-    color: t.text,
-    WebkitTextFillColor: t.text,
-    boxShadow: `inset 0 0 0 1000px ${t.inputBg}`,
+    ...inputStyle(err),
+    height: "auto",
+    minHeight: "110px",
+    padding: "14px 18px",
+    resize: "vertical",
   });
 
   const labelStyle = {
@@ -88,122 +103,79 @@ function PostForm({ user, navigateTo, darkMode }) {
 
   const fieldWrap = { marginBottom: 16 };
 
-  const categories = ["Electronics", "Bags & Wallets", "Keys", "Documents", "Other"];
-
   return (
     <>
-      {/* Global style to force input caret & placeholder colors */}
       <style>{`
         .lost-form input::placeholder, .lost-form textarea::placeholder { color: ${t.muted}; }
         .lost-form input::-webkit-calendar-picker-indicator { filter: ${darkMode ? "invert(1)" : "none"}; }
       `}</style>
 
       <div className="lost-form" style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", display: "flex", justifyContent: "center", padding: "8px 0" }}>
-        <div style={{ width: "100%", maxWidth: "540px" }}>
+        <div style={{ width: "100%", maxWidth: "560px" }}>
           <button
+            type="button"
             style={{ background: "none", border: "none", color: t.link, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", marginBottom: 20 }}
-            onClick={() => navigateTo("dashboard")}
+            onClick={() => navigateTo && navigateTo("dashboard")}
           >← Back to Dashboard</button>
 
           <div style={{
             background: t.card, borderRadius: "22px", padding: "36px 32px",
             boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: `1px solid ${t.border}`,
-            transition: "background 0.3s, border-color 0.3s",
           }}>
             <div style={{ marginBottom: "24px", textAlign: "center" }}>
               <h2 style={{ fontSize: 26, fontWeight: 800, color: t.text, margin: "0 0 6px" }}>Report Lost Item 🔴</h2>
-              <p style={{ fontSize: 15, color: t.muted, margin: 0 }}>Help others by reporting a lost item</p>
+              <p style={{ fontSize: 15, color: t.muted, margin: 0 }}>This will save to the backend `/items` API.</p>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
+
+            <form onSubmit={handleSubmit}>
               <div style={fieldWrap}>
                 <label style={labelStyle}>Item Title</label>
-                <input placeholder="e.g. Black Wallet, iPhone 13" value={title}
+                <input placeholder="e.g. Black Wallet" value={title}
                   onChange={(e) => { setTitle(e.target.value); setErrors({ ...errors, title: null }); }}
                   style={inputStyle(errors.title)} />
-                {errors.title && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.title}</span>}
+                {errors.title && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.title}</span>}
               </div>
 
               <div style={fieldWrap}>
                 <label style={labelStyle}>Category</label>
-                <select value={category}
-                  onChange={(e) => { setCategory(e.target.value); setErrors({ ...errors, category: null }); }}
-                  style={inputStyle(errors.category)}>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle(errors.category)}>
+                  {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
-                {errors.category && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.category}</span>}
               </div>
 
               <div style={fieldWrap}>
                 <label style={labelStyle}>Location</label>
-                <input placeholder="e.g. Library, Sumanadasa Building L2" value={location}
+                <input placeholder="e.g. Library" value={location}
                   onChange={(e) => { setLocation(e.target.value); setErrors({ ...errors, location: null }); }}
                   style={inputStyle(errors.location)} />
-                {errors.location && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.location}</span>}
+                {errors.location && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.location}</span>}
+              </div>
+
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Color / Identifying Detail</label>
+                <input placeholder="e.g. Black, red strap" value={color} onChange={(e) => setColor(e.target.value)} style={inputStyle(false)} />
               </div>
 
               <div style={fieldWrap}>
                 <label style={labelStyle}>Description</label>
-                <textarea placeholder="Add details like unique marks, brand, serial number..." value={description}
+                <textarea placeholder="Add details that can help matching..." value={description}
                   onChange={(e) => { setDescription(e.target.value); setErrors({ ...errors, description: null }); }}
                   style={textareaStyle(errors.description)} />
-                {errors.description && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.description}</span>}
+                {errors.description && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.description}</span>}
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Report Type</label>
-                <select value={reportType}
-                  onChange={(e) => { setReportType(e.target.value); setErrors({ ...errors, reportType: null }); }}
-                  style={inputStyle(errors.reportType)}>
-                  <option value="LOST">Lost</option>
-                  <option value="FOUND">Found</option>
-                </select>
-                {errors.reportType && <span style={{ color: "#E24B4A", fontSize: 13, marginTop: 6, display: "block" }}>{errors.reportType}</span>}
+                <label style={labelStyle}>Approximate Time</label>
+                <input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle(false)} />
               </div>
 
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Image URLs</label>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <input placeholder="e.g. https://images.unsplash.com/photo..." value={imageUrlInput}
-                    onChange={(e) => setImageUrlInput(e.target.value)}
-                    style={{ ...inputStyle(false), flex: 1 }} />
-                  <button type="button"
-                    onClick={() => {
-                      if (imageUrlInput.trim()) {
-                        setImageUrls([...imageUrls, imageUrlInput.trim()]);
-                        setImageUrlInput("");
-                      }
-                    }}
-                    style={{
-                      background: "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff", border: "none",
-                      borderRadius: "14px", padding: "0 22px", fontWeight: "700", cursor: "pointer", fontFamily: "inherit"
-                    }}>Add</button>
-                </div>
-                {imageUrls.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px" }}>
-                    {imageUrls.map((url, idx) => (
-                      <div key={idx} style={{
-                        background: darkMode ? "#334155" : "#E6F1FB",
-                        color: t.text, padding: "6px 12px", borderRadius: "10px",
-                        display: "flex", alignItems: "center", gap: "8px", fontSize: "13px",
-                        border: `1px solid ${t.border}`
-                      }}>
-                        <span style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{url}</span>
-                        <button type="button" onClick={() => setImageUrls(imageUrls.filter((_, i) => i !== idx))}
-                          style={{ background: "none", border: "none", color: "#E24B4A", fontWeight: "700", cursor: "pointer", padding: "0 2px" }}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <button type="submit" style={{
+              <button type="submit" disabled={submitting} style={{
                 width: "100%", height: "60px", border: "none", borderRadius: "14px",
-                background: "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff",
-                fontSize: "17px", fontWeight: "700", cursor: "pointer", fontFamily: "inherit", marginTop: 8,
-              }}>Submit Report</button>
+                background: submitting ? "#94a3b8" : "linear-gradient(90deg,#0F5FFF,#4A8BFF)", color: "#fff",
+                fontSize: "17px", fontWeight: "700", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", marginTop: 8,
+              }}>{submitting ? "Saving..." : "Submit Lost Item"}</button>
             </form>
           </div>
         </div>
@@ -212,4 +184,4 @@ function PostForm({ user, navigateTo, darkMode }) {
   );
 }
 
-export default PostForm;
+export default PostLostForm;
