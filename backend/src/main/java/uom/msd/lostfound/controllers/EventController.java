@@ -34,6 +34,9 @@ public class EventController {
                 payload.getLostItemOwnerId(),
                 payload.getLostItemOwnerEmail(),
                 payload.getLostItemName(),
+                payload.getFoundItemOwnerId(),
+                payload.getFoundItemOwnerEmail(),
+                payload.getFoundItemName(),
                 payload.getFoundItemId(),
                 payload.getFoundItemDescription(),
                 payload.getFoundLocation()
@@ -83,6 +86,9 @@ public class EventController {
         @NotNull  private Long lostItemOwnerId;
         @NotBlank private String lostItemOwnerEmail;
         @NotBlank private String lostItemName;
+        @NotNull  private Long foundItemOwnerId;
+        @NotBlank private String foundItemOwnerEmail;
+        @NotBlank private String foundItemName;
         @NotNull  private Long foundItemId;
         @NotBlank private String foundItemDescription;
         @NotBlank private String foundLocation;
