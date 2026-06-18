@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getAllItems } from "../api/items";
+import { runMatchingForLostItem } from "../api/matches";
 
 const C = {
   primary: "#0F5FFF",
-  primaryDk: "#0b3470",
   green: "#10B981",
   greenBg: "#E6F4EA",
   red: "#EF4444",
@@ -36,6 +36,18 @@ function theme(darkMode) {
   };
 }
 
+function getType(item) {
+  return String(item.reportType || item.type || "").toUpperCase();
+}
+
+function isLostItem(item) {
+  return getType(item) === "LOST";
+}
+
+function text(value) {
+  return String(value || "");
+}
+
 export default function BrowseItems({ navigateTo, darkMode, user }) {
   const T = theme(darkMode);
   const [items, setItems] = useState([]);
@@ -44,25 +56,23 @@ export default function BrowseItems({ navigateTo, darkMode, user }) {
   const [type, setType] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [runningMatchId, setRunningMatchId] = useState(null);
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await getAllItems();
+      setItems(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Failed to load items from backend.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let active = true;
-
-    async function loadItems() {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await getAllItems();
-        if (active) setItems(data);
-      } catch (err) {
-        if (active) setError(err.message || "Failed to load items from backend.");
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
     loadItems();
-    return () => { active = false; };
   }, []);
 
   const categories = useMemo(() => {
@@ -73,13 +83,23 @@ export default function BrowseItems({ navigateTo, darkMode, user }) {
 
   const filteredItems = items.filter((item) => {
     const q = search.toLowerCase();
-    const matchesSearch =
-      item.title.toLowerCase().includes(q) ||
-      item.desc.toLowerCase().includes(q) ||
-      item.location.toLowerCase().includes(q);
+    const searchableText = [
+      item.title,
+      item.description,
+      item.desc,
+      item.location,
+      item.category,
+      item.status,
+    ].map(text).join(" ").toLowerCase();
 
+    const matchesSearch = searchableText.includes(q);
     const matchesCategory = category === "All" || item.category === category;
-    const matchesType = type === "All" || item.type === type;
+
+    const reportType = getType(item);
+    const matchesType =
+      type === "All" ||
+      (type === "lost" && reportType === "LOST") ||
+      (type === "found" && reportType === "FOUND");
 
     return matchesSearch && matchesCategory && matchesType;
   });
@@ -92,8 +112,34 @@ export default function BrowseItems({ navigateTo, darkMode, user }) {
 
     navigateTo && navigateTo("matchresults", {
       itemId: item.id,
-      type: item.type,
+      type: isLostItem(item) ? "lost" : "found",
     });
+  };
+
+  const handleRunMatching = async (item) => {
+    if (!user) {
+      navigateTo && navigateTo("login", { next: "browse" });
+      return;
+    }
+
+    if (!isLostItem(item)) {
+      alert("The backend matching endpoint runs using a LOST item ID. Open a lost item and click Run Matching.");
+      return;
+    }
+
+    try {
+      setRunningMatchId(item.id);
+      const createdMatches = await runMatchingForLostItem(item.id);
+      alert(`Matching completed for lost item #${item.id}. Matches returned: ${createdMatches.length}`);
+      navigateTo && navigateTo("matchresults", {
+        itemId: item.id,
+        type: "lost",
+      });
+    } catch (err) {
+      alert(err.message || "Failed to run matching. Check backend console and token.");
+    } finally {
+      setRunningMatchId(null);
+    }
   };
 
   return (
@@ -101,14 +147,14 @@ export default function BrowseItems({ navigateTo, darkMode, user }) {
       <div style={styles.header}>
         <h1 style={{ ...styles.title, color: T.text }}>Lost & Found Directory</h1>
         <p style={{ ...styles.subtitle, color: T.muted }}>
-          Items are loaded from the Spring Boot backend.
+          Items are loaded from the backend. Run matching from a LOST item to create match suggestions.
         </p>
       </div>
 
       <div style={{ ...styles.controls, background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
         <input
           style={{ ...styles.searchBar, background: T.input, color: T.text, border: `1px solid ${T.border}` }}
-          placeholder="🔍 Search by name, description, or location..."
+          placeholder="🔍 Search by name, description, category, or location..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -152,36 +198,60 @@ export default function BrowseItems({ navigateTo, darkMode, user }) {
             </div>
           </div>
         </div>
+
+        <button type="button" onClick={loadItems} style={styles.refreshBtn}>
+          Refresh Items
+        </button>
       </div>
 
       {loading && <div style={{ ...styles.infoBox, background: T.card, color: T.text, border: `1px solid ${T.border}` }}>Loading backend items...</div>}
-      {error && <div style={{ ...styles.errorBox }}>{error}</div>}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
       {!loading && !error && (
         <div style={styles.grid}>
-          {filteredItems.length > 0 ? filteredItems.map((item) => (
-            <div key={item.id} style={{ ...styles.card, background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-              <div style={styles.cardHeader}>
-                <span style={{ ...styles.badge, background: item.type === "lost" ? C.redBg : C.greenBg, color: item.type === "lost" ? C.red : C.green }}>
-                  {item.type === "lost" ? "🔴 Lost" : "🟢 Found"}
-                </span>
-                <span style={{ ...styles.categoryBadge, background: T.badge, color: T.muted }}>{item.category}</span>
+          {filteredItems.length > 0 ? filteredItems.map((item) => {
+            const reportType = getType(item);
+            const lost = reportType === "LOST";
+            const description = item.description || item.desc || "No description";
+            const status = item.status || "OPEN";
+
+            return (
+              <div key={item.id} style={{ ...styles.card, background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+                <div style={styles.cardHeader}>
+                  <span style={{ ...styles.badge, background: lost ? C.redBg : C.greenBg, color: lost ? C.red : C.green }}>
+                    {lost ? "🔴 Lost" : "🟢 Found"}
+                  </span>
+                  <span style={{ ...styles.categoryBadge, background: T.badge, color: T.muted }}>{item.category}</span>
+                </div>
+
+                <h3 style={{ ...styles.cardTitle, color: T.text }}>{item.title}</h3>
+                <p style={{ ...styles.cardDesc, color: T.muted }}>{description}</p>
+
+                <div style={{ ...styles.metaRow, borderTop: `1px solid ${T.border}` }}>
+                  <span style={{ ...styles.metaItem, color: T.muted }}>📍 {item.location || "No location"}</span>
+                  <span style={{ ...styles.metaItem, color: T.muted }}>📅 {item.date || "No date"}</span>
+                  <span style={{ ...styles.metaItem, color: T.muted }}>Status: {status}</span>
+                  <span style={{ ...styles.metaItem, color: T.muted }}>#ID: {item.id}</span>
+                </div>
+
+                <div style={styles.cardActions}>
+                  {lost && (
+                    <button
+                      style={{ ...styles.actionBtn, opacity: runningMatchId === item.id ? 0.7 : 1 }}
+                      disabled={runningMatchId === item.id}
+                      onClick={() => handleRunMatching(item)}
+                    >
+                      {runningMatchId === item.id ? "Running..." : "Run Matching"}
+                    </button>
+                  )}
+
+                  <button style={lost ? styles.secondaryBtn : styles.actionBtn} onClick={() => openMatches(item)}>
+                    View Matches
+                  </button>
+                </div>
               </div>
-
-              <h3 style={{ ...styles.cardTitle, color: T.text }}>{item.title}</h3>
-              <p style={{ ...styles.cardDesc, color: T.muted }}>{item.desc}</p>
-
-              <div style={{ ...styles.metaRow, borderTop: `1px solid ${T.border}` }}>
-                <span style={{ ...styles.metaItem, color: T.muted }}>📍 {item.location || "No location"}</span>
-                <span style={{ ...styles.metaItem, color: T.muted }}>📅 {item.date || "No date"}</span>
-                <span style={{ ...styles.metaItem, color: T.muted }}>#ID: {item.id}</span>
-              </div>
-
-              <button style={styles.actionBtn} onClick={() => openMatches(item)}>
-                View Matches
-              </button>
-            </div>
-          )) : (
+            );
+          }) : (
             <div style={{ ...styles.infoBox, background: T.card, color: T.text, border: `1px solid ${T.border}`, gridColumn: "1 / -1" }}>
               No matching items found.
             </div>
@@ -205,6 +275,7 @@ const styles = {
   select: { padding: "10px 16px", fontSize: "14px", borderRadius: "10px", minWidth: "180px", outline: "none" },
   btnGroup: { display: "flex", borderRadius: "10px", overflow: "hidden" },
   btnGroupItem: { padding: "10px 20px", fontSize: "14px", fontWeight: "700", cursor: "pointer", fontFamily: "inherit" },
+  refreshBtn: { alignSelf: "flex-start", padding: "10px 16px", borderRadius: 10, border: "none", background: "#0F5FFF", color: "white", fontWeight: 800, cursor: "pointer" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" },
   card: { borderRadius: "18px", padding: "24px", display: "flex", flexDirection: "column" },
   cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
@@ -214,7 +285,9 @@ const styles = {
   cardDesc: { fontSize: "14px", lineHeight: "1.5", margin: "0 0 18px", flex: 1, whiteSpace: "pre-wrap" },
   metaRow: { display: "flex", flexDirection: "column", gap: "6px", marginBottom: "20px", paddingTop: "12px" },
   metaItem: { fontSize: "13px", fontWeight: "500" },
+  cardActions: { display: "flex", flexDirection: "column", gap: 10 },
   actionBtn: { width: "100%", padding: "12px", background: "linear-gradient(90deg, #0F5FFF, #4A8BFF)", color: "white", border: "none", borderRadius: "12px", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" },
-  infoBox: { padding: "24px", borderRadius: "16px", textAlign: "center" },
-  errorBox: { padding: "16px", borderRadius: "16px", background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca", marginBottom: "20px" },
+  secondaryBtn: { width: "100%", padding: "12px", background: "transparent", color: "#0F5FFF", border: "1px solid #0F5FFF", borderRadius: "12px", fontWeight: "700", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" },
+  infoBox: { padding: "32px", borderRadius: "18px", textAlign: "center" },
+  errorBox: { padding: "16px", borderRadius: "14px", background: "#fee2e2", border: "1px solid #fecaca", color: "#991b1b", marginBottom: "18px" },
 };

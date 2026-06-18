@@ -79,8 +79,6 @@ public class EventController {
         return ResponseEntity.accepted().build();
     }
 
-    // ─── Request payload inner classes ───────────────────────────────────────
-
     @Data
     public static class ItemMatchedPayload {
         @NotNull  private Long lostItemOwnerId;

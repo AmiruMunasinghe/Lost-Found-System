@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { createItem } from "../api/items";
+import { runMatchingForLostItem } from "../api/matches";
 
 const categories = ["Wallet", "Electronics", "Documents", "Keys", "Bags & Wallets", "Books", "Other"];
 
@@ -59,7 +60,15 @@ function PostLostForm({ navigateTo, darkMode }) {
         imageUrls: [],
       });
 
-      alert(`Lost item saved successfully. Item ID: ${savedItem.id}`);
+      let matchCount = 0;
+      try {
+        const matches = await runMatchingForLostItem(savedItem.id);
+        matchCount = Array.isArray(matches) ? matches.length : 0;
+      } catch (matchErr) {
+        console.warn("Lost item saved, but matching did not run:", matchErr);
+      }
+
+      alert(`Lost item saved successfully. Item ID: ${savedItem.id}. Matching returned ${matchCount} result(s).`);
       setTitle("");
       setDescription("");
       setCategory("Wallet");
