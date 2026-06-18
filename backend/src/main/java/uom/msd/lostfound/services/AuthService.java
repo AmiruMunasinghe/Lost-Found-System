@@ -14,7 +14,6 @@ import uom.msd.lostfound.exceptions.DuplicateUsernameException;
 import uom.msd.lostfound.exceptions.ResourceNotFoundException;
 import uom.msd.lostfound.models.User;
 import uom.msd.lostfound.repositories.UserRepository;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -95,14 +94,8 @@ public class AuthService {
         return email.trim();
     }
 
-    /**
-     * Generates a password-reset token valid for 1 hour, saves it on the user, and returns it.
-     * (Caller is responsible for sending the token via email.)
-     */
     public String forgotPassword(String email) {
-        User user = userRepository.findAll().stream()
-                .filter(u -> email.equalsIgnoreCase(u.getEmail()))
-                .findFirst()
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("No account found for email: " + email));
 
         String token = UUID.randomUUID().toString();
@@ -112,9 +105,6 @@ public class AuthService {
         return token;
     }
 
-    /**
-     * Validates the reset token and updates the user's password.
-     */
     public void resetPassword(String token, String newPassword) {
         User user = userRepository.findByResetToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset token"));
@@ -129,9 +119,6 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    /**
-     * Changes the password for an authenticated user after verifying the current password.
-     */
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = findUserById(userId);
 

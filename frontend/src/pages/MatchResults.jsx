@@ -1,69 +1,140 @@
-import React from "react";
-import { getMyMatches } from "../api/matches";
+import React, { useEffect, useState } from "react";
+import { confirmMatch, getMatches, rejectMatch, runMatchingForLostItem } from "../api/matches";
 
 function useDark(dm) {
   return dm ? {
-    card: "#1e293b", border: "#334155", text: "#e2e8f0",
-    muted: "#94a3b8", body: "#cbd5e1", fieldBg: "#0f172a",
-    link: "#60a5fa", green: "#34d399", danger: "#f87171",
+    card: "#1e293b",
+    fieldBg: "#0f172a",
+    border: "#334155",
+    text: "#e2e8f0",
+    body: "#cbd5e1",
+    muted: "#94a3b8",
+    green: "#22c55e",
+    red: "#f87171",
   } : {
-    card: "#FFFFFF", border: "#d0d5dd", text: "#0b3470",
-    muted: "#667085", body: "#344054", fieldBg: "#f6f9ff",
-    link: "#2563eb", green: "#16a34a", danger: "#b42318",
+    card: "#ffffff",
+    fieldBg: "#f8fafc",
+    border: "#d0d5dd",
+    text: "#0b3470",
+    body: "#344054",
+    muted: "#667085",
+    green: "#16a34a",
+    red: "#dc2626",
   };
 }
 
-const formatDate = (value) => {
-  if (!value) return "-";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
-};
-
-const formatScore = (value) => {
-  const score = Number(value);
-  return Number.isNaN(score) ? "-" : `${Math.round(score * 100)}%`;
-};
-
-function ItemPanel({ label, item, tone, theme }) {
-  return (
-    <div style={{ flex: 1, padding: 18, borderRadius: 8, background: theme.fieldBg, border: `1px solid ${theme.border}` }}>
-      <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: theme.muted, marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: theme.text, marginBottom: 6 }}>{item?.title || "Untitled item"}</div>
-      <div style={{ fontSize: 13, color: theme.muted, marginBottom: 12, lineHeight: 1.4 }}>{item?.description || "No description provided"}</div>
-      <p style={{ fontSize: 13, color: theme.body, marginBottom: 4 }}><b>Category:</b> {item?.category || "-"}</p>
-      <p style={{ fontSize: 13, color: tone || theme.body, marginBottom: 4 }}><b>Location:</b> {item?.location || "-"}</p>
-      <p style={{ fontSize: 13, color: theme.body, marginBottom: 4 }}><b>Status:</b> {item?.status || "-"}</p>
-      <p style={{ fontSize: 13, color: theme.body, marginBottom: 4 }}><b>Reported:</b> {formatDate(item?.createdAt)}</p>
-    </div>
-  );
+function itemTitle(item) {
+  return item?.title || item?.name || "Untitled item";
 }
 
-function MatchResults({ navigateTo, darkMode, user }) {
+function itemDesc(item) {
+  return item?.description || item?.desc || "No description available";
+}
+
+function itemType(item) {
+  return String(item?.reportType || item?.type || "").toUpperCase();
+}
+
+function normalizeScore(score) {
+  if (score === null || score === undefined || score === "") return "—";
+  const num = Number(score);
+  if (Number.isNaN(num)) return String(score);
+  if (num <= 1) return `${Math.round(num * 100)}%`;
+  return `${Math.round(num)}%`;
+}
+
+export default function MatchResults({ pageParams, navigateTo, darkMode }) {
   const t = useDark(darkMode);
-  const [matches, setMatches] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState("");
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState(null);
+  const [running, setRunning] = useState(false);
 
-  React.useEffect(() => {
-    let active = true;
+  const itemId = pageParams?.itemId;
+  const type = pageParams?.type;
+  const isLostContext = type === "lost";
 
+  async function loadMatches() {
     setLoading(true);
     setError("");
-    getMyMatches(user?.token)
-      .then((data) => {
-        if (active) setMatches(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        if (active) setError(err.message || "Unable to load matches");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    try {
+      const filters = {};
+      if (itemId) {
+        if (type === "lost") filters.lostItemId = itemId;
+        else if (type === "found") filters.foundItemId = itemId;
+        else filters.itemId = itemId;
+      }
 
-    return () => {
-      active = false;
-    };
-  }, [user?.token]);
+      const data = await getMatches(filters);
+      setMatches(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Failed to load matches.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRunMatching() {
+    if (!itemId) {
+      alert("Open Match Results from a LOST item to run matching.");
+      return;
+    }
+
+    if (!isLostContext) {
+      alert("The fixed backend runs matching using a LOST item ID. Open a lost item and click Run Matching.");
+      return;
+    }
+
+    try {
+      setRunning(true);
+      setError("");
+      const created = await runMatchingForLostItem(itemId);
+      await loadMatches();
+      alert(`Matching completed. Matches returned: ${created.length}`);
+    } catch (err) {
+      setError(err.message || "Failed to run matching.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  useEffect(() => {
+    async function init() {
+      if (pageParams?.autoRun && isLostContext && itemId) {
+        await handleRunMatching();
+      } else {
+        await loadMatches();
+      }
+    }
+
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId, type]);
+
+  const handleConfirm = async (matchId) => {
+    try {
+      setActionLoading(matchId);
+      await confirmMatch(matchId);
+      await loadMatches();
+    } catch (err) {
+      alert(err.message || "Failed to confirm match.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (matchId) => {
+    try {
+      setActionLoading(matchId);
+      await rejectMatch(matchId);
+      await loadMatches();
+    } catch (err) {
+      alert(err.message || "Failed to reject match.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
@@ -76,52 +147,117 @@ function MatchResults({ navigateTo, darkMode, user }) {
         <h2 style={{ margin: "0 0 6px", fontSize: 28, fontWeight: 800, color: t.text }}>Match Results</h2>
         <p style={{ margin: "0 0 22px", fontSize: 15, color: t.muted }}>Potential matches from admin-filtered lost item reports</p>
 
-        {loading && (
-          <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: 22, color: t.body }}>
-            Loading matches...
-          </div>
-        )}
+      <div style={{ ...styles.toolbar, background: t.card, border: `1px solid ${t.border}` }}>
+        <div>
+          <div style={{ color: t.text, fontWeight: 800 }}>Backend matching status</div>
+          <p style={{ color: t.muted, margin: "4px 0 0", fontSize: 14 }}>
+            The fixed backend creates matches only after calling <b>POST /matches/run?lostItemId=...</b>.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button onClick={loadMatches} style={{ ...styles.toolbarBtn, background: "#64748b" }}>Refresh</button>
+          <button
+            onClick={handleRunMatching}
+            disabled={running || !itemId || !isLostContext}
+            style={{ ...styles.toolbarBtn, background: isLostContext ? "#0F5FFF" : "#94a3b8", cursor: isLostContext ? "pointer" : "not-allowed" }}
+            title={!isLostContext ? "Run matching is available only for LOST items." : undefined}
+          >
+            {running ? "Running..." : "Run Matching"}
+          </button>
+        </div>
+      </div>
 
-        {!loading && error && (
-          <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: 22, color: t.danger }}>
-            {error}
-          </div>
-        )}
+      {loading && <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>Loading matches...</div>}
 
-        {!loading && !error && matches.length === 0 && (
-          <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: 22 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 6 }}>No matches yet</div>
-            <div style={{ fontSize: 14, color: t.muted }}>When admin-filtered lost items match found reports, they will appear here.</div>
-          </div>
-        )}
+      {!loading && error && (
+        <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: 22, color: t.red }}>
+          {error}
+        </div>
+      )}
 
-        {!loading && !error && matches.map((match) => (
-          <div key={match.id} style={{
-            background: t.card, padding: "24px", borderRadius: 8,
-            border: `1px solid ${t.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
-            marginBottom: 16, transition: "background 0.3s, border-color 0.3s",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <ItemPanel label="Lost Item" item={match.lostItem} theme={t} />
-              <ItemPanel label="Found Item" item={match.foundItem} theme={t} tone={t.green} />
+      {!loading && !error && matches.length === 0 && (
+        <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>
+          <h3 style={{ marginTop: 0 }}>No matches found yet</h3>
+          <p style={{ color: t.muted, marginBottom: 0 }}>
+            Create one LOST item and one similar FOUND item. Then open the lost item and click <b>Run Matching</b>.
+          </p>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {matches.map((match) => {
+          const lostItem = match.lostItem || match.lost || {};
+          const foundItem = match.foundItem || match.found || {};
+          const matchId = match.id || match.matchId;
+          const score = normalizeScore(match.confidenceScore ?? match.score);
+          const status = match.status || "SUGGESTED";
+
+          return (
+            <div key={matchId} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 22, padding: 24, boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
+                <div>
+                  <div style={{ color: t.muted, fontSize: 13, fontWeight: 700 }}>MATCH #{matchId}</div>
+                  <h2 style={{ color: t.text, margin: "4px 0 0", fontSize: 22 }}>Confidence: {score}</h2>
+                </div>
+                <span style={{ alignSelf: "flex-start", padding: "6px 14px", borderRadius: 999, background: "#dbeafe", color: "#1d4ed8", fontWeight: 800, fontSize: 13 }}>
+                  {status}
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+                <div style={{ background: t.fieldBg, border: `1px solid ${t.border}`, borderRadius: 16, padding: 18 }}>
+                  <div style={{ color: t.red, fontSize: 12, fontWeight: 800, marginBottom: 8 }}>🔴 LOST ITEM</div>
+                  <h3 style={{ color: t.text, margin: "0 0 8px" }}>{itemTitle(lostItem)}</h3>
+                  <p style={{ color: t.muted, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{itemDesc(lostItem)}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>ID:</b> {lostItem.id || "—"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Type:</b> {itemType(lostItem) || "LOST"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Category:</b> {lostItem.category || "—"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Location:</b> {lostItem.location || "—"}</p>
+                </div>
+
+                <div style={{ background: t.fieldBg, border: `1px solid ${t.border}`, borderRadius: 16, padding: 18 }}>
+                  <div style={{ color: t.green, fontSize: 12, fontWeight: 800, marginBottom: 8 }}>🟢 FOUND ITEM</div>
+                  <h3 style={{ color: t.text, margin: "0 0 8px" }}>{itemTitle(foundItem)}</h3>
+                  <p style={{ color: t.muted, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{itemDesc(foundItem)}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>ID:</b> {foundItem.id || "—"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Type:</b> {itemType(foundItem) || "FOUND"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Category:</b> {foundItem.category || "—"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Location:</b> {foundItem.location || "—"}</p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+                <button disabled={actionLoading === matchId} onClick={() => handleConfirm(matchId)} style={{ ...styles.action, background: "#16a34a" }}>
+                  Confirm Match
+                </button>
+                <button disabled={actionLoading === matchId} onClick={() => handleReject(matchId)} style={{ ...styles.action, background: "#dc2626" }}>
+                  Reject Match
+                </button>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+                <p style={{ margin: 0, fontSize: 14, color: t.body, fontWeight: 600 }}>
+                  Match Score: {normalizeScore(match.confidenceScore ?? match.score)}
+                </p>
+                <span style={{
+                  display: "inline-block", padding: "6px 16px",
+                  borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: match.status === "SUGGESTED" ? "#E6F1FB" : "#FAEEDA",
+                  color: match.status === "SUGGESTED" ? "#0b3470" : "#633806",
+                }}>{match.status}</span>
+              </div>
             </div>
-
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
-              <p style={{ margin: 0, fontSize: 14, color: t.body, fontWeight: 600 }}>
-                Match Score: {formatScore(match.confidenceScore)}
-              </p>
-              <span style={{
-                display: "inline-block", padding: "6px 16px",
-                borderRadius: 8, fontSize: 13, fontWeight: 600,
-                background: match.status === "SUGGESTED" ? "#E6F1FB" : "#FAEEDA",
-                color: match.status === "SUGGESTED" ? "#0b3470" : "#633806",
-              }}>{match.status}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export default MatchResults;
+const styles = {
+  toolbar: { padding: 18, borderRadius: 18, marginBottom: 20, display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap", alignItems: "center" },
+  toolbarBtn: { border: "none", color: "white", borderRadius: 12, padding: "11px 16px", fontWeight: 800, cursor: "pointer" },
+  info: { padding: 28, borderRadius: 18, textAlign: "center", marginBottom: 18 },
+  error: { padding: 16, borderRadius: 14, background: "#fee2e2", border: "1px solid #fecaca", color: "#991b1b", marginBottom: 18 },
+  action: { border: "none", color: "white", borderRadius: 12, padding: "11px 16px", fontWeight: 800, cursor: "pointer" },
+};
