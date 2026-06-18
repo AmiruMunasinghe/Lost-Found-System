@@ -1,5 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Bell, CheckCircle2, ChevronDown, Menu, Moon, Sun, X } from "lucide-react";
+import {
+  getUnreadNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "../api/notifications";
 
 const C = {
   primary: "#0F5FFF",
@@ -7,6 +12,27 @@ const C = {
   border: "#d0d5dd",
   body: "#344054",
 };
+
+function formatTime(dateStr) {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} minute${mins > 1 ? "s" : ""} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
+
+function typeFromNotification(n) {
+  const t = String(n.type || "").toLowerCase();
+  if (t.includes("match")) return "match";
+  if (t.includes("reward") || t.includes("badge")) return "reward";
+  if (t.includes("resolv") || t.includes("claim")) return "resolved";
+  return "info";
+}
 
 function useClickOutside(ref, enabled, onOutsideClick) {
   useEffect(() => {
@@ -38,17 +64,30 @@ export default function Navbar({
   const publicMenuRef = useRef(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [publicMenuOpen, setPublicMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: "Your lost laptop has a potential match.", time: "2 minutes ago", read: false, type: "match" },
-    { id: 2, message: "You earned 50 points for reporting a found item.", time: "1 hour ago", read: false, type: "reward" },
-    { id: 3, message: "Your water bottle report was resolved.", time: "Yesterday", read: false, type: "resolved" },
-    { id: 4, message: "New badge unlocked: Photo Uploader.", time: "2 days ago", read: true, type: "badge" },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const data = await getUnreadNotifications(user.id);
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch {
+      // silently ignore — keep existing state
+    }
+  }, [user?.id]);
+
+  // Fetch on mount and whenever the user changes; poll every 60s
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, fetchNotifications]);
 
   useClickOutside(notificationRef, showNotifications, () => setShowNotifications(false));
   useClickOutside(publicMenuRef, publicMenuOpen, () => setPublicMenuOpen(false));
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const nb = darkMode
     ? {
@@ -131,25 +170,34 @@ export default function Navbar({
     return titles[key] || "Dashboard";
   };
 
-  const markAsRead = (id) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAsRead = async (id) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    try {
+      if (user?.id) await markNotificationAsRead(id, user.id);
+    } catch {
+      fetchNotifications();
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      if (user?.id) await markAllNotificationsAsRead(user.id);
+    } catch {
+      fetchNotifications();
+    }
   };
 
   const openNotificationTarget = (notification) => {
     markAsRead(notification.id);
-
-    if (notification.type === "match") {
+    const kind = typeFromNotification(notification);
+    if (kind === "match") {
       navigateTo("/matchresults");
-    } else if (notification.type === "reward" || notification.type === "badge") {
+    } else if (kind === "reward") {
       navigateTo("/rewards");
     } else {
       navigateTo("/reports");
     }
-
     setShowNotifications(false);
   };
 
@@ -254,41 +302,60 @@ export default function Navbar({
                 </div>
 
                 <div style={styles.notificationList}>
-                  {notifications.map((notification) => (
-                    <button
-                      key={notification.id}
-                      style={{
-                        ...styles.notificationItem,
-                        background: notification.read ? nb.panelCard : nb.unreadBg,
-                        borderBottom: `1px solid ${nb.border}`,
-                      }}
-                      onClick={() => openNotificationTarget(notification)}
-                    >
-                      <span style={styles.notificationIcon}>
-                        {{ match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆" }[notification.type] || "📢"}
-                      </span>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: "24px", textAlign: "center", color: nb.panelMuted, fontSize: 14 }}>
+                      🔕 No unread notifications
+                    </div>
+                  ) : notifications.map((notification) => {
+                    const kind = typeFromNotification(notification);
+                    const typeIcon = { match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆", info: "📢" };
+                    return (
+                      <button
+                        key={notification.id}
+                        style={{
+                          ...styles.notificationItem,
+                          background: notification.isRead ? nb.panelCard : nb.unreadBg,
+                          borderBottom: `1px solid ${nb.border}`,
+                        }}
+                        onClick={() => openNotificationTarget(notification)}
+                      >
+                        <span style={styles.notificationIcon}>{typeIcon[kind] || "📢"}</span>
 
-                      <span style={styles.notificationBody}>
-                        <span
-                          style={{
-                            ...styles.notificationMessage,
-                            color: nb.panelText,
-                            fontWeight: notification.read ? 500 : 800,
-                          }}
-                        >
-                          {notification.message}
+                        <span style={styles.notificationBody}>
+                          {notification.title && (
+                            <span style={{ fontSize: 11, color: nb.panelMuted, fontWeight: 600, display: "block", marginBottom: 2 }}>
+                              {notification.title}
+                            </span>
+                          )}
+                          <span
+                            style={{
+                              ...styles.notificationMessage,
+                              color: nb.panelText,
+                              fontWeight: notification.isRead ? 500 : 800,
+                            }}
+                          >
+                            {notification.message}
+                          </span>
+                          <span style={{ ...styles.notificationTime, color: nb.panelMuted }}>
+                            {formatTime(notification.createdAt)}
+                          </span>
                         </span>
-                        <span style={{ ...styles.notificationTime, color: nb.panelMuted }}>{notification.time}</span>
-                      </span>
 
-                      {!notification.read && <span style={styles.unreadDot} />}
-                    </button>
-                  ))}
+                        {!notification.isRead && <span style={styles.unreadDot} />}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div style={{ ...styles.notificationFooter, borderTop: `1px solid ${nb.border}` }}>
                   <button style={styles.markReadBtn} onClick={markAllAsRead}>
                     <CheckCircle2 size={15} /> Mark all as read
+                  </button>
+                  <button
+                    style={{ ...styles.markReadBtn, marginLeft: "auto" }}
+                    onClick={() => { setShowNotifications(false); navigateTo("/notifications"); }}
+                  >
+                    View all
                   </button>
                 </div>
               </div>
