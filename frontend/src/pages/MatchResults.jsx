@@ -269,6 +269,18 @@ export default function MatchResults({ pageParams, navigateTo, darkMode, user })
                 )}
               </div>
 
+              {(isLostContext || isAdmin || !type) && (
+                <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+                  <button disabled={actionLoading === matchId} onClick={() => handleConfirm(matchId)} style={{ ...styles.action, background: "#16a34a" }}>
+                    Confirm Match
+                  </button>
+                  <button disabled={actionLoading === matchId} onClick={() => handleReject(matchId)} style={{ ...styles.action, background: "#dc2626" }}>
+                    Reject Match
+                  </button>
+                </div>
+              )}
+
+
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
                 <p style={{ margin: 0, fontSize: 14, color: t.body, fontWeight: 600 }}>
                   Match Score: {normalizeScore(match.confidenceScore ?? match.score)}

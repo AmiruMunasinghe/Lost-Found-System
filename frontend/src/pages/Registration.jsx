@@ -57,7 +57,7 @@ export default function Registration({ setUser, navigateTo, darkMode }) {
   const label = { display: "block", marginBottom: 6, color: t.body, fontWeight: 700, fontSize: 14 };
 
   return (
-    <div style={{ minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
+    <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif", zIndex: 9999 }}>
       <style>{`
         @media (max-width: 850px) {
           .auth-grid { grid-template-columns: 1fr !important; }

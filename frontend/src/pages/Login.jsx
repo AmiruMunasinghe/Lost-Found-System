@@ -56,7 +56,7 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
   }
 
   const styles = {
-    page: { minHeight: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" },
+    page: { position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: t.page, display: "flex", justifyContent: "center", alignItems: "center", padding: 20, fontFamily: "'DM Sans', 'Segoe UI', sans-serif", zIndex: 9999 },
     container: { width: 1000, maxWidth: "100%", minHeight: 560, background: t.card, borderRadius: 24, overflow: "hidden", display: "grid", gridTemplateColumns: "45% 55%", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: `1px solid ${t.border}` },
     leftPanel: { background: darkMode ? "#0f172a" : "#eef4fb" },
     rightPanel: { display: "flex", justifyContent: "center", alignItems: "center", padding: 40, background: t.panel },

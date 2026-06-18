@@ -85,7 +85,11 @@ export default function ResetPassword({ navigateTo, darkMode }) {
 
   const styles = {
     page: {
-      minHeight: "100%",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
       background: T.page,
       display: "flex",
       justifyContent: "center",
@@ -94,6 +98,7 @@ export default function ResetPassword({ navigateTo, darkMode }) {
       fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
       boxSizing: "border-box",
       transition: "background-color 0.3s ease",
+      zIndex: 9999,
     },
     container: {
       width: "1000px",
