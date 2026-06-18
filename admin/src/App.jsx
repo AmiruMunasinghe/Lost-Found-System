@@ -7,6 +7,9 @@ import {
   deleteItem,
   getUserDetails,
   getCurrentAdmin,
+  getCurrentAdminAsync,
+  adminLogin,
+  clearAdminSession,
 } from './services/adminApi'
 
 import {
@@ -814,9 +817,103 @@ function MatchDetailPanel({ match }) {
   )
 }
 
+function AdminLoginPage({ onLogin }) {
+  const [username, setUsername] = useState('admin')
+  const [password, setPassword] = useState('admin123')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const user = await adminLogin(username, password)
+      onLogin(user)
+      navigate('/admin/lost-items')
+    } catch (err) {
+      setError(err.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="panel" style={{ maxWidth: 420, margin: '40px auto', padding: 30 }}>
+      <div className="panel-heading" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+        <p className="eyebrow">Admin login</p>
+        <h2>Sign in to LostFound admin</h2>
+      </div>
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16, marginTop: 20 }}>
+        <label className="search-field">
+          <span>Username</span>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="admin"
+            autoComplete="username"
+          />
+        </label>
+        <label className="search-field">
+          <span>Password</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="admin123"
+            autoComplete="current-password"
+          />
+        </label>
+        {error && <div className="empty-state" style={{ color: '#b42318' }}>{error}</div>}
+        <button className="primary-button" type="submit" disabled={loading}>
+          {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </section>
+  )
+}
+
 function App() {
   const route = useRoute()
-  const admin = getCurrentAdmin()
+  const [admin, setAdmin] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadAdmin = async () => {
+      try {
+        const adminUser = await getCurrentAdminAsync()
+        if (mounted) {
+          setAdmin(adminUser)
+        }
+      } catch (error) {
+        console.error('Admin auth failed:', error)
+        if (mounted) {
+          setAdmin(null)
+        }
+      } finally {
+        if (mounted) {
+          setAuthLoading(false)
+        }
+      }
+    }
+
+    loadAdmin()
+
+    const handleSessionChange = () => {
+      const adminUser = getCurrentAdmin()
+      setAdmin(adminUser)
+    }
+
+    window.addEventListener('adminSessionChanged', handleSessionChange)
+    return () => {
+      mounted = false
+      window.removeEventListener('adminSessionChanged', handleSessionChange)
+    }
+  }, [])
+
   const isAdmin = admin?.role === 'ADMIN'
   const guardedRoute = isAdmin ? route : '/403'
 
@@ -824,17 +921,51 @@ function App() {
     if (window.location.pathname === '/') navigate('/admin/lost-items')
   }, [route])
 
+  const handleLogin = (user) => {
+    setAdmin(user)
+  }
+
+  if (authLoading) {
+    return (
+      <div className="app-shell">
+        <main className="main-panel">
+          <div className="page-surface">
+            <div className="panel"><div className="empty-state">Checking admin access...</div></div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (!admin) {
+    return (
+      <div className="app-shell">
+        <main className="main-panel">
+          <div className="page-surface">
+            <AdminLoginPage onLogin={handleLogin} />
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="app-shell">
       <Sidebar activePath={guardedRoute} />
       <main className="main-panel">
         <Topbar title={pageTitles[guardedRoute] || 'Lost Items'} admin={admin} />
         <div className="page-surface">
-          {!isAdmin && <ForbiddenPage />}
-          {isAdmin && guardedRoute === '/admin/lost-items' && <ItemsManagerPage type="LOST" />}
-          {isAdmin && guardedRoute === '/admin/found-items' && <ItemsManagerPage type="FOUND" />}
-          {isAdmin && guardedRoute === '/admin/match-results' && <MatchResultsPage />}
-          {isAdmin && !pageTitles[guardedRoute] && <ItemsManagerPage type="LOST" />}
+          {!isAdmin ? (
+            <ForbiddenPage />
+          ) : guardedRoute === '/admin/lost-items' ? (
+            <ItemsManagerPage type="LOST" />
+          ) : guardedRoute === '/admin/found-items' ? (
+            <ItemsManagerPage type="FOUND" />
+          ) : guardedRoute === '/admin/match-results' ? (
+            <MatchResultsPage />
+          ) : (
+            <ItemsManagerPage type="LOST" />
+          )}
         </div>
       </main>
     </div>
@@ -876,8 +1007,7 @@ function Sidebar({ activePath }) {
 
 function Topbar({ title, admin }) {
   function handleLogout() {
-    localStorage.setItem('adminUser', JSON.stringify({ ...admin, role: 'USER', name: 'Signed out user' }))
-    localStorage.removeItem('adminToken')
+    clearAdminSession()
     navigate('/403')
   }
 
@@ -903,8 +1033,7 @@ function Topbar({ title, admin }) {
 
 function ForbiddenPage() {
   function restoreAdmin() {
-    localStorage.removeItem('adminToken')
-    localStorage.removeItem('adminUser')
+    clearAdminSession()
     navigate('/admin/lost-items')
   }
 

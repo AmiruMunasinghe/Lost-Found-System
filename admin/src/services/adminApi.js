@@ -2,36 +2,47 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081
 const USE_MOCKS = false
 
 async function getAdminToken() {
-  let token = localStorage.getItem('adminToken')
-  if (!token) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'admin', password: 'admin123' })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        token = data.accessToken || data.token;
-        if (token) {
-          localStorage.setItem('adminToken', token);
-          localStorage.setItem('adminUser', JSON.stringify({
-            id: data.user?.id || 'A-09',
-            name: data.user?.fullName || 'Team 9 Admin',
-            email: data.user?.email || 'admin@uom.lk',
-            role: data.user?.role || 'ADMIN'
-          }));
-        }
-      }
-    } catch (e) {
-      console.error('Failed to perform silent admin login:', e);
-    }
-  }
-  return token;
+  return localStorage.getItem('adminToken')
 }
 
 function getAuthHeaders(token) {
   return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+export async function adminLogin(username, password) {
+  const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Unable to sign in. Check your credentials.')
+  }
+
+  const data = await response.json()
+  const token = data.accessToken || data.token
+  if (!token) {
+    throw new Error('No token returned from admin login.')
+  }
+
+  const user = {
+    id: data.user?.id || 'A-09',
+    name: data.user?.fullName || data.user?.username || 'Team 9 Admin',
+    email: data.user?.email || 'admin@uom.lk',
+    role: data.user?.role || 'ADMIN',
+  }
+
+  localStorage.setItem('adminToken', token)
+  localStorage.setItem('adminUser', JSON.stringify(user))
+  window.dispatchEvent(new Event('adminSessionChanged'))
+  return user
+}
+
+export function clearAdminSession() {
+  localStorage.removeItem('adminToken')
+  localStorage.removeItem('adminUser')
+  window.dispatchEvent(new Event('adminSessionChanged'))
 }
 
 async function request(path, options = {}) {
@@ -46,6 +57,9 @@ async function request(path, options = {}) {
   })
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      clearAdminSession()
+    }
     throw new Error(`Admin API request failed with ${response.status}`)
   }
 
@@ -79,19 +93,23 @@ export async function getMatches(status = 'ALL') {
   return Array.isArray(res) ? res.map(mapMatch) : []
 }
 
+export async function getCurrentAdminAsync() {
+  await getAdminToken()
+  return getCurrentAdmin()
+}
+
 export function getCurrentAdmin() {
   const saved = localStorage.getItem('adminUser')
 
   if (saved) {
-    return JSON.parse(saved)
+    const parsed = JSON.parse(saved)
+    return {
+      ...parsed,
+      role: parsed?.role ? String(parsed.role) : null,
+    }
   }
 
-  return {
-    id: 'A-09',
-    name: 'Team 9 Admin',
-    email: 'admin.team9@uom.lk',
-    role: 'ADMIN',
-  }
+  return null
 }
 
 function mapItem(item) {
