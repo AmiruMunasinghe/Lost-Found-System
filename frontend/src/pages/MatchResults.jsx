@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { confirmMatch, getMatches, rejectMatch } from "../api/matches";
+import { confirmMatch, getMatches, rejectMatch, runMatchingForLostItem } from "../api/matches";
 
 function useDark(dm) {
   return dm ? {
-    card: "#1e293b", border: "#334155", text: "#e2e8f0",
-    muted: "#94a3b8", body: "#cbd5e1", fieldBg: "#0f172a",
-    green: "#22c55e", red: "#f87171",
+    card: "#1e293b",
+    fieldBg: "#0f172a",
+    border: "#334155",
+    text: "#e2e8f0",
+    body: "#cbd5e1",
+    muted: "#94a3b8",
+    green: "#22c55e",
+    red: "#f87171",
   } : {
-    card: "#FFFFFF", border: "#d0d5dd", text: "#0b3470",
-    muted: "#667085", body: "#344054", fieldBg: "#f8fafc",
-    green: "#16a34a", red: "#dc2626",
+    card: "#ffffff",
+    fieldBg: "#f8fafc",
+    border: "#d0d5dd",
+    text: "#0b3470",
+    body: "#344054",
+    muted: "#667085",
+    green: "#16a34a",
+    red: "#dc2626",
   };
 }
 
 function itemTitle(item) {
-  return item?.title || `Item #${item?.id || "—"}`;
+  return item?.title || item?.name || "Untitled item";
 }
 
 function itemDesc(item) {
@@ -25,15 +35,25 @@ function itemType(item) {
   return String(item?.reportType || item?.type || "").toUpperCase();
 }
 
+function normalizeScore(score) {
+  if (score === null || score === undefined || score === "") return "—";
+  const num = Number(score);
+  if (Number.isNaN(num)) return String(score);
+  if (num <= 1) return `${Math.round(num * 100)}%`;
+  return `${Math.round(num)}%`;
+}
+
 export default function MatchResults({ pageParams, navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(null);
+  const [running, setRunning] = useState(false);
 
   const itemId = pageParams?.itemId;
   const type = pageParams?.type;
+  const isLostContext = type === "lost";
 
   async function loadMatches() {
     try {
@@ -48,7 +68,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
       }
 
       const data = await getMatches(filters);
-      setMatches(data);
+      setMatches(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Failed to load matches.");
     } finally {
@@ -56,8 +76,40 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
     }
   }
 
+  async function handleRunMatching() {
+    if (!itemId) {
+      alert("Open Match Results from a LOST item to run matching.");
+      return;
+    }
+
+    if (!isLostContext) {
+      alert("The fixed backend runs matching using a LOST item ID. Open a lost item and click Run Matching.");
+      return;
+    }
+
+    try {
+      setRunning(true);
+      setError("");
+      const created = await runMatchingForLostItem(itemId);
+      await loadMatches();
+      alert(`Matching completed. Matches returned: ${created.length}`);
+    } catch (err) {
+      setError(err.message || "Failed to run matching.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
   useEffect(() => {
-    loadMatches();
+    async function init() {
+      if (pageParams?.autoRun && isLostContext && itemId) {
+        await handleRunMatching();
+      } else {
+        await loadMatches();
+      }
+    }
+
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemId, type]);
 
@@ -100,6 +152,26 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
         </p>
       </div>
 
+      <div style={{ ...styles.toolbar, background: t.card, border: `1px solid ${t.border}` }}>
+        <div>
+          <div style={{ color: t.text, fontWeight: 800 }}>Backend matching status</div>
+          <p style={{ color: t.muted, margin: "4px 0 0", fontSize: 14 }}>
+            The fixed backend creates matches only after calling <b>POST /matches/run?lostItemId=...</b>.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button onClick={loadMatches} style={{ ...styles.toolbarBtn, background: "#64748b" }}>Refresh</button>
+          <button
+            onClick={handleRunMatching}
+            disabled={running || !itemId || !isLostContext}
+            style={{ ...styles.toolbarBtn, background: isLostContext ? "#0F5FFF" : "#94a3b8", cursor: isLostContext ? "pointer" : "not-allowed" }}
+            title={!isLostContext ? "Run matching is available only for LOST items." : undefined}
+          >
+            {running ? "Running..." : "Run Matching"}
+          </button>
+        </div>
+      </div>
+
       {loading && <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>Loading matches...</div>}
 
       {error && <div style={styles.error}>{error}</div>}
@@ -108,7 +180,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
         <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>
           <h3 style={{ marginTop: 0 }}>No matches found yet</h3>
           <p style={{ color: t.muted, marginBottom: 0 }}>
-            Create one LOST item and one similar FOUND item using the forms. Then come back here.
+            Create one LOST item and one similar FOUND item. Then open the lost item and click <b>Run Matching</b>.
           </p>
         </div>
       )}
@@ -118,7 +190,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
           const lostItem = match.lostItem || match.lost || {};
           const foundItem = match.foundItem || match.found || {};
           const matchId = match.id || match.matchId;
-          const score = match.confidenceScore ?? match.score ?? "—";
+          const score = normalizeScore(match.confidenceScore ?? match.score);
           const status = match.status || "SUGGESTED";
 
           return (
@@ -126,7 +198,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
               <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
                 <div>
                   <div style={{ color: t.muted, fontSize: 13, fontWeight: 700 }}>MATCH #{matchId}</div>
-                  <h2 style={{ color: t.text, margin: "4px 0 0", fontSize: 22 }}>Score: {score}</h2>
+                  <h2 style={{ color: t.text, margin: "4px 0 0", fontSize: 22 }}>Confidence: {score}</h2>
                 </div>
                 <span style={{ alignSelf: "flex-start", padding: "6px 14px", borderRadius: 999, background: "#dbeafe", color: "#1d4ed8", fontWeight: 800, fontSize: 13 }}>
                   {status}
@@ -140,6 +212,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
                   <p style={{ color: t.muted, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{itemDesc(lostItem)}</p>
                   <p style={{ color: t.body, margin: "6px 0" }}><b>ID:</b> {lostItem.id || "—"}</p>
                   <p style={{ color: t.body, margin: "6px 0" }}><b>Type:</b> {itemType(lostItem) || "LOST"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Category:</b> {lostItem.category || "—"}</p>
                   <p style={{ color: t.body, margin: "6px 0" }}><b>Location:</b> {lostItem.location || "—"}</p>
                 </div>
 
@@ -149,6 +222,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
                   <p style={{ color: t.muted, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{itemDesc(foundItem)}</p>
                   <p style={{ color: t.body, margin: "6px 0" }}><b>ID:</b> {foundItem.id || "—"}</p>
                   <p style={{ color: t.body, margin: "6px 0" }}><b>Type:</b> {itemType(foundItem) || "FOUND"}</p>
+                  <p style={{ color: t.body, margin: "6px 0" }}><b>Category:</b> {foundItem.category || "—"}</p>
                   <p style={{ color: t.body, margin: "6px 0" }}><b>Location:</b> {foundItem.location || "—"}</p>
                 </div>
               </div>
@@ -170,7 +244,9 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
 }
 
 const styles = {
-  info: { padding: 28, borderRadius: 18, textAlign: "center" },
+  toolbar: { padding: 18, borderRadius: 18, marginBottom: 20, display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap", alignItems: "center" },
+  toolbarBtn: { border: "none", color: "white", borderRadius: 12, padding: "11px 16px", fontWeight: 800, cursor: "pointer" },
+  info: { padding: 28, borderRadius: 18, textAlign: "center", marginBottom: 18 },
   error: { padding: 16, borderRadius: 14, background: "#fee2e2", border: "1px solid #fecaca", color: "#991b1b", marginBottom: 18 },
   action: { border: "none", color: "white", borderRadius: 12, padding: "11px 16px", fontWeight: 800, cursor: "pointer" },
 };

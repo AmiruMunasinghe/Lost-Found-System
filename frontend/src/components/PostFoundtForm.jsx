@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { createItem } from "../api/items";
+import { createItem, getAllItems } from "../api/items";
+import { runMatchingForLostItems } from "../api/matches";
 
 const categories = ["Wallet", "Electronics", "Documents", "Keys", "Bags & Wallets", "Books", "Other"];
 
@@ -59,7 +60,21 @@ function PostFoundForm({ navigateTo, darkMode }) {
         imageUrls: [],
       });
 
-      alert(`Found item saved successfully. Item ID: ${savedItem.id}`);
+      let matchCount = 0;
+      try {
+        const allItems = await getAllItems();
+        const lostItemIds = allItems
+          .filter((item) => String(item.reportType || item.type || "").toUpperCase() === "LOST")
+          .filter((item) => String(item.status || "OPEN").toUpperCase() === "OPEN" || String(item.status || "").toUpperCase() === "PENDING_REVIEW")
+          .map((item) => item.id);
+
+        const matches = await runMatchingForLostItems(lostItemIds);
+        matchCount = Array.isArray(matches) ? matches.length : 0;
+      } catch (matchErr) {
+        console.warn("Found item saved, but matching did not run:", matchErr);
+      }
+
+      alert(`Found item saved successfully. Item ID: ${savedItem.id}. Matching returned ${matchCount} result(s).`);
       setTitle("");
       setDescription("");
       setCategory("Wallet");

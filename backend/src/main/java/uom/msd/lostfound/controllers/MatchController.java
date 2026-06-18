@@ -1,12 +1,20 @@
 package uom.msd.lostfound.controllers;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import uom.msd.lostfound.auth.AuthenticatedUser;
 import uom.msd.lostfound.dto.ItemResponseDTO;
 import uom.msd.lostfound.dto.MatchResponseDTO;
+import uom.msd.lostfound.dto.RunMatchingRequest;
 import uom.msd.lostfound.enums.ItemStatus;
 import uom.msd.lostfound.enums.MatchStatus;
 import uom.msd.lostfound.matching.MatchingEngine;
@@ -21,20 +29,72 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/matches")
-@RequiredArgsConstructor
-@Slf4j
-@Transactional
 @CrossOrigin(origins = "*", maxAge = 3600)
+@Transactional
 public class MatchController {
 
     private final ItemMatchRepository itemMatchRepository;
     private final ItemRepository itemRepository;
     private final MatchingEngine matchingEngine;
 
-    /**
-     * GET /matches
-     * Retrieve matches. Supports filtering by status, lostItemId, foundItemId, or general itemId.
-     */
+    public MatchController(ItemMatchRepository itemMatchRepository,
+                           ItemRepository itemRepository,
+                           MatchingEngine matchingEngine) {
+        this.itemMatchRepository = itemMatchRepository;
+        this.itemRepository = itemRepository;
+        this.matchingEngine = matchingEngine;
+    }
+
+    @PostMapping("/run")
+    public ResponseEntity<List<MatchResponseDTO>> runMatchingForLostItem(@RequestParam Long lostItemId) {
+        return ResponseEntity.ok(toMatchResponses(matchingEngine.runForFilteredLostItem(lostItemId)));
+    }
+
+    @PostMapping("/run-filtered")
+    public ResponseEntity<List<MatchResponseDTO>> runMatchingForFilteredLostItems(
+            @RequestBody RunMatchingRequest request) {
+        return ResponseEntity.ok(toMatchResponses(matchingEngine.runForFilteredLostItems(request.getLostItemIds())));
+    }
+
+    @GetMapping("/my")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<MatchResponseDTO>> getMyMatches(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        List<ItemMatch> matches = itemMatchRepository.findMatchesVisibleToUser(authenticatedUser.getId());
+        return ResponseEntity.ok(toMatchResponses(matches));
+    }
+
+    @GetMapping("/review-queue")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<MatchResponseDTO>> getReviewQueue() {
+        return ResponseEntity.ok(toMatchResponses(itemMatchRepository.findByStatus(MatchStatus.PENDING_REVIEW)));
+    }
+
+    @PostMapping("/review-queue/{matchId}/approve")
+    public ResponseEntity<MatchResponseDTO> approvePendingMatch(@PathVariable Long matchId) {
+        ItemMatch match = getMatch(matchId);
+        if (match.getStatus() != MatchStatus.PENDING_REVIEW) {
+            throw new IllegalArgumentException("Match is not in PENDING_REVIEW status");
+        }
+
+        match.setStatus(MatchStatus.SUGGESTED);
+        ItemMatch savedMatch = itemMatchRepository.save(match);
+        matchingEngine.notifyOnSuggestedMatch(savedMatch);
+
+        return ResponseEntity.ok(toMatchResponse(savedMatch));
+    }
+
+    @PostMapping("/review-queue/{matchId}/reject")
+    public ResponseEntity<MatchResponseDTO> rejectPendingMatch(@PathVariable Long matchId) {
+        ItemMatch match = getMatch(matchId);
+        if (match.getStatus() != MatchStatus.PENDING_REVIEW) {
+            throw new IllegalArgumentException("Match is not in PENDING_REVIEW status");
+        }
+
+        match.setStatus(MatchStatus.REJECTED);
+        return ResponseEntity.ok(toMatchResponse(itemMatchRepository.save(match)));
+    }
+
     @GetMapping
     @Transactional(readOnly = true)
     public ResponseEntity<List<MatchResponseDTO>> getMatches(
@@ -42,7 +102,6 @@ public class MatchController {
             @RequestParam(required = false) Long lostItemId,
             @RequestParam(required = false) Long foundItemId,
             @RequestParam(required = false) Long itemId) {
-
         List<ItemMatch> matches;
 
         if (status != null) {
@@ -61,144 +120,62 @@ public class MatchController {
             matches = itemMatchRepository.findAll();
         }
 
-        List<MatchResponseDTO> dtos = matches.stream()
-                .map(this::convertToMatchResponseDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(toMatchResponses(matches));
     }
 
-    /**
-     * GET /matches/{matchId}
-     * Retrieve a specific match.
-     */
     @GetMapping("/{matchId}")
     @Transactional(readOnly = true)
     public ResponseEntity<MatchResponseDTO> getMatchById(@PathVariable Long matchId) {
-        ItemMatch match = itemMatchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + matchId));
-        return ResponseEntity.ok(convertToMatchResponseDTO(match));
+        return ResponseEntity.ok(toMatchResponse(getMatch(matchId)));
     }
 
-    /**
-     * POST /matches/{matchId}/confirm
-     * Confirm a suggested match. Sets match status to ACCEPTED and both items to MATCHED status.
-     */
     @PostMapping("/{matchId}/confirm")
     public ResponseEntity<MatchResponseDTO> confirmMatch(@PathVariable Long matchId) {
-        ItemMatch match = itemMatchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + matchId));
-
+        ItemMatch match = getMatch(matchId);
         if (match.getStatus() == MatchStatus.REJECTED) {
-            throw new RuntimeException("Cannot confirm a rejected match");
+            throw new IllegalArgumentException("Cannot confirm a rejected match");
         }
 
         match.setStatus(MatchStatus.ACCEPTED);
-        
-        Item lostItem = match.getLostItem();
-        Item foundItem = match.getFoundItem();
-        lostItem.setStatus(ItemStatus.MATCHED);
-        foundItem.setStatus(ItemStatus.MATCHED);
+        match.getLostItem().setStatus(ItemStatus.MATCHED);
+        match.getFoundItem().setStatus(ItemStatus.MATCHED);
 
-        itemRepository.save(lostItem);
-        itemRepository.save(foundItem);
-        ItemMatch savedMatch = itemMatchRepository.save(match);
-
-        log.info("Match id={} confirmed. Items id={} and id={} marked as MATCHED",
-                matchId, lostItem.getId(), foundItem.getId());
-
-        return ResponseEntity.ok(convertToMatchResponseDTO(savedMatch));
+        itemRepository.save(match.getLostItem());
+        itemRepository.save(match.getFoundItem());
+        return ResponseEntity.ok(toMatchResponse(itemMatchRepository.save(match)));
     }
 
-    /**
-     * POST /matches/{matchId}/reject
-     * Reject a suggested/pending match.
-     */
     @PostMapping("/{matchId}/reject")
     public ResponseEntity<MatchResponseDTO> rejectMatch(@PathVariable Long matchId) {
-        ItemMatch match = itemMatchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + matchId));
-
+        ItemMatch match = getMatch(matchId);
         match.setStatus(MatchStatus.REJECTED);
-        ItemMatch savedMatch = itemMatchRepository.save(match);
-
-        log.info("Match id={} rejected.", matchId);
-
-        return ResponseEntity.ok(convertToMatchResponseDTO(savedMatch));
+        return ResponseEntity.ok(toMatchResponse(itemMatchRepository.save(match)));
     }
 
-    /**
-     * GET /matches/review-queue
-     * Retrieve all matches with status PENDING_REVIEW (for administrator manual verification).
-     */
-    @GetMapping("/review-queue")
-    @Transactional(readOnly = true)
-    public ResponseEntity<List<MatchResponseDTO>> getReviewQueue() {
-        List<ItemMatch> pendingMatches = itemMatchRepository.findByStatus(MatchStatus.PENDING_REVIEW);
-        List<MatchResponseDTO> dtos = pendingMatches.stream()
-                .map(this::convertToMatchResponseDTO)
+    private ItemMatch getMatch(Long matchId) {
+        return itemMatchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found with id: " + matchId));
+    }
+
+    private List<MatchResponseDTO> toMatchResponses(List<ItemMatch> matches) {
+        return matches.stream()
+                .map(this::toMatchResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
     }
 
-    /**
-     * POST /matches/review-queue/{matchId}/approve
-     * Admin approves a match in the manual review queue, promoting it to SUGGESTED and notifying users.
-     */
-    @PostMapping("/review-queue/{matchId}/approve")
-    public ResponseEntity<MatchResponseDTO> approvePendingMatch(@PathVariable Long matchId) {
-        ItemMatch match = itemMatchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + matchId));
-
-        if (match.getStatus() != MatchStatus.PENDING_REVIEW) {
-            throw new RuntimeException("Match is not in PENDING_REVIEW status");
-        }
-
-        match.setStatus(MatchStatus.SUGGESTED);
-        ItemMatch savedMatch = itemMatchRepository.save(match);
-        
-        // Notify users since it is now approved as a suggested match
-        matchingEngine.notifyOnHighMatch(savedMatch);
-
-        log.info("Pending match id={} approved by admin. Status promoted to SUGGESTED.", matchId);
-
-        return ResponseEntity.ok(convertToMatchResponseDTO(savedMatch));
+    private MatchResponseDTO toMatchResponse(ItemMatch match) {
+        return new MatchResponseDTO(
+                match.getId(),
+                toItemResponse(match.getLostItem()),
+                toItemResponse(match.getFoundItem()),
+                match.getConfidenceScore(),
+                match.getStatus(),
+                match.getCreatedAt(),
+                match.getUpdatedAt()
+        );
     }
 
-    /**
-     * POST /matches/review-queue/{matchId}/reject
-     * Admin rejects a match in the manual review queue, marking it as REJECTED.
-     */
-    @PostMapping("/review-queue/{matchId}/reject")
-    public ResponseEntity<MatchResponseDTO> rejectPendingMatch(@PathVariable Long matchId) {
-        ItemMatch match = itemMatchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + matchId));
-
-        if (match.getStatus() != MatchStatus.PENDING_REVIEW) {
-            throw new RuntimeException("Match is not in PENDING_REVIEW status");
-        }
-
-        match.setStatus(MatchStatus.REJECTED);
-        ItemMatch savedMatch = itemMatchRepository.save(match);
-
-        log.info("Pending match id={} rejected by admin.", matchId);
-
-        return ResponseEntity.ok(convertToMatchResponseDTO(savedMatch));
-    }
-
-    private MatchResponseDTO convertToMatchResponseDTO(ItemMatch match) {
-        return MatchResponseDTO.builder()
-                .id(match.getId())
-                .lostItem(convertToItemResponseDTO(match.getLostItem()))
-                .foundItem(convertToItemResponseDTO(match.getFoundItem()))
-                .confidenceScore(match.getConfidenceScore())
-                .status(match.getStatus())
-                .createdAt(match.getCreatedAt())
-                .updatedAt(match.getUpdatedAt())
-                .build();
-    }
-
-    private ItemResponseDTO convertToItemResponseDTO(Item item) {
+    private ItemResponseDTO toItemResponse(Item item) {
         List<String> imageUrls = item.getImages().stream()
                 .map(ItemImage::getImageUrl)
                 .collect(Collectors.toList());

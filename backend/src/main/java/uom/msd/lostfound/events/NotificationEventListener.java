@@ -62,6 +62,18 @@ public class NotificationEventListener {
 
         notificationService.sendNotification(req);
 
+        SendNotificationRequest finderReq = new SendNotificationRequest();
+        finderReq.setUserId(event.getFoundItemOwnerId());
+        finderReq.setType(NotificationType.ITEM_MATCH);
+        finderReq.setTitle("Possible Owner Found: " + event.getFoundItemName());
+        finderReq.setMessage("Your found item '" + event.getFoundItemName() +
+                "' may match a lost report for '" + event.getLostItemName() +
+                "'. Please check the portal for the matched pair.");
+        finderReq.setChannel(NotificationChannel.BOTH);
+        finderReq.setReferenceItemId(event.getFoundItemId());
+        finderReq.setRecipientEmail(event.getFoundItemOwnerEmail());
+        notificationService.sendNotification(finderReq);
+
         // Send richer email template
         emailService.sendItemMatchEmail(
                 event.getLostItemOwnerEmail(),

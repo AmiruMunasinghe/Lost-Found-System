@@ -1,17 +1,12 @@
 package uom.msd.lostfound.matching;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uom.msd.lostfound.enums.ItemStatus;
 import uom.msd.lostfound.enums.MatchStatus;
 import uom.msd.lostfound.enums.ReportType;
-import uom.msd.lostfound.events.ItemCreatedEvent;
 import uom.msd.lostfound.events.ItemMatchedEvent;
 import uom.msd.lostfound.models.Item;
 import uom.msd.lostfound.models.ItemMatch;
@@ -19,11 +14,15 @@ import uom.msd.lostfound.repositories.ItemMatchRepository;
 import uom.msd.lostfound.repositories.ItemRepository;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class MatchingEngine {
 
@@ -31,8 +30,8 @@ public class MatchingEngine {
     private final ItemMatchRepository itemMatchRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Value("${app.matching.threshold.auto-accept:0.70}")
-    private double autoAcceptThreshold;
+    @Value("${app.matching.threshold.suggested:0.70}")
+    private double suggestedThreshold;
 
     @Value("${app.matching.threshold.manual-review:0.45}")
     private double manualReviewThreshold;
@@ -46,100 +45,130 @@ public class MatchingEngine {
     @Value("${app.matching.weights.location:0.20}")
     private double weightLocation;
 
-    @Async
-    @EventListener
-    public void handleItemCreated(ItemCreatedEvent event) {
-        log.info("MatchingEngine received ItemCreatedEvent for item id={}", event.getItem().getId());
-        triggerMatching(event.getItem().getId());
+    public MatchingEngine(ItemRepository itemRepository,
+                          ItemMatchRepository itemMatchRepository,
+                          ApplicationEventPublisher eventPublisher) {
+        this.itemRepository = itemRepository;
+        this.itemMatchRepository = itemMatchRepository;
+        this.eventPublisher = eventPublisher;
     }
 
-    public void triggerMatching(Long itemId) {
-        Item item = itemRepository.findById(itemId).orElse(null);
-        if (item == null || item.getStatus() != ItemStatus.OPEN) {
-            return;
+    public List<ItemMatch> runForFilteredLostItems(List<Long> lostItemIds) {
+        if (lostItemIds == null || lostItemIds.isEmpty()) {
+            return List.of();
         }
 
-        ReportType oppositeType = (item.getReportType() == ReportType.LOST) ? ReportType.FOUND : ReportType.LOST;
-        List<Item> candidates = itemRepository.findByReportTypeAndStatus(oppositeType, ItemStatus.OPEN);
+        List<ItemMatch> results = new ArrayList<>();
+        for (Long lostItemId : lostItemIds) {
+            results.addAll(runForFilteredLostItem(lostItemId));
+        }
+        return results;
+    }
 
-        log.info("Running matching for item id={} of type {}. Found {} candidate items.", 
-                itemId, item.getReportType(), candidates.size());
+    public List<ItemMatch> runForFilteredLostItem(Long lostItemId) {
+        Item lostItem = itemRepository.findById(lostItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Lost item not found with id: " + lostItemId));
 
-        for (Item candidate : candidates) {
-            BigDecimal score = calculateSimilarity(item, candidate);
-            double scoreVal = score.doubleValue();
+        if (lostItem.getReportType() != ReportType.LOST) {
+            throw new IllegalArgumentException("Matching can only be run for LOST items after admin filtering");
+        }
 
-            if (scoreVal >= manualReviewThreshold) {
-                Item lostItem = (item.getReportType() == ReportType.LOST) ? item : candidate;
-                Item foundItem = (item.getReportType() == ReportType.LOST) ? candidate : item;
+        if (lostItem.getStatus() != ItemStatus.OPEN && lostItem.getStatus() != ItemStatus.PENDING_REVIEW) {
+            return List.of();
+        }
 
-                Optional<ItemMatch> existingMatchOpt = itemMatchRepository
-                        .findByLostItemIdAndFoundItemId(lostItem.getId(), foundItem.getId());
+        List<Item> candidates = itemRepository.findByReportTypeAndStatus(ReportType.FOUND, ItemStatus.OPEN);
+        List<ItemMatch> createdOrUpdated = new ArrayList<>();
 
-                if (existingMatchOpt.isPresent()) {
-                    ItemMatch existingMatch = existingMatchOpt.get();
-                    if (existingMatch.getStatus() == MatchStatus.SUGGESTED || existingMatch.getStatus() == MatchStatus.PENDING_REVIEW) {
-                        existingMatch.setConfidenceScore(score);
-                        MatchStatus newStatus = (scoreVal >= autoAcceptThreshold) ? MatchStatus.SUGGESTED : MatchStatus.PENDING_REVIEW;
-                        existingMatch.setStatus(newStatus);
-                        itemMatchRepository.save(existingMatch);
-                        if (newStatus == MatchStatus.SUGGESTED) {
-                            notifyOnHighMatch(existingMatch);
-                        }
-                    }
-                } else {
-                    ItemMatch match = new ItemMatch(lostItem, foundItem, score);
-                    MatchStatus newStatus = (scoreVal >= autoAcceptThreshold) ? MatchStatus.SUGGESTED : MatchStatus.PENDING_REVIEW;
-                    match.setStatus(newStatus);
-                    itemMatchRepository.save(match);
-                    
-                    if (newStatus == MatchStatus.SUGGESTED) {
-                        notifyOnHighMatch(match);
-                    }
-                }
+        for (Item foundItem : candidates) {
+            BigDecimal score = calculateSimilarity(lostItem, foundItem);
+            double scoreValue = score.doubleValue();
+
+            if (scoreValue < manualReviewThreshold) {
+                continue;
+            }
+
+            MatchStatus status = scoreValue >= suggestedThreshold
+                    ? MatchStatus.SUGGESTED
+                    : MatchStatus.PENDING_REVIEW;
+
+            ItemMatch match = upsertMatch(lostItem, foundItem, score, status);
+            createdOrUpdated.add(match);
+
+            if (status == MatchStatus.SUGGESTED) {
+                notifyOnSuggestedMatch(match);
             }
         }
+
+        return createdOrUpdated;
     }
 
     public BigDecimal calculateSimilarity(Item item1, Item item2) {
-        // Text similarity (Title + Description)
-        String s1Text = item1.getTitle() + " " + (item1.getDescription() != null ? item1.getDescription() : "");
-        String s2Text = item2.getTitle() + " " + (item2.getDescription() != null ? item2.getDescription() : "");
-        double textSim = computeJaccardSimilarity(s1Text, s2Text);
+        String item1Text = safe(item1.getTitle()) + " " + safe(item1.getDescription());
+        String item2Text = safe(item2.getTitle()) + " " + safe(item2.getDescription());
+        double textSimilarity = computeJaccardSimilarity(item1Text, item2Text);
 
-        // Category similarity
-        double categorySim = 0.0;
-        if (item1.getCategory() != null && item2.getCategory() != null) {
-            categorySim = item1.getCategory().trim().equalsIgnoreCase(item2.getCategory().trim()) ? 1.0 : 0.0;
-        } else if (item1.getCategory() == null && item2.getCategory() == null) {
-            categorySim = 1.0;
-        } else {
-            categorySim = 0.5;
-        }
+        double categorySimilarity = compareCategory(item1.getCategory(), item2.getCategory());
+        double locationSimilarity = computeJaccardSimilarity(item1.getLocation(), item2.getLocation());
 
-        // Location similarity
-        double locationSim = 0.0;
-        if (item1.getLocation() != null && item2.getLocation() != null) {
-            locationSim = computeJaccardSimilarity(item1.getLocation(), item2.getLocation());
-        } else if (item1.getLocation() == null && item2.getLocation() == null) {
-            locationSim = 1.0;
-        } else {
-            locationSim = 0.5;
-        }
+        double score = (textSimilarity * weightText)
+                + (categorySimilarity * weightCategory)
+                + (locationSimilarity * weightLocation);
 
-        double score = (textSim * weightText) + (categorySim * weightCategory) + (locationSim * weightLocation);
-        return BigDecimal.valueOf(score).setScale(2, java.math.RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(score).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private double computeJaccardSimilarity(String s1, String s2) {
-        Set<String> tokens1 = getCleanTokens(s1);
-        Set<String> tokens2 = getCleanTokens(s2);
+    public void notifyOnSuggestedMatch(ItemMatch match) {
+        eventPublisher.publishEvent(new ItemMatchedEvent(
+                this,
+                match.getLostItem().getUser().getId(),
+                match.getLostItem().getUser().getEmail(),
+                match.getLostItem().getTitle(),
+                match.getFoundItem().getUser().getId(),
+                match.getFoundItem().getUser().getEmail(),
+                match.getFoundItem().getTitle(),
+                match.getFoundItem().getId(),
+                match.getFoundItem().getDescription(),
+                match.getFoundItem().getLocation()
+        ));
+    }
+
+    private ItemMatch upsertMatch(Item lostItem, Item foundItem, BigDecimal score, MatchStatus status) {
+        Optional<ItemMatch> existingMatch = itemMatchRepository
+                .findByLostItemIdAndFoundItemId(lostItem.getId(), foundItem.getId());
+
+        ItemMatch match = existingMatch.orElseGet(() -> new ItemMatch(lostItem, foundItem, score));
+
+        if (match.getStatus() == MatchStatus.ACCEPTED || match.getStatus() == MatchStatus.REJECTED) {
+            return match;
+        }
+
+        match.setConfidenceScore(score);
+        match.setStatus(status);
+        return itemMatchRepository.save(match);
+    }
+
+    private double compareCategory(String category1, String category2) {
+        if (category1 == null && category2 == null) {
+            return 1.0;
+        }
+        if (category1 == null || category2 == null) {
+            return 0.5;
+        }
+        return category1.trim().equalsIgnoreCase(category2.trim()) ? 1.0 : 0.0;
+    }
+
+    private double computeJaccardSimilarity(String text1, String text2) {
+        Set<String> tokens1 = getCleanTokens(text1);
+        Set<String> tokens2 = getCleanTokens(text2);
+
         if (tokens1.isEmpty() && tokens2.isEmpty()) {
             return 1.0;
         }
         if (tokens1.isEmpty() || tokens2.isEmpty()) {
             return 0.0;
         }
+
         Set<String> intersection = new HashSet<>(tokens1);
         intersection.retainAll(tokens2);
 
@@ -150,34 +179,28 @@ public class MatchingEngine {
     }
 
     private Set<String> getCleanTokens(String text) {
-        if (text == null) return Collections.emptySet();
-        String[] rawTokens = text.toLowerCase().replaceAll("[^a-zA-Z0-9\\s]", " ").split("\\s+");
+        if (text == null || text.isBlank()) {
+            return Collections.emptySet();
+        }
+
         Set<String> stopWords = Set.of(
-            "a", "an", "the", "and", "or", "but", "is", "are", "was", "were", "in", "on", "at", 
-            "to", "for", "with", "my", "your", "of", "it", "this", "that", "i", "you", "he", "she"
+                "a", "an", "the", "and", "or", "but", "is", "are", "was", "were",
+                "in", "on", "at", "to", "for", "with", "my", "your", "of", "it",
+                "this", "that", "i", "you", "he", "she"
         );
+
         Set<String> tokens = new HashSet<>();
-        for (String raw : rawTokens) {
-            String trimmed = raw.trim();
-            if (!trimmed.isEmpty() && !stopWords.contains(trimmed)) {
-                tokens.add(trimmed);
+        String[] rawTokens = text.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").split("\\s+");
+        for (String rawToken : rawTokens) {
+            String token = rawToken.trim();
+            if (!token.isEmpty() && !stopWords.contains(token)) {
+                tokens.add(token);
             }
         }
         return tokens;
     }
 
-    public void notifyOnHighMatch(ItemMatch match) {
-        log.info("High similarity match found between lost item id={} and found item id={}! Notifying owners.",
-                match.getLostItem().getId(), match.getFoundItem().getId());
-
-        eventPublisher.publishEvent(new ItemMatchedEvent(
-                this,
-                match.getLostItem().getUser().getId(),
-                match.getLostItem().getUser().getEmail(),
-                match.getLostItem().getTitle(),
-                match.getFoundItem().getId(),
-                match.getFoundItem().getDescription(),
-                match.getFoundItem().getLocation()
-        ));
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 }
