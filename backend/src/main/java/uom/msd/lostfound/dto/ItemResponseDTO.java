@@ -1,12 +1,17 @@
 package uom.msd.lostfound.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import uom.msd.lostfound.enums.ItemStatus;
 import uom.msd.lostfound.enums.ReportType;
 
-public class ItemResponseDTO {
+public class ItemResponseDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private Long id;
     private String title;
     private String description;
@@ -17,14 +22,17 @@ public class ItemResponseDTO {
     private Long userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<String> imageUrls = new java.util.ArrayList<>();
+    private List<String> imageUrls = new ArrayList<>();
 
     public ItemResponseDTO() {
     }
 
-    public ItemResponseDTO(Long id, String title, String description, String category, String location,
-                          ReportType reportType, ItemStatus status, Long userId,
-                          LocalDateTime createdAt, LocalDateTime updatedAt, List<String> imageUrls) {
+    public ItemResponseDTO(Long id, String title, String description,
+                           String category, String location,
+                           ReportType reportType, ItemStatus status,
+                           Long userId, LocalDateTime createdAt,
+                           LocalDateTime updatedAt, List<String> imageUrls) {
+
         this.id = id;
         this.title = title;
         this.description = description;
@@ -35,7 +43,9 @@ public class ItemResponseDTO {
         this.userId = userId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.imageUrls = imageUrls;
+        this.imageUrls = (imageUrls != null)
+                ? imageUrls
+                : new ArrayList<>();
     }
 
     public Long getId() {
@@ -123,6 +133,22 @@ public class ItemResponseDTO {
     }
 
     public void setImageUrls(List<String> imageUrls) {
-        this.imageUrls = imageUrls;
+        this.imageUrls = (imageUrls != null)
+                ? imageUrls
+                : new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "ItemResponseDTO{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", category='" + category + '\'' +
+                ", location='" + location + '\'' +
+                ", reportType=" + reportType +
+                ", status=" + status +
+                ", userId=" + userId +
+                ", imageUrlsCount=" + imageUrls.size() +
+                '}';
     }
 }

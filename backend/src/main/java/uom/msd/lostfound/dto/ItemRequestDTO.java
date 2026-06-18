@@ -1,20 +1,27 @@
 package uom.msd.lostfound.dto;
 
-import uom.msd.lostfound.enums.ReportType;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ItemRequestDTO {
+import uom.msd.lostfound.enums.ReportType;
+
+public class ItemRequestDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private String title;
     private String description;
     private String category;
     private String location;
     private ReportType reportType;
-    private List<String> imageUrls = new java.util.ArrayList<>();
+    private List<String> imageUrls = new ArrayList<>();
 
     public ItemRequestDTO() {
     }
 
-    public ItemRequestDTO(String title, String description, String category, String location, ReportType reportType) {
+    public ItemRequestDTO(String title, String description, String category,
+                          String location, ReportType reportType) {
         this.title = title;
         this.description = description;
         this.category = category;
@@ -67,6 +74,20 @@ public class ItemRequestDTO {
     }
 
     public void setImageUrls(List<String> imageUrls) {
-        this.imageUrls = imageUrls;
+        this.imageUrls = (imageUrls != null)
+                ? imageUrls
+                : new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "ItemRequestDTO{" +
+                "title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", category='" + category + '\'' +
+                ", location='" + location + '\'' +
+                ", reportType=" + reportType +
+                ", imageUrlsCount=" + imageUrls.size() +
+                '}';
     }
 }
