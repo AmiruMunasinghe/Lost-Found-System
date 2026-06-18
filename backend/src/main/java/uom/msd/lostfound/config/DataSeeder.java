@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import uom.msd.lostfound.enums.ItemStatus;
 import uom.msd.lostfound.enums.ReportType;
+import uom.msd.lostfound.enums.Role;
 import uom.msd.lostfound.models.Item;
 import uom.msd.lostfound.models.User;
 import uom.msd.lostfound.repositories.ItemRepository;
@@ -28,10 +29,16 @@ public class DataSeeder implements CommandLineRunner {
         if (!userRepository.existsByUsername("admin")) {
             User admin = new User("admin", "admin@uom.lk", passwordEncoder.encode("admin123"));
             admin.setFullName("Team 9 Admin");
+            admin.setRole(Role.ADMIN);
             adminUser = userRepository.save(admin);
             System.out.println("Default admin user created: admin / admin123");
         } else {
             adminUser = userRepository.findByUsername("admin").orElse(null);
+            if (adminUser != null && adminUser.getRole() != Role.ADMIN) {
+                adminUser.setRole(Role.ADMIN);
+                adminUser = userRepository.save(adminUser);
+                System.out.println("Existing admin user promoted to ADMIN role");
+            }
         }
 
         User studentUser = null;

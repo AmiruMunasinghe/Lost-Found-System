@@ -158,7 +158,7 @@ function ItemDetailModal({ item, userCache, onClose, onStatusChange, getItemStat
                 imagesList.map((imgUrl, index) => (
                   <img
                     key={index}
-                    src={imgUrl.startsWith('http') ? imgUrl : `http://localhost:8085/uploads/${imgUrl}`}
+                    src={imgUrl.startsWith('http') ? imgUrl : `http://localhost:8081/uploads/${imgUrl}`}
                     alt={`Attachment ${index + 1}`}
                     style={{ height: '180px', width: '240px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }}
                     onError={(e) => {
@@ -549,7 +549,7 @@ function ItemsManagerPage({ type }) {
                       <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {item.imageUrls && item.imageUrls.length > 0 ? (
                           <img
-                            src={item.imageUrls[0].startsWith('http') ? item.imageUrls[0] : `http://localhost:8085/uploads/${item.imageUrls[0]}`}
+                            src={item.imageUrls[0].startsWith('http') ? item.imageUrls[0] : `http://localhost:8081/uploads/${item.imageUrls[0]}`}
                             alt={item.title}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {
