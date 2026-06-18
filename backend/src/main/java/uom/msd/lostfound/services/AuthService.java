@@ -14,6 +14,8 @@ import uom.msd.lostfound.exceptions.DuplicateUsernameException;
 import uom.msd.lostfound.exceptions.ResourceNotFoundException;
 import uom.msd.lostfound.models.User;
 import uom.msd.lostfound.repositories.UserRepository;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -92,7 +94,41 @@ public class AuthService {
         return email.trim();
     }
 
-    public String forgotPassword(String email){
+    public String forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User with email not found"));
+        
+        String resetToken = UUID.randomUUID().toString();
+        user.setResetToken(resetToken);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
+        
+        userRepository.save(user);
+        return resetToken;
+    }
 
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid reset token"));
+        
+        if (user.getResetTokenExpiry() == null || LocalDateTime.now().isAfter(user.getResetTokenExpiry())) {
+            throw new BadCredentialsException("Reset token has expired");
+        }
+        
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        
+        userRepository.save(user);
+    }
+
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = findUserById(userId);
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+        
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }
