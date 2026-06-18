@@ -24,6 +24,9 @@ public interface ItemMatchRepository extends JpaRepository<ItemMatch, Long> {
     @Query("SELECT im FROM ItemMatch im WHERE im.lostItem.id = :itemId OR im.foundItem.id = :itemId")
     List<ItemMatch> findMatchesByItemId(@Param("itemId") Long itemId);
 
+    @Query("SELECT im FROM ItemMatch im WHERE im.lostItem.user.id = :userId OR im.foundItem.user.id = :userId")
+    List<ItemMatch> findMatchesVisibleToUser(@Param("userId") Long userId);
+
     @Query("SELECT im FROM ItemMatch im WHERE im.status = :status AND im.confidenceScore >= :minScore ORDER BY im.confidenceScore DESC")
     List<ItemMatch> findByStatusAndMinConfidenceScore(
             @Param("status") MatchStatus status,
