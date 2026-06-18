@@ -5,6 +5,7 @@ import {
   getMatches,
   updateItemStatus,
   deleteItem,
+  deleteMatch,
   getUserDetails,
   getCurrentAdmin,
   getCurrentAdminAsync,
@@ -643,6 +644,20 @@ function MatchResultsPage() {
       .finally(() => setLoading(false))
   }
 
+  const handleDeleteMatch = async (matchId) => {
+    console.log('[App] handleDeleteMatch called with matchId:', matchId)
+    if (!matchId) return
+    if (!window.confirm(`Delete match entry #${matchId}? This will not delete the lost or found item.`)) return
+    try {
+      await deleteMatch(matchId)
+      window.alert(`Deleted match entry #${matchId}.`)
+      loadMatches()
+    } catch (err) {
+      console.error(err)
+      window.alert(err.message || 'Failed to delete match entry.')
+    }
+  }
+
   useEffect(() => {
     loadMatches()
   }, [statusFilter])
@@ -727,12 +742,12 @@ function MatchResultsPage() {
           </div>
         )}
       </div>
-      <MatchDetailPanel match={selectedMatch} />
+      <MatchDetailPanel match={selectedMatch} onDeleteMatch={handleDeleteMatch} />
     </section>
   )
 }
 
-function MatchDetailPanel({ match }) {
+function MatchDetailPanel({ match, onDeleteMatch }) {
   if (!match) {
     return (
       <div className="panel audit-detail">
@@ -812,6 +827,18 @@ function MatchDetailPanel({ match }) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div style={{ padding: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <button
+          className="primary-button"
+          type="button"
+          onClick={() => onDeleteMatch(match.id)}
+          disabled={!match.id}
+          style={{ minWidth: '220px' }}
+        >
+          Delete Match
+        </button>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -155,6 +156,13 @@ public class MatchController {
         ItemMatch match = getMatch(matchId);
         match.setStatus(MatchStatus.REJECTED);
         return ResponseEntity.ok(toMatchResponse(itemMatchRepository.save(match)));
+    }
+
+    @DeleteMapping("/{matchId}")
+    public ResponseEntity<Void> deleteMatch(@PathVariable Long matchId) {
+        ItemMatch match = getMatch(matchId);
+        itemMatchRepository.delete(match);
+        return ResponseEntity.noContent().build();
     }
 
     private ItemMatch getMatch(Long matchId) {

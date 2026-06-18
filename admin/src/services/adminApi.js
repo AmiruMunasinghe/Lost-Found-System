@@ -47,7 +47,9 @@ export function clearAdminSession() {
 
 async function request(path, options = {}) {
   const token = await getAdminToken()
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const url = `${API_BASE_URL}${path}`
+  console.log('[adminApi]', options.method || 'GET', url, options)
+  const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(token),
@@ -147,6 +149,15 @@ export async function deleteItem(itemId) {
   })
   return itemId
 }
+
+export async function deleteMatch(matchId) {
+  console.log('[adminApi] deleteMatch called with matchId:', matchId)
+  await request(`/matches/${encodeURIComponent(matchId)}`, {
+    method: 'DELETE',
+  })
+  return matchId
+}
+
 
 export async function getUserDetails(userId) {
   return request(`/users/${userId}`)
