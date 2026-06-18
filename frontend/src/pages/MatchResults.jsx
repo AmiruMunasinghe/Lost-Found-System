@@ -250,6 +250,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
           );
         })}
       </div>
+      </div>
     </div>
   );
 }
