@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { confirmMatch, getMatches, rejectMatch, runMatchingForLostItem } from "../api/matches";
+import { confirmMatch, getMatches, getMyMatches, rejectMatch, runMatchingForLostItem } from "../api/matches";
 
 function useDark(dm) {
   return dm ? {
@@ -59,14 +59,17 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
     setLoading(true);
     setError("");
     try {
-      const filters = {};
+      let data;
       if (itemId) {
+        const filters = {};
         if (type === "lost") filters.lostItemId = itemId;
         else if (type === "found") filters.foundItemId = itemId;
         else filters.itemId = itemId;
+        data = await getMatches(filters);
+      } else {
+        // No specific item — show only user's relevant matches
+        data = await getMyMatches();
       }
-
-      const data = await getMatches(filters);
       setMatches(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Failed to load matches.");
