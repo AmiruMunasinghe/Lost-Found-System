@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getUserItems } from "../api/items";
 
 function useDark(dm) {
   return dm ? {
@@ -30,15 +31,74 @@ function Badge({ children, color }) {
   );
 }
 
-export default function MyReports({ navigateTo, darkMode }) {
+export default function MyReports({ user, navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [tab, setTab] = useState(0);
-  const rows = [
-    { item: "Laptop",       cat: "Electronics", date: "Apr 01, 2026", status: "Pending",  match: "85%" },
-    { item: "Water Bottle", cat: "Accessories", date: "Mar 28, 2026", status: "Resolved", match: "100%" },
-    { item: "Backpack",     cat: "Bags",        date: "Mar 25, 2026", status: "Matched",  match: "90%" },
-  ];
-  const statusColor = { Pending: "amber", Resolved: "green", Matched: "blue" };
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const statusColor = {
+    OPEN: "amber",
+    PENDING: "amber",
+    PENDING_REVIEW: "amber",
+    MATCHED: "blue",
+    CLAIMED: "green",
+    RESOLVED: "green",
+    CLOSED: "green",
+  };
+
+  useEffect(() => {
+    if (!user?.id) {
+      setItems([]);
+      return;
+    }
+
+    let active = true;
+    setLoading(true);
+    setApiError("");
+
+    getUserItems(user.id)
+      .then((data) => {
+        if (!active) return;
+        setItems(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setApiError(err.message || "Unable to load your reports.");
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  const getItemReportType = (item) => {
+    const raw = item.reportType || item.type || item?.reportType?.name || item?.type?.name || "";
+    const text = String(raw).toUpperCase();
+    if (text.includes("FOUND")) return "FOUND";
+    if (text.includes("LOST")) return "LOST";
+    return "LOST";
+  };
+
+  const filteredItems = items.filter((item) => {
+    const type = getItemReportType(item);
+    return tab === 0 ? type === "LOST" : type === "FOUND";
+  });
+
+  const getMatchValue = (item) => {
+    if (item.matchScore || item.matchPercentage) {
+      return `${item.matchScore || item.matchPercentage}%`;
+    }
+    if (item.matchStatus) {
+      return item.matchStatus;
+    }
+    return "-";
+  };
 
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
@@ -81,17 +141,34 @@ export default function MyReports({ navigateTo, darkMode }) {
               </tr>
             </thead>
             <tbody>
-              {tab === 0 ? rows.map((r, i) => (
-                <tr key={i} style={{ borderBottom: `1px solid ${t.border}` }}>
-                  <td style={{ padding: "14px 18px", color: t.text, fontWeight: 700 }}>{r.item}</td>
-                  <td style={{ padding: "14px 18px", color: t.muted }}>{r.cat}</td>
-                  <td style={{ padding: "14px 18px", color: t.muted }}>{r.date}</td>
-                  <td style={{ padding: "14px 18px" }}><Badge color={statusColor[r.status]}>{r.status}</Badge></td>
-                  <td style={{ padding: "14px 18px", color: t.text, fontWeight: 600 }}>{r.match}</td>
+              {apiError && (
+                <tr>
+                  <td colSpan={5} style={{ padding: "22px 18px", color: "#E02424", textAlign: "center" }}>{apiError}</td>
                 </tr>
-              )) : (
-                <tr><td colSpan={5} style={{ padding: "40px 18px", textAlign: "center", color: t.muted, fontSize: 14 }}>No found item reports yet.</td></tr>
               )}
+              {loading && !apiError && (
+                <tr>
+                  <td colSpan={5} style={{ padding: "22px 18px", color: t.muted, textAlign: "center" }}>Loading your reports…</td>
+                </tr>
+              )}
+              {!loading && !apiError && filteredItems.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: "40px 18px", textAlign: "center", color: t.muted, fontSize: 14 }}>
+                    {tab === 0 ? "No lost item reports yet." : "No found item reports yet."}
+                  </td>
+                </tr>
+              )}
+              {!loading && !apiError && filteredItems.map((item, index) => (
+                <tr key={item.id || index} style={{ borderBottom: `1px solid ${t.border}` }}>
+                  <td style={{ padding: "14px 18px", color: t.text, fontWeight: 700 }}>{item.title}</td>
+                  <td style={{ padding: "14px 18px", color: t.muted }}>{item.category || "Other"}</td>
+                  <td style={{ padding: "14px 18px", color: t.muted }}>{item.date || item.createdAt?.slice(0, 10) || "-"}</td>
+                  <td style={{ padding: "14px 18px" }}>
+                    <Badge color={statusColor[item.status?.toUpperCase()] || "blue"}>{item.status || "OPEN"}</Badge>
+                  </td>
+                  <td style={{ padding: "14px 18px", color: t.text, fontWeight: 600 }}>{getMatchValue(item)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
