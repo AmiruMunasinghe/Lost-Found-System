@@ -69,10 +69,10 @@ const PAGES = {
 
 function getStoredUser() {
   try {
-    const savedUser = localStorage.getItem("lostFoundUser");
+    const savedUser = localStorage.getItem("lost_found_user");
     return savedUser ? JSON.parse(savedUser) : null;
   } catch (error) {
-    localStorage.removeItem("lostFoundUser");
+    localStorage.removeItem("lost_found_user");
     return null;
   }
 }
@@ -102,9 +102,9 @@ function App() {
     setUserState(newUser);
 
     if (newUser) {
-      localStorage.setItem("lostFoundUser", JSON.stringify(newUser));
+      localStorage.setItem("lost_found_user", JSON.stringify(newUser));
     } else {
-      localStorage.removeItem("lostFoundUser");
+      localStorage.removeItem("lost_found_user");
     }
   }, []);
 
