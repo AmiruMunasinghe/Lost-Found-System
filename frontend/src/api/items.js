@@ -1,8 +1,15 @@
 import { apiRequest } from "./client";
 
 function normalizeReportType(value) {
-  const text = String(value || "").toUpperCase();
-  if (text === "FOUND") return "FOUND";
+  if (value == null) return "LOST";
+
+  const rawValue = typeof value === "object"
+    ? value.name || value.toString()
+    : String(value);
+
+  const text = rawValue.toUpperCase();
+  if (text.includes("FOUND")) return "FOUND";
+  if (text.includes("LOST")) return "LOST";
   return "LOST";
 }
 
@@ -80,6 +87,12 @@ export async function getItemsByType(type) {
 export async function getItemsByTypeAndStatus(type, status = "OPEN") {
   const reportType = normalizeReportType(type);
   const data = await apiRequest(`/items/filter?type=${reportType}&status=${status}`);
+  return Array.isArray(data) ? data.map(toFrontendItem) : [];
+}
+
+export async function getUserItems(userId) {
+  if (userId == null) return [];
+  const data = await apiRequest(`/items/user/${userId}`);
   return Array.isArray(data) ? data.map(toFrontendItem) : [];
 }
 
