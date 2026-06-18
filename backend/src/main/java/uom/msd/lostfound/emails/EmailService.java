@@ -98,29 +98,4 @@ public class EmailService {
             log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
         }
     }
-
-    /**
-     * Sends a support request email to the admin team.
-     */
-    @Async
-    public void sendSupportEmail(String userEmail, String subject, String message) {
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom(fromEmail);
-            helper.setTo(fromEmail); // Send to the support email itself
-            helper.setReplyTo(userEmail); // Allow replying directly to the user
-            helper.setSubject("Support Request: " + subject);
-
-            String textBody = "New support request from: " + userEmail + "\n\n"
-                    + "Subject: " + subject + "\n\n"
-                    + "Message:\n" + message;
-
-            helper.setText(textBody, false);
-            mailSender.send(mimeMessage);
-            log.info("Support email sent from {}", userEmail);
-        } catch (MessagingException e) {
-            log.error("Failed to send support email from {}: {}", userEmail, e.getMessage());
-        }
-    }
 }

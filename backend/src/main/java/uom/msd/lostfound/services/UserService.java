@@ -78,4 +78,21 @@ public class UserService {
 
         return authService.getCurrentUser(userId);
     }
+    public UserResponse getUserById(Long userId) {
+        User user = authService.findUserById(userId);
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getCreatedAt(),
+                user.getFullName(),
+                user.getPhone(),
+                user.getStudentId(),
+                user.getFaculty(),
+                user.getDepartment(),
+                user.getYearOfStudy(),
+                user.getProfileImageUrl()
+        );
+    }
+}
 }

@@ -41,6 +41,9 @@ class ItemServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private ItemServiceImpl itemService;
 

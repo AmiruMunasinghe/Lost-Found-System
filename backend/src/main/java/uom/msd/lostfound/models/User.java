@@ -183,7 +183,6 @@ public class User {
     public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
         this.resetTokenExpiry = resetTokenExpiry;
     }
-
     public Role getRole() {
         return role;
     }

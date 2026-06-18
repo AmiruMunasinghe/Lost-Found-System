@@ -10,12 +10,4 @@ public class SupportRequest {
 
     @NotBlank(message = "Message is required")
     private String message;
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
 }

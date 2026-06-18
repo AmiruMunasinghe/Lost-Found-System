@@ -23,7 +23,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/register/")
+    @PostMapping({"/register", "/register/"})
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         System.out.println("Register request received");
         AuthResponse response = authService.register(request);
@@ -31,14 +31,14 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/login/")
+    @PostMapping({"/login", "/login/"})
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         System.out.println("Logged In");
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/me/")
+    @GetMapping({"/me", "/me/"})
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         return ResponseEntity.ok(authService.getCurrentUser(authenticatedUser.getId()));
     }
