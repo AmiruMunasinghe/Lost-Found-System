@@ -1,6 +1,6 @@
-HEAD
+<<<<<<< HEAD
 /admin/nbproject/private/
 /frontend/nbproject/private/
-
+=======
 /env
-origin/Integration_test
+>>>>>>> origin/Integration_test
