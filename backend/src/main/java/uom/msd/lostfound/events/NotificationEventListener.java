@@ -2,7 +2,6 @@ package uom.msd.lostfound.events;
 
 import uom.msd.lostfound.dto.SendNotificationRequest;
 import uom.msd.lostfound.dto.RewardTransactionRequest;
-import uom.msd.lostfound.emails.EmailService;
 import uom.msd.lostfound.enums.NotificationChannel;
 import uom.msd.lostfound.enums.NotificationType;
 import uom.msd.lostfound.enums.RewardTransactionType;
@@ -29,7 +28,6 @@ public class NotificationEventListener {
 
     private final NotificationService notificationService;
     private final RewardService rewardService;
-    private final EmailService emailService;
 
     @Value("${app.rewards.points-per-found-item:50}")
     private int pointsPerFoundItem;
@@ -56,19 +54,10 @@ public class NotificationEventListener {
         req.setType(NotificationType.ITEM_MATCH);
         req.setTitle("Possible Match Found: " + event.getLostItemName());
         req.setMessage(message);
-        req.setChannel(NotificationChannel.BOTH);
+        req.setChannel(NotificationChannel.IN_APP);
         req.setReferenceItemId(event.getFoundItemId());
-        req.setRecipientEmail(event.getLostItemOwnerEmail());
 
         notificationService.sendNotification(req);
-
-        // Send richer email template
-        emailService.sendItemMatchEmail(
-                event.getLostItemOwnerEmail(),
-                "Student",
-                event.getLostItemName(),
-                event.getFoundItemDescription(),
-                event.getFoundLocation());
     }
 
     // ─── Found Item Submitted ─────────────────────────────────────────────────
@@ -96,18 +85,9 @@ public class NotificationEventListener {
         notifReq.setTitle("You Earned " + pointsPerFoundItem + " Reward Points!");
         notifReq.setMessage("Thank you for submitting a found item. You earned " +
                 pointsPerFoundItem + " points. Your balance: " + newBalance + " points.");
-        notifReq.setChannel(NotificationChannel.BOTH);
+        notifReq.setChannel(NotificationChannel.IN_APP);
         notifReq.setReferenceItemId(event.getFoundItemId());
-        notifReq.setRecipientEmail(event.getFinderEmail());
         notificationService.sendNotification(notifReq);
-
-        // Rich email
-        emailService.sendRewardEarnedEmail(
-                event.getFinderEmail(),
-                "Student",
-                pointsPerFoundItem,
-                newBalance,
-                "Submitted found item: " + event.getItemName());
     }
 
     // ─── Item Claimed ─────────────────────────────────────────────────────────
@@ -124,9 +104,8 @@ public class NotificationEventListener {
         ownerNotif.setTitle("Your Item Has Been Returned: " + event.getItemName());
         ownerNotif.setMessage("Your item '" + event.getItemName() +
                 "' has been successfully returned. Thank you for using the Lost & Found system.");
-        ownerNotif.setChannel(NotificationChannel.BOTH);
+        ownerNotif.setChannel(NotificationChannel.IN_APP);
         ownerNotif.setReferenceItemId(event.getItemId());
-        ownerNotif.setRecipientEmail(event.getOwnerEmail());
         notificationService.sendNotification(ownerNotif);
 
         // Credit points to finder for successful return
@@ -139,8 +118,6 @@ public class NotificationEventListener {
             finderReward.setReferenceId(event.getItemId());
             rewardService.recordTransaction(finderReward);
 
-            int finderBalance = rewardService.getBalance(event.getFinderId());
-
             SendNotificationRequest finderNotif = new SendNotificationRequest();
             finderNotif.setUserId(event.getFinderId());
             finderNotif.setType(NotificationType.ITEM_CLAIMED);
@@ -148,17 +125,9 @@ public class NotificationEventListener {
             finderNotif.setMessage("The item '" + event.getItemName() +
                     "' you submitted has been claimed by its owner. " +
                     "You earned an additional " + pointsPerClaimedItem + " points!");
-            finderNotif.setChannel(NotificationChannel.BOTH);
+            finderNotif.setChannel(NotificationChannel.IN_APP);
             finderNotif.setReferenceItemId(event.getItemId());
-            finderNotif.setRecipientEmail(event.getFinderEmail());
             notificationService.sendNotification(finderNotif);
-
-            emailService.sendRewardEarnedEmail(
-                    event.getFinderEmail(),
-                    "Student",
-                    pointsPerClaimedItem,
-                    finderBalance,
-                    "Item successfully returned: " + event.getItemName());
         }
     }
 }
