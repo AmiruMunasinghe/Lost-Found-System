@@ -31,6 +31,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminReports from "./pages/AdminReports";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import Notifications from "./pages/Notifications";
 
 const PAGES = {
   // Public
@@ -63,6 +64,7 @@ const PAGES = {
   "admin-reports": { component: AdminReports, authRequired: true, allowedRoles: ["admin"] },
   "admin-users": { component: AdminUsers, authRequired: true, allowedRoles: ["admin"] },
   "admin-analytics": { component: AdminAnalytics, authRequired: true, allowedRoles: ["admin"] },
+  notifications: { component: Notifications, authRequired: true, allowedRoles: ["student", "admin"] },
 };
 
 function getStoredUser() {

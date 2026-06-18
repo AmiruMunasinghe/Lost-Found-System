@@ -1,4 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  getAllNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  getCurrentUserId,
+} from "../api/notifications";
 
 function useDark(dm) {
   return dm ? {
@@ -12,20 +18,71 @@ function useDark(dm) {
   };
 }
 
-export default function Notifications({ navigateTo, darkMode }) {
-  const t = useDark(darkMode);
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: "🔔 Your lost laptop has a potential match! Click to view.", time: "2 minutes ago", read: false, type: "match" },
-    { id: 2, message: "⭐ You earned 50 points for reporting a found item", time: "1 hour ago", read: false, type: "reward" },
-    { id: 3, message: "✅ Your report for Water Bottle was resolved. Claim confirmed.", time: "Yesterday", read: true, type: "resolved" },
-    { id: 4, message: "🏆 New badge unlocked: Photo Uploader", time: "2 days ago", read: true, type: "badge" },
-    { id: 5, message: "🔔 Someone found your backpack! Check the match details.", time: "3 days ago", read: true, type: "match" },
-    { id: 6, message: "⭐ You earned 25 points for uploading a photo", time: "5 days ago", read: true, type: "reward" },
-  ]);
+function typeFromNotification(n) {
+  const t = String(n.type || "").toLowerCase();
+  if (t.includes("match")) return "match";
+  if (t.includes("reward") || t.includes("badge")) return "reward";
+  if (t.includes("resolv") || t.includes("claim")) return "resolved";
+  return "info";
+}
 
-  const markAsRead = (id) => setNotifications(ns => ns.map(n => n.id === id ? { ...n, read: true } : n));
-  const markAllAsRead = () => setNotifications(ns => ns.map(n => ({ ...n, read: true })));
-  const unreadCount = notifications.filter(n => !n.read).length;
+function formatTime(dateStr) {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} minute${mins > 1 ? "s" : ""} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
+
+export default function Notifications({ navigateTo, darkMode, user }) {
+  const t = useDark(darkMode);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const userId = user?.id ?? getCurrentUserId();
+
+  const fetchNotifications = useCallback(async () => {
+    if (!userId) { setLoading(false); return; }
+    try {
+      const data = await getAllNotifications(userId);
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError("Failed to load notifications.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  const markAsRead = async (id) => {
+    setNotifications(ns => ns.map(n => n.id === id ? { ...n, isRead: true } : n));
+    try {
+      await markNotificationAsRead(id, userId);
+    } catch {
+      // revert on failure
+      fetchNotifications();
+    }
+  };
+
+  const markAllAsRead = async () => {
+    setNotifications(ns => ns.map(n => ({ ...n, isRead: true })));
+    try {
+      await markAllNotificationsAsRead(userId);
+    } catch {
+      fetchNotifications();
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const typeIcon = { match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆", info: "📢" };
 
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
@@ -50,32 +107,40 @@ export default function Notifications({ navigateTo, darkMode }) {
 
           {/* List */}
           <div>
-            {notifications.length === 0 ? (
+            {loading ? (
+              <div style={{ padding: "48px", textAlign: "center", color: t.muted, fontSize: 15 }}>Loading notifications…</div>
+            ) : error ? (
+              <div style={{ padding: "48px", textAlign: "center", color: "#ef4444", fontSize: 15 }}>{error}</div>
+            ) : notifications.length === 0 ? (
               <div style={{ padding: "48px", textAlign: "center", color: t.muted, fontSize: 15 }}>🔕 No notifications yet</div>
-            ) : notifications.map(notif => (
-              <div
-                key={notif.id}
-                onClick={() => markAsRead(notif.id)}
-                style={{
-                  display: "flex", alignItems: "flex-start", gap: 14,
-                  padding: "16px 24px",
-                  borderBottom: `1px solid ${t.border}`,
-                  background: notif.read ? t.card : t.unread,
-                  cursor: "pointer", transition: "background 0.2s",
-                }}
-              >
-                <div style={{ fontSize: 20, marginTop: 2 }}>
-                  {{ match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆" }[notif.type] || "📢"}
+            ) : notifications.map(notif => {
+              const kind = typeFromNotification(notif);
+              return (
+                <div
+                  key={notif.id}
+                  onClick={() => markAsRead(notif.id)}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 14,
+                    padding: "16px 24px",
+                    borderBottom: `1px solid ${t.border}`,
+                    background: notif.isRead ? t.card : t.unread,
+                    cursor: "pointer", transition: "background 0.2s",
+                  }}
+                >
+                  <div style={{ fontSize: 20, marginTop: 2 }}>{typeIcon[kind] || "📢"}</div>
+                  <div style={{ flex: 1 }}>
+                    {notif.title && (
+                      <div style={{ fontSize: 13, color: t.muted, fontWeight: 600, marginBottom: 2 }}>{notif.title}</div>
+                    )}
+                    <div style={{ fontSize: 14, color: t.body, marginBottom: 5, fontWeight: notif.isRead ? 400 : 700 }}>{notif.message}</div>
+                    <div style={{ fontSize: 12, color: t.muted }}>{formatTime(notif.createdAt)}</div>
+                  </div>
+                  {!notif.isRead && (
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#0F5FFF", flexShrink: 0, marginTop: 6 }} />
+                  )}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, color: t.body, marginBottom: 5, fontWeight: notif.read ? 400 : 700 }}>{notif.message}</div>
-                  <div style={{ fontSize: 12, color: t.muted }}>{notif.time}</div>
-                </div>
-                {!notif.read && (
-                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#0F5FFF", flexShrink: 0, marginTop: 6 }} />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
