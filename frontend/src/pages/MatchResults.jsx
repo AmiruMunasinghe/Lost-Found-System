@@ -211,8 +211,16 @@ export default function MatchResults({ pageParams, navigateTo, darkMode, user })
                   <div style={{ color: t.muted, fontSize: 13, fontWeight: 700 }}>MATCH #{matchId}</div>
                   <h2 style={{ color: t.text, margin: "4px 0 0", fontSize: 22 }}>Confidence: {score}</h2>
                 </div>
-                <span style={{ alignSelf: "flex-start", padding: "6px 14px", borderRadius: 999, background: "#dbeafe", color: "#1d4ed8", fontWeight: 800, fontSize: 13 }}>
-                  {status}
+                <span style={{
+                  alignSelf: "flex-start",
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  fontWeight: 800,
+                  fontSize: 13,
+                  background: status === "ACCEPTED" ? "#d1fae5" : status === "REJECTED" ? "#fee2e2" : "#dbeafe",
+                  color: status === "ACCEPTED" ? "#065f46" : status === "REJECTED" ? "#991b1b" : "#1d4ed8"
+                }}>
+                  {status === "ACCEPTED" ? "✓ CONFIRMED" : status === "REJECTED" ? "✕ REJECTED" : status}
                 </span>
               </div>
 
@@ -239,12 +247,26 @@ export default function MatchResults({ pageParams, navigateTo, darkMode, user })
               </div>
 
               <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
-                <button disabled={actionLoading === matchId} onClick={() => handleConfirm(matchId)} style={{ ...styles.action, background: "#16a34a" }}>
-                  Confirm Match
-                </button>
-                <button disabled={actionLoading === matchId} onClick={() => handleReject(matchId)} style={{ ...styles.action, background: "#dc2626" }}>
-                  Reject Match
-                </button>
+                {status === "SUGGESTED" && (
+                  <>
+                    <button disabled={actionLoading === matchId} onClick={() => handleConfirm(matchId)} style={{ ...styles.action, background: "#16a34a" }}>
+                      {actionLoading === matchId ? "Confirming..." : "Confirm Match"}
+                    </button>
+                    <button disabled={actionLoading === matchId} onClick={() => handleReject(matchId)} style={{ ...styles.action, background: "#dc2626" }}>
+                      {actionLoading === matchId ? "Rejecting..." : "Reject Match"}
+                    </button>
+                  </>
+                )}
+                {status === "ACCEPTED" && (
+                  <div style={{ padding: "11px 16px", borderRadius: 12, background: "#d1fae5", color: "#065f46", fontWeight: 800, fontSize: 14 }}>
+                    ✓ Match Confirmed
+                  </div>
+                )}
+                {status === "REJECTED" && (
+                  <div style={{ padding: "11px 16px", borderRadius: 12, background: "#fee2e2", color: "#991b1b", fontWeight: 800, fontSize: 14 }}>
+                    ✕ Match Rejected
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
@@ -254,9 +276,9 @@ export default function MatchResults({ pageParams, navigateTo, darkMode, user })
                 <span style={{
                   display: "inline-block", padding: "6px 16px",
                   borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  background: match.status === "SUGGESTED" ? "#E6F1FB" : "#FAEEDA",
-                  color: match.status === "SUGGESTED" ? "#0b3470" : "#633806",
-                }}>{match.status}</span>
+                  background: status === "ACCEPTED" ? "#d1fae5" : status === "REJECTED" ? "#fee2e2" : "#E6F1FB",
+                  color: status === "ACCEPTED" ? "#065f46" : status === "REJECTED" ? "#991b1b" : "#0b3470",
+                }}>{status === "ACCEPTED" ? "✓ CONFIRMED" : status === "REJECTED" ? "✕ REJECTED" : status}</span>
               </div>
             </div>
           );
