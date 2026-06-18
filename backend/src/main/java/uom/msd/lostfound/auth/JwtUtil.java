@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import uom.msd.lostfound.enums.Role;
 import uom.msd.lostfound.models.User;
 
 import javax.crypto.SecretKey;
@@ -36,6 +37,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(String.valueOf(user.getId()))
                 .claim("username", user.getUsername())
+                .claim("role", user.getRole().name())
                 .issuedAt(new Date(now))
                 .expiration(new Date(expiration))
                 .signWith(key, Jwts.SIG.HS256)
@@ -44,6 +46,11 @@ public class JwtUtil {
 
     public Long extractUserId(String token) {
         return Long.parseLong(extractAllClaims(token).getSubject());
+    }
+
+    public Role extractRole(String token) {
+        String roleName = extractAllClaims(token).get("role", String.class);
+        return Role.valueOf(roleName);
     }
 
     public boolean isTokenValid(String token) {

@@ -2,6 +2,7 @@ package uom.msd.lostfound.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import uom.msd.lostfound.enums.Role;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +22,10 @@ public class User {
     @Column(nullable = false)
     @JsonIgnore
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Role role = Role.USER;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -177,5 +182,13 @@ public class User {
 
     public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
         this.resetTokenExpiry = resetTokenExpiry;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

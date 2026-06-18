@@ -9,6 +9,7 @@ import uom.msd.lostfound.dto.AuthResponse;
 import uom.msd.lostfound.dto.LoginRequest;
 import uom.msd.lostfound.dto.RegisterRequest;
 import uom.msd.lostfound.dto.UserResponse;
+import uom.msd.lostfound.enums.Role;
 import uom.msd.lostfound.exceptions.DuplicateUsernameException;
 import uom.msd.lostfound.exceptions.ResourceNotFoundException;
 import uom.msd.lostfound.models.User;
@@ -38,6 +39,7 @@ public class AuthService {
                 normalizeEmail(request.getEmail()),
                 passwordEncoder.encode(request.getPassword())
         );
+        user.setRole(Role.USER);
 
         User savedUser = userRepository.save(user);
         return buildAuthResponse(savedUser);
@@ -78,6 +80,7 @@ public class AuthService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getRole(),
                 user.getCreatedAt()
         );
     }
