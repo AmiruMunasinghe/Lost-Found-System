@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { confirmMatch, getMatches, getMyMatches, rejectMatch, runMatchingForLostItem } from "../api/matches";
+import { confirmMatch, getMatches, getMyMatches, getReviewQueue, rejectMatch, runMatchingForLostItem } from "../api/matches";
 
 function useDark(dm) {
   return dm ? {
@@ -43,7 +43,7 @@ function normalizeScore(score) {
   return `${Math.round(num)}%`;
 }
 
-export default function MatchResults({ pageParams, navigateTo, darkMode }) {
+export default function MatchResults({ pageParams, navigateTo, darkMode, user }) {
   const t = useDark(darkMode);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,7 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
   const itemId = pageParams?.itemId;
   const type = pageParams?.type;
   const isLostContext = type === "lost";
+  const isAdmin = user?.role?.toLowerCase() === "admin";
 
   async function loadMatches() {
     setLoading(true);
@@ -61,13 +62,17 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
     try {
       let data;
       if (itemId) {
+        // User clicked on a specific item
         const filters = {};
         if (type === "lost") filters.lostItemId = itemId;
         else if (type === "found") filters.foundItemId = itemId;
         else filters.itemId = itemId;
         data = await getMatches(filters);
+      } else if (isAdmin) {
+        // Admin viewing all matches or review queue
+        data = await getMatches({});
       } else {
-        // No specific item — show only user's relevant matches
+        // Student viewing their own matches
         data = await getMyMatches();
       }
       setMatches(Array.isArray(data) ? data : []);
@@ -152,21 +157,23 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
 
       <div style={{ ...styles.toolbar, background: t.card, border: `1px solid ${t.border}` }}>
         <div>
-          <div style={{ color: t.text, fontWeight: 800 }}>Backend matching status</div>
+          <div style={{ color: t.text, fontWeight: 800 }}>{isAdmin ? "All System Matches" : "Your Matches"}</div>
           <p style={{ color: t.muted, margin: "4px 0 0", fontSize: 14 }}>
-            The fixed backend creates matches only after calling <b>POST /matches/run?lostItemId=...</b>.
+            {isAdmin ? "Viewing all matches in the system." : "Potential matches from admin-filtered lost item reports"}
           </p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={loadMatches} style={{ ...styles.toolbarBtn, background: "#64748b" }}>Refresh</button>
-          <button
-            onClick={handleRunMatching}
-            disabled={running || !itemId || !isLostContext}
-            style={{ ...styles.toolbarBtn, background: isLostContext ? "#0F5FFF" : "#94a3b8", cursor: isLostContext ? "pointer" : "not-allowed" }}
-            title={!isLostContext ? "Run matching is available only for LOST items." : undefined}
-          >
-            {running ? "Running..." : "Run Matching"}
-          </button>
+          {!isAdmin && (
+            <button
+              onClick={handleRunMatching}
+              disabled={running || !itemId || !isLostContext}
+              style={{ ...styles.toolbarBtn, background: isLostContext ? "#0F5FFF" : "#94a3b8", cursor: isLostContext ? "pointer" : "not-allowed" }}
+              title={!isLostContext ? "Run matching is available only for LOST items." : undefined}
+            >
+              {running ? "Running..." : "Run Matching"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -180,9 +187,11 @@ export default function MatchResults({ pageParams, navigateTo, darkMode }) {
 
       {!loading && !error && matches.length === 0 && (
         <div style={{ ...styles.info, background: t.card, border: `1px solid ${t.border}`, color: t.text }}>
-          <h3 style={{ marginTop: 0 }}>No matches found yet</h3>
+          <h3 style={{ marginTop: 0 }}>No matches found</h3>
           <p style={{ color: t.muted, marginBottom: 0 }}>
-            Create one LOST item and one similar FOUND item. Then open the lost item and click <b>Run Matching</b>.
+            {isAdmin
+              ? "No matches have been created yet. Students need to create LOST and FOUND items and run matching."
+              : "Create one LOST item and one similar FOUND item. Then open the lost item and click Run Matching."}
           </p>
         </div>
       )}

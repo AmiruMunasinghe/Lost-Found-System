@@ -1,19 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import {
-  approveClaim,
-  getAnalytics,
-  getAuditLog,
-  getClaims,
-  getCurrentAdmin,
-  rejectClaim,
-  requestMoreEvidence,
-  schedulePickup,
   getAdminItems,
+  getMatches,
   updateItemStatus,
   deleteItem,
-  getUserDetails
+  getUserDetails,
+  getCurrentAdmin,
 } from './services/adminApi'
+
 import {
   formatConfidence,
   formatDateTime,
@@ -22,35 +17,18 @@ import {
   toKebabCase,
 } from './utils/formatters'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081'
+
 const routes = [
-  { path: '/admin/claims', label: 'Claims Queue', shortLabel: 'Claims' },
-  { path: '/admin/lost-items', label: 'Lost Items Queue', shortLabel: 'Lost Items' },
-  { path: '/admin/found-items', label: 'Found Items Queue', shortLabel: 'Found Items' },
-  { path: '/admin/analytics', label: 'Analytics Views', shortLabel: 'Analytics' },
-  { path: '/admin/audit-log', label: 'Audit Log', shortLabel: 'Audit' },
-]
-
-const claimStatuses = [
-  { value: 'ALL', label: 'All' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'IN_CONFLICT', label: 'In Conflict' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'REJECTED', label: 'Rejected' },
-]
-
-const rangeOptions = [
-  { value: '7d', label: '7 days' },
-  { value: '30d', label: '30 days' },
-  { value: 'semester', label: 'Semester' },
-  { value: 'all', label: 'All' },
+  { path: '/admin/lost-items', label: 'Lost items', shortLabel: 'Lost' },
+  { path: '/admin/found-items', label: 'Found items', shortLabel: 'Found' },
+  { path: '/admin/match-results', label: 'Match results', shortLabel: 'Matches' },
 ]
 
 const pageTitles = {
-  '/admin/claims': 'Claims Queue',
-  '/admin/lost-items': 'Lost Items Queue',
-  '/admin/found-items': 'Found Items Queue',
-  '/admin/analytics': 'Analytics Views',
-  '/admin/audit-log': 'Audit Log',
+  '/admin/lost-items': 'Lost Items',
+  '/admin/found-items': 'Found Items',
+  '/admin/match-results': 'Match Results',
   '/403': 'Access Restricted',
 }
 
@@ -68,7 +46,7 @@ function useRoute() {
     return () => window.removeEventListener('popstate', handleRouteChange)
   }, [])
 
-  return path === '/' ? '/admin/claims' : path
+  return path === '/' ? '/admin/lost-items' : path
 }
 
 function UserCell({ userId, onUserLoaded }) {
@@ -103,6 +81,7 @@ function UserCell({ userId, onUserLoaded }) {
       </div>
     )
   }
+
   return <span>User ID: {userId}</span>
 }
 
@@ -123,26 +102,25 @@ function ItemDetailModal({ item, userCache, onClose, onStatusChange, getItemStat
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 100,
-      padding: '20px'
+      padding: '20px',
     }}>
       <div className="panel" style={{
-        maxWidth: '700px',
+        maxWidth: '720px',
         width: '100%',
         maxHeight: '90vh',
         overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        animation: 'fadeIn 0.2s ease-out'
       }}>
         <div className="panel-heading" style={{ borderBottom: '1px solid var(--border)', padding: '20px 24px' }}>
           <div>
-            <p className="eyebrow">{item.reportType} Item Registry</p>
-            <h2>Item #{item.id} Details</h2>
+            <p className="eyebrow">{item.reportType} item detail</p>
+            <h2>Item #{item.id}</h2>
           </div>
           <button
             className="ghost-button"
-            style={{ borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+            style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0 }}
             type="button"
             onClick={onClose}
           >
@@ -150,20 +128,20 @@ function ItemDetailModal({ item, userCache, onClose, onStatusChange, getItemStat
           </button>
         </div>
 
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ padding: '24px', display: 'grid', gap: '20px' }}>
           <div>
-            <span style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '8px' }}>Images</span>
+            <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '8px' }}>Images</span>
             <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
               {imagesList.length > 0 ? (
                 imagesList.map((imgUrl, index) => (
                   <img
                     key={index}
-                    src={imgUrl.startsWith('http') ? imgUrl : `http://localhost:8085/uploads/${imgUrl}`}
+                    src={imgUrl.startsWith('http') ? imgUrl : `${API_BASE_URL}/uploads/${imgUrl}`}
                     alt={`Attachment ${index + 1}`}
                     style={{ height: '180px', width: '240px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }}
                     onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80';
+                      e.target.onerror = null
+                      e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80'
                     }}
                   />
                 ))
@@ -175,32 +153,32 @@ function ItemDetailModal({ item, userCache, onClose, onStatusChange, getItemStat
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px' }}>
             <InfoBlock label="Item Name" value={item.title} />
             <InfoBlock label="Category" value={item.category} />
             <InfoBlock label="Report Type" value={item.reportType} />
             <InfoBlock label="Current Status" value={
               <Badge tone={getItemStatusTone(item.status)}>{item.status}</Badge>
             } />
-            <InfoBlock label="Location Found/Lost" value={item.location || 'Not specified'} />
-            <InfoBlock label="Date & Time Reported" value={formatDateTime(item.createdAt)} />
+            <InfoBlock label="Location" value={item.location || 'Not specified'} />
+            <InfoBlock label="Submitted" value={formatDateTime(item.createdAt)} />
           </div>
 
           <div>
-            <span style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>Description</span>
+            <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>Description</span>
             <div style={{ padding: '16px', background: '#fbfcfb', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-h)', whiteSpace: 'pre-wrap' }}>
               {item.description || 'No description provided by the submitter.'}
             </div>
           </div>
 
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '8px' }}>Submitted By</span>
+            <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '8px' }}>Submitted by</span>
             {user ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', padding: '14px', background: '#f4faf7', borderRadius: '8px', border: '1px solid #b7d8cc' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px', padding: '14px', background: '#f4faf7', borderRadius: '8px', border: '1px solid #b7d8cc' }}>
                 <InfoBlock label="Full Name" value={user.fullName || 'N/A'} />
                 <InfoBlock label="Username" value={user.username || 'N/A'} />
-                <InfoBlock label="Email Address" value={user.email || 'N/A'} />
-                <InfoBlock label="Contact Number" value={user.phone || 'N/A'} />
+                <InfoBlock label="Email" value={user.email || 'N/A'} />
+                <InfoBlock label="Phone" value={user.phone || 'N/A'} />
               </div>
             ) : (
               <div style={{ color: 'var(--text)' }}>
@@ -211,8 +189,8 @@ function ItemDetailModal({ item, userCache, onClose, onStatusChange, getItemStat
 
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '8px' }}>Quick Status Transition</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text)', display: 'block', marginBottom: '8px' }}>Quick status</span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   className="secondary-button"
                   style={{ padding: '6px 12px', fontSize: '13px' }}
@@ -242,7 +220,7 @@ function ItemDetailModal({ item, userCache, onClose, onStatusChange, getItemStat
                 </button>
               </div>
             </div>
-            <button className="primary-button" style={{ padding: '10px 20px', alignSelf: 'flex-end' }} type="button" onClick={onClose}>
+            <button className="primary-button" style={{ padding: '10px 20px' }} type="button" onClick={onClose}>
               Done
             </button>
           </div>
@@ -266,7 +244,7 @@ function DeleteConfirmModal({ item, isDeleting, onClose, onConfirm }) {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 110,
-      padding: '20px'
+      padding: '20px',
     }}>
       <div className="panel" style={{
         maxWidth: '440px',
@@ -274,12 +252,12 @@ function DeleteConfirmModal({ item, isDeleting, onClose, onConfirm }) {
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         animation: 'fadeIn 0.2s ease-out',
         padding: '24px',
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
-        <h2 style={{ fontSize: '20px', color: 'var(--text-h)', margin: '0 0 10px' }}>Confirm Deletion</h2>
+        <h2 style={{ fontSize: '20px', color: 'var(--text-h)', margin: '0 0 10px' }}>Confirm deletion</h2>
         <p style={{ fontSize: '14px', color: 'var(--text)', margin: '0 0 20px', lineHeight: '1.5' }}>
-          Are you sure you want to permanently delete the item <strong>"{item.title}"</strong> (ID: {item.id})? This action cannot be undone.
+          Are you sure you want to permanently delete the item <strong>"{item.title}"</strong> (ID: {item.id})? This cannot be undone.
         </p>
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
           <button
@@ -314,18 +292,15 @@ function ItemsManagerPage({ type }) {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [sortBy, setSortBy] = useState('date_desc')
-  
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-
   const [selectedItem, setSelectedItem] = useState(null)
   const [itemToDelete, setItemToDelete] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
-
   const [userCache, setUserCache] = useState({})
 
   function handleUserLoaded(userId, userData) {
-    setUserCache(prev => ({ ...prev, [userId]: userData }))
+    setUserCache((prev) => ({ ...prev, [userId]: userData }))
   }
 
   const loadItems = () => {
@@ -337,11 +312,9 @@ function ItemsManagerPage({ type }) {
       })
       .catch((err) => {
         console.error(err)
-        setError('Failed to fetch items from the backend database.')
+        setError('Failed to fetch items from the backend.')
       })
-      .finally(() => {
-        setLoading(false)
-      })
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => {
@@ -349,9 +322,7 @@ function ItemsManagerPage({ type }) {
     setCurrentPage(1)
   }, [type])
 
-  const categories = useMemo(() => {
-    return [...new Set(items.map(item => item.category).filter(Boolean))]
-  }, [items])
+  const categories = useMemo(() => [...new Set(items.map((item) => item.category).filter(Boolean))], [items])
 
   const getItemStatusTone = (status) => {
     const tones = {
@@ -371,11 +342,9 @@ function ItemsManagerPage({ type }) {
   const handleStatusChange = async (itemId, newStatus) => {
     try {
       await updateItemStatus(itemId, newStatus)
-      setItems(current => 
-        current.map(item => item.id === itemId ? { ...item, status: newStatus } : item)
-      )
-      if (selectedItem && selectedItem.id === itemId) {
-        setSelectedItem(prev => ({ ...prev, status: newStatus }))
+      setItems((current) => current.map((item) => (item.id === itemId ? { ...item, status: newStatus } : item)))
+      if (selectedItem?.id === itemId) {
+        setSelectedItem((prev) => ({ ...prev, status: newStatus }))
       }
     } catch (err) {
       alert(`Failed to update status: ${err.message}`)
@@ -387,7 +356,7 @@ function ItemsManagerPage({ type }) {
     setIsDeleting(true)
     try {
       await deleteItem(itemToDelete.id)
-      setItems(current => current.filter(item => item.id !== itemToDelete.id))
+      setItems((current) => current.filter((item) => item.id !== itemToDelete.id))
       setItemToDelete(null)
     } catch (err) {
       alert(`Failed to delete item: ${err.message}`)
@@ -400,27 +369,26 @@ function ItemsManagerPage({ type }) {
     let result = [...items]
 
     if (statusFilter !== 'ALL') {
-      result = result.filter(item => item.status === statusFilter)
+      result = result.filter((item) => item.status === statusFilter)
     }
 
     if (categoryFilter !== 'ALL') {
-      result = result.filter(item => item.category === categoryFilter)
+      result = result.filter((item) => item.category === categoryFilter)
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
-      result = result.filter(item => {
+      result = result.filter((item) => {
         const titleMatch = (item.title || '').toLowerCase().includes(q)
         const descMatch = (item.description || '').toLowerCase().includes(q)
         const catMatch = (item.category || '').toLowerCase().includes(q)
         const locMatch = (item.location || '').toLowerCase().includes(q)
-        
         const user = userCache[item.userId]
-        const userMatch = user ? (
-          (user.fullName || '').toLowerCase().includes(q) || 
-          (user.username || '').toLowerCase().includes(q) || 
-          (user.email || '').toLowerCase().includes(q)
-        ) : false
+        const userMatch = user
+          ? (user.fullName || '').toLowerCase().includes(q) ||
+            (user.username || '').toLowerCase().includes(q) ||
+            (user.email || '').toLowerCase().includes(q)
+          : false
 
         return titleMatch || descMatch || catMatch || locMatch || userMatch
       })
@@ -446,7 +414,7 @@ function ItemsManagerPage({ type }) {
   }, [items, statusFilter, categoryFilter, searchQuery, sortBy, userCache])
 
   const totalItems = filteredAndSortedItems.length
-  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filteredAndSortedItems.slice(start, start + itemsPerPage)
@@ -460,12 +428,12 @@ function ItemsManagerPage({ type }) {
     <section className="analytics-layout">
       <div className="page-actions">
         <div>
-          <p className="eyebrow">Database Records</p>
-          <h2>{type === 'LOST' ? 'Lost' : 'Found'} Items Registry</h2>
+          <p className="eyebrow">Database registry</p>
+          <h2>{type === 'LOST' ? 'Lost items' : 'Found items'}</h2>
         </div>
         <div className="segmented-control compact">
           <button className="active" type="button" onClick={loadItems}>
-            Refresh Data
+            Refresh data
           </button>
         </div>
       </div>
@@ -473,10 +441,10 @@ function ItemsManagerPage({ type }) {
       <div className="panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Listing Filters</p>
-            <h2>Filter & Search Registry</h2>
+            <p className="eyebrow">Item filters</p>
+            <h2>Search and sort</h2>
           </div>
-          <span className="count-pill">{filteredAndSortedItems.length} items found</span>
+          <span className="count-pill">{filteredAndSortedItems.length} items</span>
         </div>
 
         <div className="toolbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', padding: '16px 20px' }}>
@@ -491,7 +459,7 @@ function ItemsManagerPage({ type }) {
           <label className="search-field">
             <span>Status</span>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="ALL">All Statuses</option>
+              <option value="ALL">All statuses</option>
               <option value="OPEN">Open</option>
               <option value="UNDER_REVIEW">Under Review</option>
               <option value="PENDING_REVIEW">Pending Review</option>
@@ -506,15 +474,17 @@ function ItemsManagerPage({ type }) {
           <label className="search-field">
             <span>Category</span>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-              <option value="ALL">All Categories</option>
-              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              <option value="ALL">All categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </label>
           <label className="search-field">
-            <span>Sort By</span>
+            <span>Sort by</span>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="date_desc">Date (Newest First)</option>
-              <option value="date_asc">Date (Oldest First)</option>
+              <option value="date_desc">Date (newest)</option>
+              <option value="date_asc">Date (oldest)</option>
               <option value="title_asc">Title (A-Z)</option>
               <option value="title_desc">Title (Z-A)</option>
             </select>
@@ -522,22 +492,22 @@ function ItemsManagerPage({ type }) {
         </div>
 
         {loading ? (
-          <div className="empty-state">Loading items registry...</div>
+          <div className="empty-state">Loading items...</div>
         ) : error ? (
           <div className="empty-state" style={{ color: '#b42318' }}>{error}</div>
         ) : paginatedItems.length === 0 ? (
-          <div className="empty-state">No items match the selected criteria.</div>
+          <div className="empty-state">No items match the selected filters.</div>
         ) : (
           <div className="audit-table-wrap">
             <table className="audit-table">
               <thead>
                 <tr>
                   <th style={{ width: '60px' }}>Image</th>
-                  <th>Item Details</th>
+                  <th>Item</th>
                   <th>Category</th>
                   <th>Location</th>
                   <th>Submitted</th>
-                  <th>Submitted By</th>
+                  <th>Submitted by</th>
                   <th>Status</th>
                   <th style={{ width: '180px' }}>Actions</th>
                 </tr>
@@ -546,15 +516,15 @@ function ItemsManagerPage({ type }) {
                 {paginatedItems.map((item) => (
                   <tr key={item.id}>
                     <td>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {item.imageUrls && item.imageUrls.length > 0 ? (
+                      <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', background: '#e5e7eb', display: 'grid', placeItems: 'center' }}>
+                        {item.imageUrls?.length ? (
                           <img
-                            src={item.imageUrls[0].startsWith('http') ? item.imageUrls[0] : `http://localhost:8085/uploads/${item.imageUrls[0]}`}
+                            src={item.imageUrls[0].startsWith('http') ? item.imageUrls[0] : `${API_BASE_URL}/uploads/${item.imageUrls[0]}`}
                             alt={item.title}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=100&q=80';
+                              e.target.onerror = null
+                              e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=100&q=80'
                             }}
                           />
                         ) : (
@@ -563,36 +533,25 @@ function ItemsManagerPage({ type }) {
                       </div>
                     </td>
                     <td>
-                      <strong style={{ color: 'var(--text-h)', display: 'block' }}>{item.title}</strong>
-                      <span style={{ fontSize: '12px', color: 'var(--text)', opacity: 0.8, display: 'block', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <strong style={{ display: 'block', color: 'var(--text-h)' }}>{item.title}</strong>
+                      <span style={{ fontSize: '12px', color: 'var(--text)', opacity: 0.8, display: 'block', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.description || 'No description provided.'}
                       </span>
                     </td>
-                    <td>
-                      <span className="badge muted">{item.category}</span>
-                    </td>
+                    <td>{item.category}</td>
                     <td>{item.location || 'Unknown'}</td>
                     <td>{formatDateTime(item.createdAt)}</td>
+                    <td><UserCell userId={item.userId} onUserLoaded={handleUserLoaded} /></td>
+                    <td><Badge tone={getItemStatusTone(item.status)}>{item.status}</Badge></td>
                     <td>
-                      <UserCell userId={item.userId} onUserLoaded={handleUserLoaded} />
-                    </td>
-                    <td>
-                      <Badge tone={getItemStatusTone(item.status)}>{item.status}</Badge>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button
-                          className="ghost-button"
-                          style={{ padding: '6px 10px', fontSize: '12px' }}
-                          type="button"
-                          onClick={() => setSelectedItem(item)}
-                        >
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        <button className="ghost-button" style={{ padding: '6px 10px', fontSize: '12px' }} type="button" onClick={() => setSelectedItem(item)}>
                           Details
                         </button>
                         <select
                           value={item.status}
                           onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                          style={{ padding: '4px 8px', fontSize: '12px', width: 'auto', flex: 'none' }}
+                          style={{ padding: '6px 10px', fontSize: '12px' }}
                         >
                           <option value="OPEN">Open</option>
                           <option value="UNDER_REVIEW">Under Review</option>
@@ -604,12 +563,7 @@ function ItemsManagerPage({ type }) {
                           <option value="SCHEDULED_FOR_DONATION">Donation</option>
                           <option value="CLOSED">Closed</option>
                         </select>
-                        <button
-                          className="danger-button"
-                          style={{ padding: '6px 10px', fontSize: '12px', border: 'none' }}
-                          type="button"
-                          onClick={() => setItemToDelete(item)}
-                        >
+                        <button className="danger-button" style={{ padding: '6px 10px', fontSize: '12px', border: 'none' }} type="button" onClick={() => setItemToDelete(item)}>
                           Delete
                         </button>
                       </div>
@@ -624,25 +578,13 @@ function ItemsManagerPage({ type }) {
         {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
             <span style={{ fontSize: '13px', color: 'var(--text)' }}>
-              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({totalItems} items total)
+              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({totalItems} items)
             </span>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                className="segmented-control button"
-                style={{ padding: '8px 14px', border: '1px solid #d7ded9', borderRadius: '8px', cursor: 'pointer', background: '#fff', fontWeight: '800' }}
-                disabled={currentPage === 1}
-                type="button"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              >
+              <button className="segmented-control button" style={{ padding: '8px 14px', border: '1px solid #d7ded9', borderRadius: '8px', cursor: 'pointer', background: '#fff', fontWeight: 800 }} disabled={currentPage === 1} type="button" onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
                 Previous
               </button>
-              <button
-                className="segmented-control button"
-                style={{ padding: '8px 14px', border: '1px solid #d7ded9', borderRadius: '8px', cursor: 'pointer', background: '#fff', fontWeight: '800' }}
-                disabled={currentPage === totalPages}
-                type="button"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              >
+              <button className="segmented-control button" style={{ padding: '8px 14px', border: '1px solid #d7ded9', borderRadius: '8px', cursor: 'pointer', background: '#fff', fontWeight: 800 }} disabled={currentPage === totalPages} type="button" onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}>
                 Next
               </button>
             </div>
@@ -661,16 +603,217 @@ function ItemsManagerPage({ type }) {
       )}
 
       {itemToDelete && (
-        <DeleteConfirmModal
-          item={itemToDelete}
-          isDeleting={isDeleting}
-          onClose={() => setItemToDelete(null)}
-          onConfirm={handleDelete}
-        />
+        <DeleteConfirmModal item={itemToDelete} isDeleting={isDeleting} onClose={() => setItemToDelete(null)} onConfirm={handleDelete} />
       )}
     </section>
   )
 }
+
+function MatchResultsPage() {
+  const [matches, setMatches] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedMatch, setSelectedMatch] = useState(null)
+
+  const statusOptions = [
+    { value: 'ALL', label: 'All' },
+    { value: 'PENDING_REVIEW', label: 'Pending Review' },
+    { value: 'SUGGESTED', label: 'Suggested' },
+    { value: 'ACCEPTED', label: 'Accepted' },
+    { value: 'REJECTED', label: 'Rejected' },
+  ]
+
+  const loadMatches = () => {
+    setLoading(true)
+    setError('')
+    getMatches(statusFilter)
+      .then((data) => {
+        setMatches(data)
+        setSelectedMatch((current) => current || data[0] || null)
+      })
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load match results.')
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadMatches()
+  }, [statusFilter])
+
+  const filteredMatches = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return matches
+
+    return matches.filter((match) => {
+      const lostTitle = match.lostItem?.title || ''
+      const foundTitle = match.foundItem?.title || ''
+      return [
+        String(match.id),
+        match.status || '',
+        lostTitle,
+        foundTitle,
+      ].some((field) => field.toLowerCase().includes(q))
+    })
+  }, [matches, searchQuery])
+
+  return (
+    <section className="audit-layout">
+      <div className="panel audit-table-panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Match results</p>
+            <h2>Match review</h2>
+          </div>
+          <span className="count-pill">{filteredMatches.length} results</span>
+        </div>
+
+        <div className="audit-filters">
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search ID, lost item, found item, or status"
+          />
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Match status filter">
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <button className="ghost-button" type="button" onClick={loadMatches}>
+            Refresh
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="empty-state">Loading matches...</div>
+        ) : error ? (
+          <div className="empty-state" style={{ color: '#b42318' }}>{error}</div>
+        ) : filteredMatches.length === 0 ? (
+          <div className="empty-state">No matches found.</div>
+        ) : (
+          <div className="audit-table-wrap">
+            <table className="audit-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Lost item</th>
+                  <th>Found item</th>
+                  <th>Confidence</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMatches.map((match) => (
+                  <tr key={match.id} className={selectedMatch?.id === match.id ? 'selected' : ''} onClick={() => setSelectedMatch(match)}>
+                    <td>{match.id}</td>
+                    <td>{match.lostItem?.title || 'Unknown'}</td>
+                    <td>{match.foundItem?.title || 'Unknown'}</td>
+                    <td>{formatConfidence(match.confidenceScore)}</td>
+                    <td><Badge tone={getStatusTone(match.status)}>{formatStatus(match.status)}</Badge></td>
+                    <td>{formatDateTime(match.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      <MatchDetailPanel match={selectedMatch} />
+    </section>
+  )
+}
+
+function MatchDetailPanel({ match }) {
+  if (!match) {
+    return (
+      <div className="panel audit-detail">
+        <div className="empty-state">Select a match to view details.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="panel audit-detail">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Match detail</p>
+          <h2>Match #{match.id}</h2>
+        </div>
+        <Badge tone={getStatusTone(match.status)}>{formatStatus(match.status)}</Badge>
+      </div>
+      <div className="detail-grid single-column">
+        <InfoBlock label="Match ID" value={match.id} />
+        <InfoBlock label="Status" value={formatStatus(match.status)} />
+        <InfoBlock label="Confidence" value={formatConfidence(match.confidenceScore)} />
+        <InfoBlock label="Created" value={formatDateTime(match.createdAt)} />
+        <InfoBlock label="Updated" value={formatDateTime(match.updatedAt)} />
+      </div>
+
+      <div className="detail-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="info-block">
+          <span>Lost item</span>
+          <strong>{match.lostItem?.title || 'Unknown'}</strong>
+          <p>{match.lostItem?.description || 'No description available.'}</p>
+          <p><strong>Location:</strong> {match.lostItem?.location || 'Unknown'}</p>
+          <p><strong>Status:</strong> {match.lostItem?.status || 'Unknown'}</p>
+        </div>
+        <div className="info-block">
+          <span>Found item</span>
+          <strong>{match.foundItem?.title || 'Unknown'}</strong>
+          <p>{match.foundItem?.description || 'No description available.'}</p>
+          <p><strong>Location:</strong> {match.foundItem?.location || 'Unknown'}</p>
+          <p><strong>Status:</strong> {match.foundItem?.status || 'Unknown'}</p>
+        </div>
+      </div>
+
+      <div style={{ padding: '20px' }}>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          <div>
+            <span style={{ fontSize: '12px', color: 'var(--text)', fontWeight: 700 }}>Lost item images</span>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+              {match.lostItem?.imageUrls?.length ? (
+                match.lostItem.imageUrls.map((image, index) => (
+                  <img
+                    key={`lost-${index}`}
+                    src={image.startsWith('http') ? image : `${API_BASE_URL}/uploads/${image}`}
+                    alt={`Lost item ${index + 1}`}
+                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                ))
+              ) : (
+                <div style={{ color: 'var(--text)' }}>No images available.</div>
+              )}
+            </div>
+          </div>
+          <div>
+            <span style={{ fontSize: '12px', color: 'var(--text)', fontWeight: 700 }}>Found item images</span>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+              {match.foundItem?.imageUrls?.length ? (
+                match.foundItem.imageUrls.map((image, index) => (
+                  <img
+                    key={`found-${index}`}
+                    src={image.startsWith('http') ? image : `${API_BASE_URL}/uploads/${image}`}
+                    alt={`Found item ${index + 1}`}
+                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                ))
+              ) : (
+                <div style={{ color: 'var(--text)' }}>No images available.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const route = useRoute()
   const admin = getCurrentAdmin()
@@ -678,22 +821,20 @@ function App() {
   const guardedRoute = isAdmin ? route : '/403'
 
   useEffect(() => {
-    if (window.location.pathname === '/') navigate('/admin/claims')
+    if (window.location.pathname === '/') navigate('/admin/lost-items')
   }, [route])
 
   return (
     <div className="app-shell">
       <Sidebar activePath={guardedRoute} />
       <main className="main-panel">
-        <Topbar title={pageTitles[guardedRoute] || 'Claims Queue'} admin={admin} />
+        <Topbar title={pageTitles[guardedRoute] || 'Lost Items'} admin={admin} />
         <div className="page-surface">
           {!isAdmin && <ForbiddenPage />}
-          {isAdmin && guardedRoute === '/admin/claims' && <ClaimsPage />}
           {isAdmin && guardedRoute === '/admin/lost-items' && <ItemsManagerPage type="LOST" />}
           {isAdmin && guardedRoute === '/admin/found-items' && <ItemsManagerPage type="FOUND" />}
-          {isAdmin && guardedRoute === '/admin/analytics' && <AnalyticsPage />}
-          {isAdmin && guardedRoute === '/admin/audit-log' && <AuditLogPage />}
-          {isAdmin && !pageTitles[guardedRoute] && <ClaimsPage />}
+          {isAdmin && guardedRoute === '/admin/match-results' && <MatchResultsPage />}
+          {isAdmin && !pageTitles[guardedRoute] && <ItemsManagerPage type="LOST" />}
         </div>
       </main>
     </div>
@@ -726,8 +867,8 @@ function Sidebar({ activePath }) {
       </nav>
 
       <div className="sidebar-note">
-        <span>Backend Mode</span>
-        <strong>Connected to Live API</strong>
+        <span>Backend mode</span>
+        <strong>Connected to live API</strong>
       </div>
     </aside>
   )
@@ -735,23 +876,19 @@ function Sidebar({ activePath }) {
 
 function Topbar({ title, admin }) {
   function handleLogout() {
-    localStorage.setItem(
-      'adminUser',
-      JSON.stringify({ ...admin, role: 'USER', name: 'Signed out user' }),
-    )
+    localStorage.setItem('adminUser', JSON.stringify({ ...admin, role: 'USER', name: 'Signed out user' }))
+    localStorage.removeItem('adminToken')
     navigate('/403')
   }
 
   return (
     <header className="topbar">
       <div>
-        <p className="eyebrow">Admin Dashboard UI</p>
+        <p className="eyebrow">Admin dashboard</p>
         <h1>{title}</h1>
       </div>
       <div className="admin-chip">
-        <div className="avatar" aria-hidden="true">
-          T9
-        </div>
+        <div className="avatar">T9</div>
         <div>
           <strong>{admin?.name || 'Admin'}</strong>
           <span>{admin?.role || 'UNKNOWN'}</span>
@@ -764,595 +901,20 @@ function Topbar({ title, admin }) {
   )
 }
 
-function ClaimsPage() {
-  const [claims, setClaims] = useState([])
-  const [selectedId, setSelectedId] = useState('')
-  const [status, setStatus] = useState('ALL')
-  const [query, setQuery] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [notice, setNotice] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-    getClaims({ status, q: query })
-      .then((data) => {
-        if (cancelled) return
-        setClaims(data)
-        setSelectedId((current) => current || data[0]?.id || '')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [status, query])
-
-  const selectedClaim = useMemo(
-    () => claims.find((claim) => claim.id === selectedId) || claims[0],
-    [claims, selectedId],
-  )
-
-  async function runClaimAction(action, successMessage) {
-    if (!selectedClaim) return
-    setNotice('Saving review decision...')
-
-    try {
-      const updatedClaim = await action(selectedClaim.id)
-      setClaims((current) =>
-        current.map((claim) => (claim.id === updatedClaim.id ? updatedClaim : claim)),
-      )
-      setSelectedId(updatedClaim.id)
-      setNotice(successMessage)
-    } catch (error) {
-      setNotice(error.message)
-    }
-  }
-
-  return (
-    <section className="claims-layout">
-      <div className="panel list-panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Review workflow</p>
-            <h2>Claims queue</h2>
-          </div>
-          <span className="count-pill">{claims.length} visible</span>
-        </div>
-
-        <div className="toolbar">
-          <label className="search-field">
-            <span>Search claims</span>
-            <input
-              value={query}
-              onChange={(event) => {
-                setLoading(true)
-                setQuery(event.target.value)
-              }}
-              placeholder="Name, item, category, location"
-            />
-          </label>
-
-          <div className="segmented-control" aria-label="Claim status filter">
-            {claimStatuses.map((option) => (
-              <button
-                key={option.value}
-                className={status === option.value ? 'active' : ''}
-                type="button"
-                onClick={() => {
-                  setLoading(true)
-                  setStatus(option.value)
-                }}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {loading && <div className="empty-state">Loading claims...</div>}
-        {!loading && claims.length === 0 && (
-          <div className="empty-state">No claims match the selected filters.</div>
-        )}
-        {!loading && claims.length > 0 && (
-          <div className="claim-list">
-            {claims.map((claim) => (
-              <button
-                key={claim.id}
-                className={claim.id === selectedClaim?.id ? 'claim-row active' : 'claim-row'}
-                type="button"
-                onClick={() => setSelectedId(claim.id)}
-              >
-                <div>
-                  <strong>{claim.item.title}</strong>
-                  <span>
-                    {claim.id} by {claim.claimant.name}
-                  </span>
-                </div>
-                <div className="row-meta">
-                  <Badge tone={getStatusTone(claim.status)}>
-                    {formatStatus(claim.status)}
-                  </Badge>
-                  <small>{formatConfidence(claim.match.confidenceScore)}</small>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <ClaimDetailPanel
-        key={selectedClaim?.id || 'empty-claim'}
-        claim={selectedClaim}
-        notice={notice}
-        onApprove={() =>
-          runClaimAction(approveClaim, 'Claim approved and claimant notified.')
-        }
-        onReject={(reason) =>
-          runClaimAction(
-            (claimId) => rejectClaim(claimId, reason),
-            'Claim rejected with reason saved.',
-          )
-        }
-        onRequestEvidence={(message) =>
-          runClaimAction(
-            (claimId) => requestMoreEvidence(claimId, message),
-            'Additional evidence request sent.',
-          )
-        }
-        onSchedulePickup={(pickup) =>
-          runClaimAction(
-            (claimId) => schedulePickup(claimId, pickup),
-            'Pickup schedule saved and status updated.',
-          )
-        }
-      />
-    </section>
-  )
-}
-
-function ClaimDetailPanel({
-  claim,
-  notice,
-  onApprove,
-  onReject,
-  onRequestEvidence,
-  onSchedulePickup,
-}) {
-  const [reason, setReason] = useState('')
-  const [message, setMessage] = useState('')
-  const [pickupAt, setPickupAt] = useState('')
-  const [pickupLocation, setPickupLocation] = useState('Student Services Desk')
-
-  if (!claim) {
-    return (
-      <div className="panel detail-panel">
-        <div className="empty-state">Select a claim to review its evidence.</div>
-      </div>
-    )
-  }
-
-  const canDecide = ['PENDING', 'IN_CONFLICT', 'MORE_EVIDENCE'].includes(claim.status)
-  const canSchedule = ['APPROVED', 'AWAITING_PICKUP'].includes(claim.status)
-
-  return (
-    <div className="panel detail-panel">
-      <div className="detail-hero">
-        <img src={claim.item.imageUrl} alt={claim.item.title} />
-        <div>
-          <div className="detail-title-row">
-            <Badge tone={getStatusTone(claim.status)}>
-              {formatStatus(claim.status)}
-            </Badge>
-            <span className="priority">{claim.priority} priority</span>
-          </div>
-          <h2>{claim.item.title}</h2>
-          <p>{claim.item.description}</p>
-        </div>
-      </div>
-
-      {notice && <div className="notice">{notice}</div>}
-
-      <div className="detail-grid">
-        <InfoBlock label="Claim ID" value={claim.id} />
-        <InfoBlock label="Item ID" value={claim.item.id} />
-        <InfoBlock label="Category" value={claim.item.category} />
-        <InfoBlock label="Location" value={claim.item.location} />
-        <InfoBlock label="Submitted" value={formatDateTime(claim.createdAt)} />
-        <InfoBlock label="Updated" value={formatDateTime(claim.updatedAt)} />
-      </div>
-
-      <section className="review-section">
-        <h3>Claimant evidence</h3>
-        <p>{claim.evidence.summary}</p>
-        <div className="attachment-list">
-          {claim.evidence.attachments.map((attachment) => (
-            <span key={attachment}>{attachment}</span>
-          ))}
-        </div>
-      </section>
-
-      <section className="review-section">
-        <h3>Match review</h3>
-        <div className="confidence-row">
-          <div>
-            <strong>{formatConfidence(claim.match.confidenceScore)}</strong>
-            <span>matching confidence</span>
-          </div>
-          <div className="confidence-track">
-            <span
-              style={{ width: formatConfidence(claim.match.confidenceScore) }}
-            />
-          </div>
-        </div>
-        <div className="tag-list">
-          {claim.match.matchedTerms.map((term) => (
-            <span key={term}>{term}</span>
-          ))}
-        </div>
-      </section>
-
-      {claim.decisionReason && (
-        <section className="review-section">
-          <h3>Decision note</h3>
-          <p>{claim.decisionReason}</p>
-        </section>
-      )}
-
-      <section className="review-section action-stack">
-        <h3>Admin actions</h3>
-        <div className="button-row">
-          <button
-            className="primary-button"
-            type="button"
-            onClick={onApprove}
-            disabled={!canDecide}
-          >
-            Approve
-          </button>
-          <button
-            className="danger-button"
-            type="button"
-            onClick={() => reason.trim() && onReject(reason.trim())}
-            disabled={!canDecide || !reason.trim()}
-          >
-            Reject
-          </button>
-        </div>
-        <textarea
-          value={reason}
-          onChange={(event) => setReason(event.target.value)}
-          placeholder="Required rejection reason"
-          rows="3"
-        />
-        <div className="button-row split-row">
-          <input
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder="Message requesting more evidence"
-          />
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => message.trim() && onRequestEvidence(message.trim())}
-            disabled={!canDecide || !message.trim()}
-          >
-            Request Evidence
-          </button>
-        </div>
-        <div className="button-row split-row">
-          <input
-            type="datetime-local"
-            value={pickupAt}
-            onChange={(event) => setPickupAt(event.target.value)}
-            aria-label="Pickup date and time"
-          />
-          <input
-            value={pickupLocation}
-            onChange={(event) => setPickupLocation(event.target.value)}
-            aria-label="Pickup location"
-          />
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() =>
-              pickupAt &&
-              pickupLocation.trim() &&
-              onSchedulePickup({
-                pickupAt,
-                location: pickupLocation.trim(),
-              })
-            }
-            disabled={!canSchedule || !pickupAt || !pickupLocation.trim()}
-          >
-            Schedule Pickup
-          </button>
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function AnalyticsPage() {
-  const [range, setRange] = useState('30d')
-  const [analytics, setAnalytics] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-    getAnalytics(range).then((data) => {
-      if (!cancelled) setAnalytics(data)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [range])
-
-  if (!analytics) {
-    return <div className="panel empty-state">Loading analytics...</div>
-  }
-
-  const kpis = [
-    ['Total reports', analytics.summary.totalReports],
-    ['Pending claims', analytics.summary.pendingClaims],
-    ['Approved claims', analytics.summary.approvedClaims],
-    ['Rejected claims', analytics.summary.rejectedClaims],
-    ['Recovered items', analytics.summary.recoveredItems],
-    ['Avg. review time', analytics.summary.averageReviewTime],
-  ]
-
-  return (
-    <section className="analytics-layout">
-      <div className="page-actions">
-        <div>
-          <p className="eyebrow">Operational metrics</p>
-          <h2>Campus lost and found performance</h2>
-        </div>
-        <div className="segmented-control compact">
-          {rangeOptions.map((option) => (
-            <button
-              key={option.value}
-              className={range === option.value ? 'active' : ''}
-              type="button"
-              onClick={() => setRange(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="kpi-grid">
-        {kpis.map(([label, value]) => (
-          <div className="panel kpi-card" key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </div>
-        ))}
-      </div>
-
-      <div className="chart-grid">
-        <TrendChart title="Lost vs found trends" data={analytics.trendSeries} />
-        <BarChart title="Claims by status" data={analytics.statusBreakdown} />
-        <BarChart title="Reports by category" data={analytics.categoryBreakdown} />
-        <BarChart title="Reports by location" data={analytics.locationBreakdown} />
-        <BarChart
-          title="Matching confidence distribution"
-          data={analytics.confidenceDistribution}
-        />
-      </div>
-    </section>
-  )
-}
-
-function TrendChart({ title, data }) {
-  const maxValue = Math.max(...data.flatMap((item) => [item.lost, item.found]))
-
-  return (
-    <div className="panel chart-card wide-chart">
-      <h3>{title}</h3>
-      <div className="trend-chart">
-        {data.map((item) => (
-          <div className="trend-column" key={item.label}>
-            <div className="trend-bars">
-              <span
-                className="lost-bar"
-                style={{ height: `${(item.lost / maxValue) * 100}%` }}
-                title={`${item.lost} lost reports`}
-              />
-              <span
-                className="found-bar"
-                style={{ height: `${(item.found / maxValue) * 100}%` }}
-                title={`${item.found} found reports`}
-              />
-            </div>
-            <small>{item.label}</small>
-          </div>
-        ))}
-      </div>
-      <div className="legend">
-        <span className="legend-lost">Lost</span>
-        <span className="legend-found">Found</span>
-      </div>
-    </div>
-  )
-}
-
-function BarChart({ title, data }) {
-  const maxValue = Math.max(...data.map((item) => item.value))
-
-  return (
-    <div className="panel chart-card">
-      <h3>{title}</h3>
-      <div className="bar-list">
-        {data.map((item) => (
-          <div className="bar-row" key={item.label}>
-            <div>
-              <span>{item.label}</span>
-              <strong>{item.value}</strong>
-            </div>
-            <div className="bar-track">
-              <span style={{ width: `${(item.value / maxValue) * 100}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function AuditLogPage() {
-  const [events, setEvents] = useState([])
-  const [filters, setFilters] = useState({
-    action: '',
-    entityType: '',
-    adminId: '',
-  })
-  const [selectedEvent, setSelectedEvent] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-    getAuditLog(filters).then((data) => {
-      if (!cancelled) {
-        setEvents(data)
-        setSelectedEvent((current) => current || data[0] || null)
-      }
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [filters])
-
-  const actionOptions = [...new Set(events.map((event) => event.action))]
-
-  return (
-    <section className="audit-layout">
-      <div className="panel audit-table-panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Immutable activity trail</p>
-            <h2>Audit log</h2>
-          </div>
-          <Badge tone="info">Read-only</Badge>
-        </div>
-
-        <div className="audit-filters">
-          <select
-            value={filters.action}
-            onChange={(event) =>
-              setFilters((current) => ({ ...current, action: event.target.value }))
-            }
-            aria-label="Action type"
-          >
-            <option value="">All actions</option>
-            {actionOptions.map((action) => (
-              <option key={action} value={action}>
-                {action.replaceAll('_', ' ')}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.entityType}
-            onChange={(event) =>
-              setFilters((current) => ({
-                ...current,
-                entityType: event.target.value,
-              }))
-            }
-            aria-label="Entity type"
-          >
-            <option value="">All entities</option>
-            <option value="CLAIM">Claim</option>
-            <option value="ITEM">Item</option>
-          </select>
-          <input
-            value={filters.adminId}
-            onChange={(event) =>
-              setFilters((current) => ({ ...current, adminId: event.target.value }))
-            }
-            placeholder="Admin name or ID"
-          />
-        </div>
-
-        <div className="audit-table-wrap">
-          <table className="audit-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Admin</th>
-                <th>Action</th>
-                <th>Entity</th>
-                <th>Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <tr
-                  key={event.id}
-                  className={selectedEvent?.id === event.id ? 'selected' : ''}
-                  onClick={() => setSelectedEvent(event)}
-                >
-                  <td>{formatDateTime(event.timestamp)}</td>
-                  <td>{event.admin.name}</td>
-                  <td>{event.action.replaceAll('_', ' ')}</td>
-                  <td>
-                    {event.entityType} {event.entityId}
-                  </td>
-                  <td>
-                    <Badge tone="success">{event.outcome}</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="panel audit-detail">
-        {selectedEvent ? (
-          <>
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Event detail</p>
-                <h2>{selectedEvent.id}</h2>
-              </div>
-              <Badge tone="muted">{selectedEvent.entityType}</Badge>
-            </div>
-            <div className="detail-grid single-column">
-              <InfoBlock label="Timestamp" value={formatDateTime(selectedEvent.timestamp)} />
-              <InfoBlock label="Admin" value={selectedEvent.admin.name} />
-              <InfoBlock label="Action" value={selectedEvent.action.replaceAll('_', ' ')} />
-              <InfoBlock label="Entity" value={selectedEvent.entityId} />
-              <InfoBlock label="Notes" value={selectedEvent.notes} />
-            </div>
-            <pre>{JSON.stringify(selectedEvent.payload, null, 2)}</pre>
-          </>
-        ) : (
-          <div className="empty-state">Select an audit event to inspect.</div>
-        )}
-      </div>
-    </section>
-  )
-}
-
 function ForbiddenPage() {
   function restoreAdmin() {
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUser')
-    navigate('/admin/claims')
+    navigate('/admin/lost-items')
   }
 
   return (
     <section className="panel forbidden">
       <p className="eyebrow">403 Forbidden</p>
       <h2>Admin access is required</h2>
-      <p>
-        This route is guarded for users with the ADMIN role.
-      </p>
+      <p>This route is guarded for users with the ADMIN role.</p>
       <button className="primary-button" type="button" onClick={restoreAdmin}>
-        Restore Admin Session
+        Restore admin session
       </button>
     </section>
   )

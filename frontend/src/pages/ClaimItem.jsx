@@ -10,7 +10,7 @@ function useDark(dm) {
   };
 }
 
-function ClaimItem({ navigateTo, darkMode }) {
+function ClaimItem({ navigateTo, darkMode, user }) {
   const t = useDark(darkMode);
 
   const features = [
