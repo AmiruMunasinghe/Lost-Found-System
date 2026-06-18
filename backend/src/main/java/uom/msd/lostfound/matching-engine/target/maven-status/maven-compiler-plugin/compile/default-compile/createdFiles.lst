@@ -1,0 +1,9 @@
+com\uom\lostfound\matching\dto\ScoreBreakdown.class
+com\uom\lostfound\matching\dto\ScoredCandidate.class
+com\uom\lostfound\matching\model\FoundItem.class
+com\uom\lostfound\matching\model\FoundItem$FoundItemBuilder.class
+com\uom\lostfound\matching\model\LostItem$LostItemBuilder.class
+com\uom\lostfound\matching\algorithm\SimilarityScorer.class
+com\uom\lostfound\matching\dto\ScoredCandidate$ScoredCandidateBuilder.class
+com\uom\lostfound\matching\model\LostItem.class
+com\uom\lostfound\matching\dto\ScoreBreakdown$ScoreBreakdownBuilder.class

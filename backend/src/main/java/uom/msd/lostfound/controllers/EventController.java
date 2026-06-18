@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/events")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RequiredArgsConstructor
 public class EventController {
 
@@ -34,6 +35,9 @@ public class EventController {
                 payload.getLostItemOwnerId(),
                 payload.getLostItemOwnerEmail(),
                 payload.getLostItemName(),
+                payload.getFoundItemOwnerId(),
+                payload.getFoundItemOwnerEmail(),
+                payload.getFoundItemName(),
                 payload.getFoundItemId(),
                 payload.getFoundItemDescription(),
                 payload.getFoundLocation()
@@ -76,13 +80,14 @@ public class EventController {
         return ResponseEntity.accepted().build();
     }
 
-    // ─── Request payload inner classes ───────────────────────────────────────
-
     @Data
     public static class ItemMatchedPayload {
         @NotNull  private Long lostItemOwnerId;
         @NotBlank private String lostItemOwnerEmail;
         @NotBlank private String lostItemName;
+        @NotNull  private Long foundItemOwnerId;
+        @NotBlank private String foundItemOwnerEmail;
+        @NotBlank private String foundItemName;
         @NotNull  private Long foundItemId;
         @NotBlank private String foundItemDescription;
         @NotBlank private String foundLocation;

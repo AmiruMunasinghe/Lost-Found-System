@@ -1,0 +1,91 @@
+{
+  "id": "notification-api-environment",
+  "name": "Lost & Found Notification API - Local Dev",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "api_version",
+      "value": "v1",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "user_lost_owner",
+      "value": "1",
+      "type": "string",
+      "enabled": true,
+      "description": "User ID for lost item owner (john_doe)"
+    },
+    {
+      "key": "user_finder",
+      "value": "6",
+      "type": "string",
+      "enabled": true,
+      "description": "User ID for item finder (emily_davis)"
+    },
+    {
+      "key": "user_secondary",
+      "value": "2",
+      "type": "string",
+      "enabled": true,
+      "description": "Secondary user ID for testing (jane_smith)"
+    },
+    {
+      "key": "notification_id_match",
+      "value": "1",
+      "type": "string",
+      "enabled": true,
+      "description": "Notification ID for item match notification"
+    },
+    {
+      "key": "notification_id_reward",
+      "value": "8",
+      "type": "string",
+      "enabled": true,
+      "description": "Notification ID for reward earned notification"
+    },
+    {
+      "key": "item_lost_id",
+      "value": "101",
+      "type": "string",
+      "enabled": true,
+      "description": "Lost item ID (Samsung Galaxy S21)"
+    },
+    {
+      "key": "item_found_id",
+      "value": "201",
+      "type": "string",
+      "enabled": true,
+      "description": "Found item ID (Samsung Galaxy S21 found)"
+    },
+    {
+      "key": "user_email_owner",
+      "value": "john.doe@university.edu",
+      "type": "string",
+      "enabled": true,
+      "description": "Email of lost item owner"
+    },
+    {
+      "key": "user_email_finder",
+      "value": "emily.davis@university.edu",
+      "type": "string",
+      "enabled": true,
+      "description": "Email of item finder"
+    },
+    {
+      "key": "timestamp",
+      "value": "",
+      "type": "string",
+      "enabled": true,
+      "description": "Generated timestamp for requests (auto-filled by tests)"
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2024-01-15T10:00:00.000Z",
+  "_postman_exported_using": "Postman/11.0.0"
+}

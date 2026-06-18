@@ -70,6 +70,20 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+    /**
+     * Sends a support request email from a user to the system support address.
+     */
+    @Async
+    public void sendSupportEmail(String fromUserEmail, String subject, String message) {
+        Context ctx = new Context();
+        ctx.setVariable("fromEmail", fromUserEmail);
+        ctx.setVariable("subject", subject);
+        ctx.setVariable("message", message);
+
+        String html = templateEngine.process("email/generic-notification", ctx);
+        sendHtmlEmail(fromEmail, "[Support] " + subject, html);
+    }
+
     private void sendHtmlEmail(String toEmail, String subject, String htmlBody) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();

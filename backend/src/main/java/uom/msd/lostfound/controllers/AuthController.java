@@ -23,7 +23,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/register/")
+    @PostMapping({"/register", "/register/"})
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         System.out.println("Register request received");
         AuthResponse response = authService.register(request);
@@ -31,15 +31,44 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/login/")
+    @PostMapping({"/login", "/login/"})
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         System.out.println("Logged In");
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/me/")
+    @GetMapping({"/me", "/me/"})
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         return ResponseEntity.ok(authService.getCurrentUser(authenticatedUser.getId()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<java.util.Map<String, String>> forgotPassword(@RequestBody uom.msd.lostfound.dto.ForgotPasswordRequest request) {
+        String token = authService.forgotPassword(request.getEmail());
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Reset link generated");
+        response.put("token", token);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<java.util.Map<String, String>> resetPassword(@RequestBody uom.msd.lostfound.dto.ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Password has been reset successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<java.util.Map<String, String>> changePassword(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @RequestBody java.util.Map<String, String> request) {
+        String currentPassword = request.get("currentPassword");
+        String newPassword = request.get("newPassword");
+        authService.changePassword(authenticatedUser.getId(), currentPassword, newPassword);
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Password changed successfully");
+        return ResponseEntity.ok(response);
     }
 }

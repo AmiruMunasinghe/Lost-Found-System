@@ -12,6 +12,8 @@ import uom.msd.lostfound.enums.ReportType;
 import uom.msd.lostfound.models.Item;
 import uom.msd.lostfound.models.ItemImage;
 import uom.msd.lostfound.models.User;
+import org.springframework.context.ApplicationEventPublisher;
+import uom.msd.lostfound.events.ItemCreatedEvent;
 import uom.msd.lostfound.repositories.ItemRepository;
 import uom.msd.lostfound.repositories.UserRepository;
 
@@ -30,6 +32,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public ItemResponseDTO createItem(Long userId, ItemRequestDTO request) {
@@ -50,6 +55,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Item savedItem = itemRepository.save(item);
+        eventPublisher.publishEvent(new ItemCreatedEvent(this, savedItem));
         return convertToResponseDTO(savedItem);
     }
 

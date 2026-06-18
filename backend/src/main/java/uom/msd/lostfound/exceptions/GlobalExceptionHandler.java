@@ -2,6 +2,7 @@ package uom.msd.lostfound.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -55,15 +56,30 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), List.of());
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Access denied: you do not have permission to access this resource", List.of());
+    }
+
+    @ExceptionHandler(InvalidClaimStatusTransitionException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidClaimStatusTransition(
+            InvalidClaimStatusTransitionException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST,
+                "Invalid claim status transition: " + ex.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(ClaimNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleClaimNotFound(ClaimNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception ex) {
-
-        ex.printStackTrace(); // 🔥 THIS IS WHAT YOU ARE MISSING
-
+        ex.printStackTrace();
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
-                List.of(ex.getMessage()) // optional but useful
+                List.of()
         );
     }
 
