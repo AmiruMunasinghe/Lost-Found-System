@@ -91,4 +91,8 @@ public class AuthService {
         }
         return email.trim();
     }
+
+    public String forgotPassword(String email){
+
+    }
 }
