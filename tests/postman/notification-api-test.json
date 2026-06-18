@@ -1,0 +1,223 @@
+{
+  "info": {
+    "name": "Notification API Test Data",
+    "description": "Test data payload examples for the Lost and Found Notification API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Send Notification - Item Match",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"type\": \"ITEM_MATCH\",\n  \"title\": \"Your Lost Item Has a Match!\",\n  \"message\": \"Your Samsung Galaxy S21 has been matched with a found item. The confidence score is 95%. Please review and accept or reject the match.\",\n  \"channel\": \"BOTH\",\n  \"referenceItemId\": 101,\n  \"recipientEmail\": \"john.doe@university.edu\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Send Notification - Item Claimed",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"type\": \"ITEM_CLAIMED\",\n  \"title\": \"Your Lost Item Has Been Claimed!\",\n  \"message\": \"Your Red Backpack has been successfully claimed and is ready for pickup at the Lost and Found Office. Please collect it within 7 days.\",\n  \"channel\": \"BOTH\",\n  \"referenceItemId\": 102,\n  \"recipientEmail\": \"john.doe@university.edu\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Send Notification - Reward Earned",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 6,\n  \"type\": \"REWARD_EARNED\",\n  \"title\": \"Congratulations! You Earned Reward Points\",\n  \"message\": \"You have earned 50 points for reporting the Samsung Galaxy S21 as a found item.\",\n  \"channel\": \"IN_APP\",\n  \"referenceItemId\": 201,\n  \"recipientEmail\": \"finder@university.edu\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Send Notification - Reward Redeemed",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 6,\n  \"type\": \"REWARD_REDEEMED\",\n  \"title\": \"Reward Points Redeemed\",\n  \"message\": \"You have redeemed 100 points for a $10 voucher. Your voucher code is: REWARD2024X1.\",\n  \"channel\": \"BOTH\",\n  \"recipientEmail\": \"finder@university.edu\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Send Notification - Item Returned",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"type\": \"ITEM_RETURNED\",\n  \"title\": \"Item Successfully Returned\",\n  \"message\": \"Your Red Backpack has been returned to you. Thank you for using the Lost and Found System.\",\n  \"channel\": \"BOTH\",\n  \"referenceItemId\": 102,\n  \"recipientEmail\": \"john.doe@university.edu\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Send Notification - General Announcement",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"type\": \"GENERAL\",\n  \"title\": \"System Maintenance Notice\",\n  \"message\": \"The Lost and Found System will undergo maintenance on Saturday from 10 PM to 2 AM.\",\n  \"channel\": \"EMAIL\",\n  \"recipientEmail\": \"john.doe@university.edu\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get All Notifications for User",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications/users/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications", "users", "1"]
+        }
+      }
+    },
+    {
+      "name": "Get Unread Notifications for User",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications/users/1/unread",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications", "users", "1", "unread"]
+        }
+      }
+    },
+    {
+      "name": "Get Unread Count for User",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications/users/1/unread-count",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications", "users", "1", "unread-count"]
+        }
+      }
+    },
+    {
+      "name": "Mark Notification as Read",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications/1/read?userId=1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications", "1", "read"],
+          "query": [
+            {
+              "key": "userId",
+              "value": "1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Mark All Notifications as Read",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/notifications/users/1/read-all",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "notifications", "users", "1", "read-all"]
+        }
+      }
+    }
+  ]
+}
