@@ -29,9 +29,9 @@ public class ItemController {
      */
     @PostMapping
     public ResponseEntity<ItemResponseDTO> createItem(
-            @RequestParam(defaultValue = "1") Long userId,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @RequestBody ItemRequestDTO request) {
-        ItemResponseDTO response = itemService.createItem(userId, request);
+        ItemResponseDTO response = itemService.createItem(authenticatedUser.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
