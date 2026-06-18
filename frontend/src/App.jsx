@@ -127,11 +127,16 @@ function App() {
         targetPage = "login";
         nextParams = { next: pageKey, nextParams: params };
       } else if (pageConfig.guestOnly && isLoggedIn) {
-        targetPage = currentUser.role === "admin" ? "admin-dashboard" : "browse";
+        const r = currentUser.role?.toLowerCase();
+        targetPage = r === "admin" ? "admin-dashboard" : "browse";
         nextParams = {};
-      } else if (!pageConfig.allowedRoles.includes(currentUser ? currentUser.role : "guest")) {
-        targetPage = currentUser ? (currentUser.role === "admin" ? "admin-dashboard" : "browse") : "home";
-        nextParams = {};
+      } else {
+        let r = currentUser ? currentUser.role?.toLowerCase() : "guest";
+        if (r === "user") r = "student";
+        if (!pageConfig.allowedRoles.includes(r)) {
+          targetPage = currentUser ? (r === "admin" ? "admin-dashboard" : "browse") : "home";
+          nextParams = {};
+        }
       }
     }
 
@@ -194,7 +199,8 @@ function App() {
     }
 
     const isLoggedIn = !!userState;
-    const role = userState ? userState.role : "guest";
+    let role = userState?.role ? userState.role.toLowerCase() : "guest";
+    if (role === "user") role = "student";
 
     if (pageConfig.authRequired && !isLoggedIn) {
       navigateTo("/login", { next: currentPage, nextParams: pageParams }, true);
@@ -213,7 +219,8 @@ function App() {
 
   const PageComponent = PAGES[currentPage]?.component || PAGES.home.component;
   const user = userState;
-  const userRole = user ? user.role : "guest";
+  let userRole = user?.role ? user.role.toLowerCase() : "guest";
+  if (userRole === "user") userRole = "student";
   const dm = darkMode;
 
   const floatAnimation = `
