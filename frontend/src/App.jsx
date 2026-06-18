@@ -43,7 +43,6 @@ const PAGES = {
   forgot: { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   reset: { component: ResetPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   "reset-password": { component: ResetPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  browse: { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
 
   // Authenticated Student/Staff
   dashboard: { component: Dashboard, authRequired: true, allowedRoles: ["student", "admin"] },
@@ -208,12 +207,12 @@ function App() {
     }
 
     if (pageConfig.guestOnly && isLoggedIn) {
-      navigateTo(role === "admin" ? "/admin-dashboard" : "/browse", {}, true);
+      navigateTo(role === "admin" ? "/admin-dashboard" : "/home", {}, true);
       return;
     }
 
     if (!pageConfig.allowedRoles.includes(role)) {
-      navigateTo(isLoggedIn ? (role === "admin" ? "/admin-dashboard" : "/browse") : "/", {}, true);
+      navigateTo(isLoggedIn ? (role === "admin" ? "/admin-dashboard" : "/home") : "/", {}, true);
     }
   }, [currentPage, userState, navigateTo]);
 

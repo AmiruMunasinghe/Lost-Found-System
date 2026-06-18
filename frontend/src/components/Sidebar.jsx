@@ -278,7 +278,7 @@ export default function Sidebar({
             ...styles.itemButtonReset,
             justifyContent: compact ? "center" : "flex-start",
           }}
-          onClick={() => goToPage(role === "admin" ? "admin-dashboard" : "browse")}
+          // onClick={() => goToPage(role === "admin" ? "admin-dashboard" : "browse")}
         >
           <div style={styles.logoBox}>
             <FileBox color="white" size={20} />
