@@ -57,7 +57,7 @@ The Lost & Found Management System is a comprehensive web application designed t
 │  │  ┌─────────────┬─────────────┬──────────────────┐   │   │
 │  │  │  AuthCtrl   │  ItemCtrl   │  MatchCtrl       │   │   │
 │  │  │  ClaimCtrl  │  NotifyCtrl  │  AdminCtrl       │   │   │
-│  │  │  RewardCtrl │  UserCtrl    │  AuditCtrl       │   │   │
+│  │  │  UserCtrl   │  AuditCtrl   │                  │   │   │
 │  │  └─────────────┴─────────────┴──────────────────┘   │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                         │                                    │
@@ -66,7 +66,7 @@ The Lost & Found Management System is a comprehensive web application designed t
 │  │  ┌─────────────┬─────────────┬──────────────────┐   │   │
 │  │  │ AuthService │ ItemService │ MatchService     │   │   │
 │  │  │ ClaimService│ NotifyService│ AuditService     │   │   │
-│  │  │ RewardService│UserService  │ AdminService     │   │   │
+│  │  │ UserService  │ AdminService │                  │   │   │
 │  │  └─────────────┴─────────────┴──────────────────┘   │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                         │                                    │
@@ -75,7 +75,7 @@ The Lost & Found Management System is a comprehensive web application designed t
 │  │  ┌─────────────┬──────────────┬────────────────┐   │   │
 │  │  │ UserRepo    │ ItemRepo     │ MatchRepo      │   │   │
 │  │  │ ClaimRepo   │ NotifyRepo   │ AuditRepo      │   │   │
-│  │  │ RewardRepo  │ SettingsRepo │                │   │   │
+│  │  │             │ SettingsRepo │                │   │   │
 │  │  └─────────────┴──────────────┴────────────────┘   │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                         │                                    │
@@ -88,8 +88,7 @@ The Lost & Found Management System is a comprehensive web application designed t
 │  ┌──────────────┬────────────┬──────────────────────────┐   │
 │  │  User        │  Item      │  Notification            │   │
 │  │  ItemMatch   │  Claim     │  AuditLog                │   │
-│  │  RewardLedger│ Settings   │  VerificationCode        │   │
-│  │  Activity    │ Message    │                          │   │
+│  │  Settings    │ Activity   │                          │   │
 │  └──────────────┴────────────┴──────────────────────────┘   │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
@@ -162,14 +161,10 @@ Backend Service (async)
     ├─→ Event triggered (Item posted, Claim created, Match found)
     │   └─→ NotificationService
     │       ├─→ Create Notification record
-    │       ├─→ Determine channels (IN_APP, EMAIL, BOTH)
-    │       ├─→ Queue notification delivery
-    │       └─→ Send via appropriate channels
-    │           ├─→ IN_APP: Store in database
-    │           ├─→ EMAIL: Queue to mail service
-    │           └─→ Audit event
+    │       ├─→ Channel: IN_APP only
+    │       └─→ Store notification in database
     │
-    └─→ Frontend: Poll /notifications or WebSocket
+    └─→ Frontend: Poll /api/notifications/users/{userId}
 ```
 
 ---
@@ -256,8 +251,7 @@ Synchronous Operation (e.g., POST /items)
             └─→ EventListener (async)
                 ├─→ Query related items
                 ├─→ Run matching algorithm
-                ├─→ Create notifications
-                ├─→ Queue emails
+                ├─→ Create in-app notifications
                 └─→ Audit logging
 ```
 

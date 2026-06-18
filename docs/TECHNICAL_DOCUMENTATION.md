@@ -33,7 +33,7 @@
 
 ## 1. Project Overview
 
-The **Lost & Found Management System** is a full-stack web application for a university campus. It allows students and staff to report lost and found items, be automatically matched with probable counterparts, submit claims for matched items, and receive notifications through the system. Administrators manage claims, view analytics, and maintain audit logs of all actions.
+The **Lost & Found Management System** is a full-stack web application for a university campus. It allows students and staff to report lost and found items, be automatically matched with probable counterparts, submit claims for matched items, and receive in-app notifications through the system. Administrators manage claims, view analytics, and maintain audit logs of all actions.
 
 **Three deployable applications:**
 
@@ -59,7 +59,6 @@ The **Lost & Found Management System** is a full-stack web application for a uni
 | Authentication | Spring Security + JWT (jjwt `0.13.0`) | Stateless auth |
 | JWT Algorithm | HMAC-SHA256 (`HS256`) | Token signing |
 | Password Hashing | BCrypt (Spring Security default) | Password storage |
-| Email | Spring Mail + Thymeleaf HTML templates | Notification emails |
 | Validation | Jakarta Validation (Bean Validation) | Input validation |
 | Boilerplate | Lombok | Code generation |
 | Testing | H2 in-memory DB + Spring Boot Test | Unit & integration tests |
@@ -92,7 +91,6 @@ The **Lost & Found Management System** is a full-stack web application for a uni
 │  - Match Results         │  - Audit Logs                        │
 │  - Claim Items           │  - User Management                   │
 │  - Notifications         │                                      │
-│  - Rewards               │                                      │
 └──────────────────────────┴──────────────────────────────────────┘
                            │
               HTTP REST (JSON) + Bearer JWT
@@ -104,13 +102,13 @@ The **Lost & Found Management System** is a full-stack web application for a uni
 ├─────────────────────────────────────────────────────────────────┤
 │  Controllers (REST)                                              │
 │  AuthController | ItemController | MatchController               │
-│  NotificationController | RewardController | EventController     │
+│  NotificationController | EventController                        │
 │  AdminClaimController | AdminAnalyticsController                 │
 │  AdminAuditController | UserController | SupportController       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Services (Business Logic)                                       │
 │  AuthService | ItemService | ClaimService | NotificationService  │
-│  RewardService | UserService | AuditLogService                   │
+│  UserService | AuditLogService                                   │
 │  AdminAnalyticsService | MatchingEngine                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  Event System (Spring ApplicationEvent)                          │
@@ -119,11 +117,9 @@ The **Lost & Found Management System** is a full-stack web application for a uni
 ├─────────────────────────────────────────────────────────────────┤
 │  Repositories (Spring Data JPA)                                  │
 │  UserRepository | ItemRepository | ItemMatchRepository           │
-│  ClaimRepository | NotificationRepository | RewardLedgerRepo     │
+│  ClaimRepository | NotificationRepository                        │
 │  AuditLogRepository | PickupScheduleRepository                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  Email (Spring Mail + Thymeleaf)                                 │
-│  EmailService — item-match / reward-earned / generic templates   │
 └─────────────────────────────────────────────────────────────────┘
                            │
                       JDBC / JPA
@@ -132,7 +128,7 @@ The **Lost & Found Management System** is a full-stack web application for a uni
 │                   PostgreSQL Database                            │
 │  users | items | item_images | item_matches | claims             │
 │  pickup_schedules | evidence_requests | notifications             │
-│  reward_ledger | audit_logs                                      │
+│  audit_logs                                                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -165,7 +161,6 @@ backend/src/main/java/uom/msd/lostfound/
 │   ├── ItemController.java            # /items/**
 │   ├── MatchController.java           # /matches/**
 │   ├── NotificationController.java    # /api/notifications/**
-│   ├── RewardController.java          # /api/rewards/**
 │   ├── EventController.java           # /api/events/**
 │   ├── UserController.java            # /users/**
 │   ├── SupportController.java         # /support
@@ -180,7 +175,6 @@ backend/src/main/java/uom/msd/lostfound/
 │   ├── ClaimService.java              (interface)
 │   ├── ClaimServiceImpl.java
 │   ├── NotificationService.java
-│   ├── RewardService.java
 │   ├── UserService.java
 │   ├── AuditLogService.java           (interface)
 │   ├── AuditLogServiceImpl.java
@@ -199,7 +193,6 @@ backend/src/main/java/uom/msd/lostfound/
 │   ├── EvidenceRequest.java
 │   ├── PickupSchedule.java
 │   ├── Notification.java
-│   ├── RewardLedgerEntry.java
 │   └── AuditLog.java
 │
 ├── dto/                               # Request/Response DTOs
@@ -219,9 +212,6 @@ backend/src/main/java/uom/msd/lostfound/
 │   ├── RequestEvidenceDTO.java
 │   ├── SendNotificationRequest.java
 │   ├── NotificationResponse.java
-│   ├── RewardTransactionRequest.java
-│   ├── RewardBalanceResponse.java
-│   ├── RewardLedgerEntryResponse.java
 │   ├── AnalyticsResponseDTO.java
 │   ├── AuditLogResponseDTO.java
 │   ├── SupportRequest.java
@@ -238,7 +228,6 @@ backend/src/main/java/uom/msd/lostfound/
 │   ├── EvidenceStatus.java
 │   ├── NotificationType.java
 │   ├── NotificationChannel.java
-│   ├── RewardTransactionType.java
 │   └── AuditAction.java
 │
 ├── events/
@@ -249,7 +238,7 @@ backend/src/main/java/uom/msd/lostfound/
 │   └── NotificationEventListener.java
 │
 ├── emails/
-│   └── EmailService.java
+│   └── EmailService.java              # Infrastructure class (not actively used for notifications)
 │
 ├── repositories/
 │   ├── UserRepository.java
@@ -259,7 +248,6 @@ backend/src/main/java/uom/msd/lostfound/
 │   ├── EvidenceRequestRepository.java
 │   ├── PickupScheduleRepository.java
 │   ├── NotificationRepository.java
-│   ├── RewardLedgerRepository.java
 │   └── AuditLogRepository.java
 │
 └── exceptions/
@@ -500,39 +488,13 @@ public class Notification {
 
 ---
 
-### 5.7 `RewardLedgerEntry` — Table: `reward_ledger`
+### 5.7 `RewardLedgerEntry`
 
-Uses Lombok `@Builder`
-
-```java
-@Entity @Table(name = "reward_ledger")
-@Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class RewardLedgerEntry {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private Long userId;
-
-    @Column(nullable = false)
-    private int points;
-
-    @Enumerated(EnumType.STRING) @Column(nullable = false)
-    private RewardTransactionType transactionType;  // CREDIT | DEBIT
-
-    @Column(nullable = false, length = 255)
-    private String description;
-
-    private Long referenceId;             // optional link to item/event
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;      // @PrePersist
-}
-```
+> The `RewardLedgerEntry` entity exists in the codebase but the reward system is not currently active in the user interface.
 
 ---
 
-### 5.8 `AuditLog` — Table: `audit_logs`
+### 5.8 `AuditLog`
 
 Indexes: `idx_audit_logs_action`, `idx_audit_logs_admin_id`, `idx_audit_logs_timestamp`, `idx_audit_logs_entity`, `idx_audit_logs_admin_and_timestamp`
 
@@ -615,19 +577,12 @@ CLOSED            // fully resolved
 ITEM_MATCH,       // @JsonAlias("ITEM_MATCHED") — match found
 ITEM_CLAIMED,     // item was claimed
 ITEM_RETURNED,    // item returned to owner
-REWARD_EARNED,    // reward points credited
-REWARD_REDEEMED,  // reward points debited
 GENERAL           // general campus announcement
 ```
 
 ### `NotificationChannel`
 ```java
-IN_APP, EMAIL, BOTH
-```
-
-### `RewardTransactionType`
-```java
-CREDIT, DEBIT
+IN_APP  // in-app web notifications only
 ```
 
 ### `AuditAction`
@@ -678,16 +633,6 @@ CLOSE_CLAIM
 | `message` | String | `@NotBlank` |
 | `channel` | `NotificationChannel` | `@NotNull` |
 | `referenceItemId` | Long | optional |
-| `recipientEmail` | String | required when channel is `EMAIL` or `BOTH` |
-
-#### `RewardTransactionRequest`
-| Field | Type | Constraint |
-|---|---|---|
-| `userId` | Long | `@NotNull` |
-| `points` | int | `@Min(1)` |
-| `transactionType` | `RewardTransactionType` | `@NotNull` |
-| `description` | String | `@NotBlank` |
-| `referenceId` | Long | optional |
 
 #### `UpdateProfileRequest`
 | Field | Type |
@@ -944,20 +889,12 @@ long countByUserIdAndReadFalse(Long userId);
 
 | Method | Description |
 |---|---|
-| `sendNotification(SendNotificationRequest)` | Persists `Notification`; if channel `EMAIL`/`BOTH`, sends email via `EmailService` |
+| `sendNotification(SendNotificationRequest)` | Persists `Notification` record (channel: `IN_APP`) |
 | `getNotificationsForUser(Long userId)` | Returns all notifications newest-first |
 | `getUnreadNotificationsForUser(Long userId)` | Returns only unread notifications |
 | `getUnreadCount(Long userId)` | Returns count of unread notifications |
 | `markAsRead(Long notificationId, Long userId)` | Validates ownership, sets `read=true`, sets `readAt` |
 | `markAllAsRead(Long userId)` | Marks all user notifications read |
-
-### `RewardService`
-
-| Method | Description |
-|---|---|
-| `recordTransaction(RewardTransactionRequest)` | Saves `RewardLedgerEntry` (CREDIT or DEBIT) |
-| `getBalanceAndHistory(Long userId)` | Returns current balance + full transaction list |
-| `getBalance(Long userId)` | Returns sum of all CREDIT minus DEBIT |
 
 ### `AuditLogService` (interface + `AuditLogServiceImpl`)
 
@@ -1200,26 +1137,16 @@ Date format for `from`/`to`: ISO 8601 (`2024-01-01T00:00:00`)
 
 ---
 
-### 10.9 Notification Controller — `/api/notifications`
+### `NotificationController` — `/api/notifications`
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/api/notifications` | Send a notification (internal use) |
+| `POST` | `/api/notifications` | Send an in-app notification (internal use) |
 | `GET` | `/api/notifications/users/{userId}` | All notifications for user (newest first) |
 | `GET` | `/api/notifications/users/{userId}/unread` | Unread notifications only |
 | `GET` | `/api/notifications/users/{userId}/unread-count` | `{ "unreadCount": N }` |
 | `PATCH` | `/api/notifications/{id}/read?userId=` | Mark single notification as read |
 | `PATCH` | `/api/notifications/users/{userId}/read-all` | Mark all as read |
-
----
-
-### 10.10 Reward Controller — `/api/rewards`
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/rewards/transactions` | Record a CREDIT or DEBIT transaction |
-| `GET` | `/api/rewards/users/{userId}` | Full reward history + current balance |
-| `GET` | `/api/rewards/users/{userId}/balance` | `{ "balance": N }` |
 
 ---
 
@@ -1325,9 +1252,8 @@ Matching/Claim Service
       ├─ eventPublisher.publishEvent(new ItemMatchedEvent(...))
       │
       └─ NotificationEventListener (@EventListener @Async)
-             ├─ notificationService.sendNotification(...)  ← IN_APP
-             ├─ notificationService.sendNotification(...)  ← BOTH (email + in-app)
-             └─ rewardService.recordTransaction(...)
+             ├─ notificationService.sendNotification(...)  ← IN_APP (lost owner)
+             └─ notificationService.sendNotification(...)  ← IN_APP (found owner)
 ```
 
 ### Events
@@ -1336,50 +1262,26 @@ Matching/Claim Service
 |---|---|---|
 | `ItemMatchedEvent` | `MatchingEngine` | Notify both item owners of a new SUGGESTED match |
 | `ItemCreatedEvent` | `ItemService` | Fired when a new item is posted |
-| `FoundItemSubmittedEvent` | `EventController` (external trigger) | Notify finder + award points |
-| `ItemClaimedEvent` | `EventController` (external trigger) | Notify owner + award points |
+| `FoundItemSubmittedEvent` | `EventController` (external trigger) | Notify finder (IN_APP) |
+| `ItemClaimedEvent` | `EventController` (external trigger) | Notify owner (IN_APP) |
 
 ### `NotificationEventListener` Behaviour
 
 **On `ItemMatchedEvent`:**
 - Sends `IN_APP` notification to lost item owner
-- Sends `BOTH` (email + in-app) notification to found item owner
+- Sends `IN_APP` notification to found item owner
 
 **On `FoundItemSubmittedEvent`:**
 - Sends `IN_APP` notification confirming submission
-- Credits finder with `app.rewards.points-per-found-item` points (default: `50`)
 
 **On `ItemClaimedEvent`:**
 - Sends `IN_APP` notification to item owner
-- Credits claimant with `app.rewards.points-per-claimed-item` points (default: `20`)
 
 ---
 
 ## 13. Email Service
 
-**Class:** `uom.msd.lostfound.emails.EmailService`  
-**Annotations:** `@Service @RequiredArgsConstructor @Slf4j`  
-**All methods are `@Async`**
-
-Uses **Spring `JavaMailSender`** with **Thymeleaf HTML templates**.
-
-| Method | Template | Trigger |
-|---|---|---|
-| `sendItemMatchEmail(...)` | `email/item-match` | Match event — email to lost item owner |
-| `sendRewardEarnedEmail(...)` | `email/reward-earned` | Reward credit event |
-| `sendGenericEmail(...)` | `email/generic-notification` | Generic in-app notification with email channel |
-| `sendSupportEmail(...)` | `email/generic-notification` | Support request submission |
-
-**Configuration** (from `application.properties`):
-```properties
-spring.mail.host=${MAIL_HOST:smtp.gmail.com}
-spring.mail.port=${MAIL_PORT:587}
-spring.mail.username=${MAIL_USERNAME:}
-spring.mail.password=${MAIL_PASSWORD:}
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-app.notification.from-email=${NOTIFICATION_FROM_EMAIL:notifications@lostfound.edu}
-```
+> **Not actively used.** Email delivery was planned during initial design but was removed due to complexity. All notifications are delivered in-app only (see Section 12). The `EmailService` class and Spring Mail dependency remain in the codebase as infrastructure but are not invoked from any active user-facing flow.
 
 ---
 
@@ -1498,20 +1400,8 @@ server.port=8081
 app.auth.jwt.secret=${TOKEN_SECRET_KEY}
 app.auth.jwt.expiration-ms=${TOKEN_EXPIRATION_MS:21600000}
 
-# Mail
-spring.mail.host=${MAIL_HOST:smtp.gmail.com}
-spring.mail.port=${MAIL_PORT:587}
-spring.mail.username=${MAIL_USERNAME:}
-spring.mail.password=${MAIL_PASSWORD:}
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-
-# Notifications
-app.notification.from-email=${NOTIFICATION_FROM_EMAIL:notifications@lostfound.edu}
-
-# Rewards
-app.rewards.points-per-found-item=${REWARDS_POINTS_PER_FOUND_ITEM:50}
-app.rewards.points-per-claimed-item=${REWARDS_POINTS_PER_CLAIMED_ITEM:20}
+# Notifications (all in-app only)
+app.notifications.enabled=true
 
 # Matching thresholds (defaults used by MatchingEngine)
 app.matching.threshold.suggested=0.70
@@ -1530,13 +1420,6 @@ app.matching.weights.location=0.20
 | `DB_PASSWORD` | `secret` | Database password |
 | `TOKEN_SECRET_KEY` | 32+ char random string | JWT HMAC signing key |
 | `TOKEN_EXPIRATION_MS` | `21600000` | JWT lifetime in milliseconds |
-| `MAIL_HOST` | `smtp.gmail.com` | SMTP host |
-| `MAIL_PORT` | `587` | SMTP port |
-| `MAIL_USERNAME` | `app@gmail.com` | SMTP username |
-| `MAIL_PASSWORD` | `app-password` | SMTP password |
-| `NOTIFICATION_FROM_EMAIL` | `notifications@lostfound.edu` | From address for emails |
-| `REWARDS_POINTS_PER_FOUND_ITEM` | `50` | Points credited when found item submitted |
-| `REWARDS_POINTS_PER_CLAIMED_ITEM` | `20` | Points credited when claim completed |
 
 ---
 
@@ -1737,7 +1620,6 @@ The frontend uses a **custom `NavigationContext`** (defined in `router-mock.jsx`
 | `claim` | `ClaimItem` | Yes | student |
 | `return` | `ReturnItem` | Yes | student |
 | `chat` | `Chat` | Yes | student |
-| `rewards` | `Rewards` | Yes | student |
 | `profile` | `Profile` | Yes | student, admin |
 | `settings` | `Settings` | Yes | student, admin |
 | `help-support` | `HelpSupport` | Yes | student, admin |
@@ -1803,7 +1685,7 @@ Frontend                  Backend                    Async
    │                         ├─ eventPublisher.publish(ItemCreatedEvent)
    │                         │                         │
    │                         │              ◄──────────┤ NotificationEventListener
-   │                         │                         ├─ (optional) reward credits
+   │                         │                         ├─ IN_APP notification (confirmation)
    │                         │                         │
    │─POST /matches/run ──────►│                         │
    │  ?lostItemId=X          ├─ matchingEngine.run()   │
@@ -1814,7 +1696,7 @@ Frontend                  Backend                    Async
    │◄─ MatchResponseDTO[] ───┤                         │
    │                         │              ◄──────────┤ NotificationEventListener
    │                         │                         ├─ IN_APP notification (lost owner)
-   │                         │                         └─ BOTH notification (found owner)
+   │                         │                         └─ IN_APP notification (found owner)
 ```
 
 ### Claim Lifecycle Flow
@@ -1865,11 +1747,6 @@ Student                  Admin                     Backend
    DB_PASSWORD=yourpassword
    TOKEN_SECRET_KEY=your-32-character-minimum-secret-key
    TOKEN_EXPIRATION_MS=21600000
-   MAIL_HOST=smtp.gmail.com
-   MAIL_PORT=587
-   MAIL_USERNAME=your@gmail.com
-   MAIL_PASSWORD=your-app-password
-   NOTIFICATION_FROM_EMAIL=notifications@lostfound.edu
    ```
 
 3. Run the backend:

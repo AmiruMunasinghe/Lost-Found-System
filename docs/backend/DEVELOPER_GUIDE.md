@@ -196,8 +196,7 @@ Controllers expose REST endpoints and handle incoming HTTP requests. Each contro
 | `ItemController` | `/items` | CRUD operations for lost/found items |
 | `MatchController` | `/matches` | Query matching results, manage matches |
 | `ClaimController` | `/claims` | Create, update, and track claims |
-| `NotificationController` | `/notifications` | Retrieve and manage notifications |
-| `RewardController` | `/rewards` | Query reward points and history |
+| `NotificationController` | `/notifications` | Retrieve and manage in-app notifications |
 | `UserController` | `/users` | User profile management |
 | `AdminController` | `/admin` | Admin-specific operations |
 | `AuditController` | `/audit` | Access audit logs |
@@ -242,7 +241,7 @@ Services contain the core business logic and orchestrate repository calls.
 | `ItemService` | Item CRUD, status management, image handling |
 | `MatchingService` | Intelligent matching algorithm |
 | `ClaimService` | Claim creation, approval, verification |
-| `NotificationService` | Notification creation and delivery |
+| `NotificationService` | In-app notification creation and delivery |
 | `UserService` | User profile management, preferences |
 | `AdminService` | Admin analytics, user management |
 | `AuditService` | Audit log creation and retrieval |

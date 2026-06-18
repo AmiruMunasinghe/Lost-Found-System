@@ -21,9 +21,8 @@ It is responsible for handling all business logic, data processing, and system o
 - Authentication (Login, Registration)
 - Item Catalogue (Lost/Found items)
 - Matching Engine
-- Notification System
+- Notification System (in-app)
 - Admin Management
-- Reward System
 
 ---
 
@@ -62,15 +61,14 @@ DB_URL=jdbc:postgresql://localhost:5432/lostfound
 DB_USER=your_db_username
 DB_PASSWORD=your_db_password
 
-# ── Email / SMTP (required for Notification & Reward email alerts) ────────────
-# Gmail example: enable "App Passwords" under Google Account → Security
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-gmail-app-password
-
-# Sender address shown in outgoing notification emails
-NOTIFICATION_FROM_EMAIL=notifications@lostfound.edu
+# ── Email / SMTP ────────────────────────────────────────────────────────────
+# Not currently used — notifications are delivered in-app only.
+# Uncomment and configure if email delivery is added in the future.
+# MAIL_HOST=smtp.gmail.com
+# MAIL_PORT=587
+# MAIL_USERNAME=your-email@gmail.com
+# MAIL_PASSWORD=your-gmail-app-password
+# NOTIFICATION_FROM_EMAIL=notifications@lostfound.edu
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
 JWT_SECRET=replace-with-a-long-random-secret-key-at-least-256-bits
@@ -86,11 +84,6 @@ JWT_SECRET=replace-with-a-long-random-secret-key-at-least-256-bits
 | `DB_URL` | Spring JPA datasource | Yes |
 | `DB_USER` | Spring JPA datasource | Yes |
 | `DB_PASSWORD` | Spring JPA datasource | Yes |
-| `MAIL_HOST` | `EmailService` – SMTP server | Yes (for emails) |
-| `MAIL_PORT` | `EmailService` – SMTP port (587 = TLS) | Yes (for emails) |
-| `MAIL_USERNAME` | `EmailService` – SMTP login | Yes (for emails) |
-| `MAIL_PASSWORD` | `EmailService` – SMTP password / App Password | Yes (for emails) |
-| `NOTIFICATION_FROM_EMAIL` | Sender address on all notification emails | Yes (for emails) |
 | `JWT_SECRET` | `JwtUtil` – token signing key | Yes |
 
-> If email variables are not set, the app **will still start** but email notifications will fail silently (errors are logged, not thrown).
+> Email variables are defined in the code but not actively used — notifications are in-app only.

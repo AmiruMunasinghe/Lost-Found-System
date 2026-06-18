@@ -200,7 +200,6 @@ admin/                          # Admin application (separate)
 **Features**:
 - Title, description, location, date fields
 - Category/type selection
-- Reward amount (optional)
 - Image upload
 - Form validation
 
@@ -283,7 +282,6 @@ admin/                          # Admin application (separate)
 | `/matches` | MatchResults | Matching results |
 | `/claims` | ClaimItem | Make a claim on item |
 | `/notifications` | Notifications | User notifications |
-| `/rewards` | Rewards | Reward points page |
 | `/profile` | Profile | User profile management |
 | `/settings` | Settings | User settings |
 | `/messages` | Chat | Messaging with other users |
