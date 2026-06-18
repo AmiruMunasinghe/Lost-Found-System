@@ -5,12 +5,23 @@ export async function getMatches(filters = {}) {
     ? `?${new URLSearchParams(filters).toString()}`
     : "";
   const data = await apiRequest(`/matches${qs}`);
-  return data;
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.matches)) return data.matches;
+  if (Array.isArray(data.data)) return data.data;
+  // Unexpected shape — surface for debugging and return empty array
+  console.debug("getMatches: unexpected response shape", data);
+  return [];
 }
 
 export async function getMyMatches() {
   const data = await apiRequest("/matches/my");
-  return Array.isArray(data) ? data : [];
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.matches)) return data.matches;
+  if (Array.isArray(data.data)) return data.data;
+  console.debug("getMyMatches: unexpected response shape", data);
+  return [];
 }
 
 export async function getMatchesForFoundItem(foundItemId) {
