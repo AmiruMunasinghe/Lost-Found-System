@@ -571,7 +571,7 @@ class ItemControllerTest {
         }
 
         private UsernamePasswordAuthenticationToken authToken(Long userId) {
-                AuthenticatedUser authenticatedUser = new AuthenticatedUser(userId, "testuser", "test@example.com");
+                AuthenticatedUser authenticatedUser = new AuthenticatedUser(userId, "testuser", "test@example.com", uom.msd.lostfound.enums.Role.USER);
                 return new UsernamePasswordAuthenticationToken(authenticatedUser, null, authenticatedUser.getAuthorities());
         }
 }

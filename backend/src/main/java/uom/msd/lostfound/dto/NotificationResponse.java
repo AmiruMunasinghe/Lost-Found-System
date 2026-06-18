@@ -14,7 +14,7 @@ public class NotificationResponse {
     private NotificationType type;
     private String title;
     private String message;
-    private boolean isRead;
+    private boolean read;
     private NotificationChannel channel;
     private Long referenceItemId;
     private LocalDateTime createdAt;

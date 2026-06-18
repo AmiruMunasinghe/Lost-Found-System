@@ -123,7 +123,7 @@ class MatchControllerTest {
     private RequestPostProcessor authenticatedUser(Long userId) {
         return request -> {
             uom.msd.lostfound.auth.AuthenticatedUser principal =
-                    new uom.msd.lostfound.auth.AuthenticatedUser(userId, "student", "student@example.com");
+                    new uom.msd.lostfound.auth.AuthenticatedUser(userId, "student", "student@example.com", uom.msd.lostfound.enums.Role.USER);
             SecurityContextHolder.setContext(new SecurityContextImpl(
                     new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())));
             return request;

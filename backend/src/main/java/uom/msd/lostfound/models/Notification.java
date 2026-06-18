@@ -31,8 +31,8 @@ public class Notification {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    @Column(nullable = false)
-    private boolean isRead;
+    @Column(name = "is_read", nullable = false)
+    private boolean read;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -49,6 +49,6 @@ public class Notification {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.isRead = false;
+        this.read = false;
     }
 }

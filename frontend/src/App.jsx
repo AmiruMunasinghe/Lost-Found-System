@@ -31,6 +31,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminReports from "./pages/AdminReports";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import Notifications from "./pages/Notifications";
 
 const PAGES = {
   // Public
@@ -63,14 +64,15 @@ const PAGES = {
   "admin-reports": { component: AdminReports, authRequired: true, allowedRoles: ["admin"] },
   "admin-users": { component: AdminUsers, authRequired: true, allowedRoles: ["admin"] },
   "admin-analytics": { component: AdminAnalytics, authRequired: true, allowedRoles: ["admin"] },
+  notifications: { component: Notifications, authRequired: true, allowedRoles: ["student", "admin"] },
 };
 
 function getStoredUser() {
   try {
-    const savedUser = localStorage.getItem("lostFoundUser");
+    const savedUser = localStorage.getItem("lost_found_user");
     return savedUser ? JSON.parse(savedUser) : null;
   } catch (error) {
-    localStorage.removeItem("lostFoundUser");
+    localStorage.removeItem("lost_found_user");
     return null;
   }
 }
@@ -100,9 +102,9 @@ function App() {
     setUserState(newUser);
 
     if (newUser) {
-      localStorage.setItem("lostFoundUser", JSON.stringify(newUser));
+      localStorage.setItem("lost_found_user", JSON.stringify(newUser));
     } else {
-      localStorage.removeItem("lostFoundUser");
+      localStorage.removeItem("lost_found_user");
     }
   }, []);
 
