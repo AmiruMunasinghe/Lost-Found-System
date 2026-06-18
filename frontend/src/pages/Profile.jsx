@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Camera, Edit2, Shield, Search, Package, MapPin, CheckCircle, Clock, Lock } from "lucide-react";
+import { Camera, Edit2, Search, Package, MapPin, CheckCircle, Clock, Lock } from "lucide-react";
 
 import { updateProfile, uploadProfilePhoto } from "../api/auth";
 
@@ -212,16 +212,7 @@ export default function Profile({ user, setUser, darkMode }) {
             )}
           </div>
 
-          <div style={{ ...styles.card, background: t.card, border: `1px solid ${t.border}` }}>
-            <div style={styles.securityRow}>
-              <div style={{ ...styles.securityIconBox, background: darkMode ? "#1a2d47" : "#E6F1FB" }}><Shield size={20} color="#0F5FFF" /></div>
-              <div>
-                <h3 style={{ ...styles.cardTitle, margin: "0 0 4px 0", color: t.text }}>Keep your account secure</h3>
-                <p style={{ ...styles.securityDesc, color: t.muted }}>Two-factor authentication adds an extra layer of security to your account.</p>
-              </div>
-            </div>
-            <button style={{ ...styles.outlineBtn, border: `1px solid ${t.border}`, color: t.body }}>Enable 2FA</button>
-          </div>
+          
         </div>
 
         {/* RIGHT COLUMN */}

@@ -4,7 +4,6 @@ import { Bell, Eye, Moon, Save, Sun, User } from "lucide-react";
 const defaultSettings = {
   matchAlerts: true,
   showContactDetails: false,
-  twoStepVerification: false,
 };
 
 export default function Settings({ user, darkMode, setDarkMode, navigateTo }) {
