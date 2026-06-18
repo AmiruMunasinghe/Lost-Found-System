@@ -70,6 +70,14 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+    /**
+     * Sends a support email request.
+     */
+    @Async
+    public void sendSupportEmail(String fromEmail, String subject, String message) {
+        sendGenericEmail("support@lostfound.edu", "Support Ticket: " + subject, "Support Ticket from " + fromEmail, message);
+    }
+
     private void sendHtmlEmail(String toEmail, String subject, String htmlBody) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();

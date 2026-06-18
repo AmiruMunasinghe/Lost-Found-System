@@ -55,15 +55,25 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), List.of());
     }
 
+    @ExceptionHandler(InvalidClaimStatusTransitionException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidClaimStatusTransition(
+            InvalidClaimStatusTransitionException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid claim status transition: " + ex.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(ClaimNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleClaimNotFound(ClaimNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception ex) {
-
-        ex.printStackTrace(); // 🔥 THIS IS WHAT YOU ARE MISSING
-
+        ex.printStackTrace();
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
-                List.of(ex.getMessage()) // optional but useful
+                List.of()
         );
     }
 
