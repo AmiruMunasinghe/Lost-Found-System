@@ -119,6 +119,11 @@ public class MatchingEngine {
     }
 
     public void notifyOnSuggestedMatch(ItemMatch match) {
+        // Only notify if confidence is >= 80%
+        if (match.getConfidenceScore().compareTo(BigDecimal.valueOf(0.70)) < 0) {
+            return;
+        }
+        
         eventPublisher.publishEvent(new ItemMatchedEvent(
                 this,
                 match.getLostItem().getUser().getId(),

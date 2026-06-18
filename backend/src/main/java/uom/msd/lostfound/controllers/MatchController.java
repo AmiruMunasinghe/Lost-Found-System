@@ -63,10 +63,6 @@ public class MatchController {
     public ResponseEntity<List<MatchResponseDTO>> getMyMatches(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         List<ItemMatch> matches = itemMatchRepository.findMatchesVisibleToUser(authenticatedUser.getId());
-        matches = matches.stream()
-            .filter(match -> match.getConfidenceScore()
-                    .compareTo(BigDecimal.valueOf(0.80)) > 0)
-            .toList();
         return ResponseEntity.ok(toMatchResponses(matches));
     }
 
