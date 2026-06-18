@@ -45,7 +45,7 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
       if (pageParams?.next) {
         navigateTo(pageParams.next, pageParams.nextParams || {});
       } else {
-        navigateTo(user.role === "admin" ? "admin-dashboard" : "browse");
+        navigateTo(user.role === "admin" ? "admin/claims" : "browse");
       }
     } catch (err) {
       setApiError(err.message || "Login failed. Check backend and credentials.");
@@ -96,6 +96,7 @@ export default function Login({ setUser, pageParams, navigateTo, darkMode }) {
             </div>
 
             <h1 style={styles.heading}>Welcome Back 👋</h1>
+            <p style={{ ...styles.subtitle, marginTop: 0 }}>Use the same login for students and admins. Admin users will open the admin dashboard automatically.</p>
 
             {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
 

@@ -31,7 +31,7 @@ export default function Registration({ setUser, navigateTo, darkMode }) {
     if (!email.trim()) nextErrors.email = "Email is required.";
     else if (!/\S+@\S+\.\S+/.test(email)) nextErrors.email = "Please enter a valid email address.";
     if (!pass) nextErrors.pass = "Password is required.";
-    else if (pass.length < 6) nextErrors.pass = "Use at least 6 characters for backend testing.";
+    else if (pass.length < 8) nextErrors.pass = "Use at least 8 characters.";
     if (pass !== conf) nextErrors.conf = "Passwords do not match.";
 
     if (Object.keys(nextErrors).length > 0) {

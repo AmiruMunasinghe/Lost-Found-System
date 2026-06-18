@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { getMyMatches } from "../api/matches";
+import { useState } from "react";
 
 // Dark mode helper — call useDark(darkMode) to get theme tokens
 function useDark(dm) {
@@ -59,30 +58,12 @@ function ActionCard({ title, desc, iconBg, icon, onClick, wide, darkMode }) {
   );
 }
 
-export default function Dashboard({ navigateTo, darkMode, user }) {
+export default function Dashboard({ navigateTo, darkMode }) {
   const t = useDark(darkMode);
-
-  const [matchesCount, setMatchesCount] = useState(0);
-
-  useEffect(() => {
-    let mounted = true;
-    async function loadMatches() {
-      try {
-        const data = await getMyMatches();
-        if (!mounted) return;
-        setMatchesCount(Array.isArray(data) ? data.length : 0);
-      } catch (err) {
-        console.debug("Failed to load my matches:", err);
-      }
-    }
-
-    if (user) loadMatches();
-    return () => { mounted = false; };
-  }, [user]);
 
   const stats = [
     { num: "3", label: "Active reports", color: "#0F5FFF" },
-    { num: String(matchesCount || 0), label: "Matches found", color: "#3B6D11" },
+    { num: "1", label: "Matches found", color: "#3B6D11" },
     { num: "250", label: "Reward points", color: "#BA7517" },
   ];
 

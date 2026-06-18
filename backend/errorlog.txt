@@ -1,5 +1,13 @@
 [INFO] Error stacktraces are turned on.
 [INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for uom.msd:lostfound:jar:0.0.1-SNAPSHOT
+[WARNING] 'build.plugins.plugin.(groupId:artifactId)' must be unique but found duplicate declaration of plugin org.apache.maven.plugins:maven-compiler-plugin @ line 140, column 12
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
 [INFO] 
 [INFO] -------------------------< uom.msd:lostfound >--------------------------
 [INFO] Building  0.0.1-SNAPSHOT
@@ -10,16 +18,16 @@
 [INFO] 
 [INFO] --- resources:3.3.1:resources (default-resources) @ lostfound ---
 [INFO] Copying 1 resource from src\main\resources to target\classes
-[INFO] Copying 4 resources from src\main\resources to target\classes
+[INFO] Copying 6 resources from src\main\resources to target\classes
 [INFO] 
 [INFO] --- compiler:3.14.1:compile (default-compile) @ lostfound ---
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.3.1:testResources (default-testResources) @ lostfound ---
-[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] Not copying test resources
 [INFO] 
 [INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ lostfound ---
-[INFO] Nothing to compile - all classes are up to date.
+[INFO] Not compiling test sources
 [INFO] 
 [INFO] <<< spring-boot:3.5.11:run (default-cli) < test-compile @ lostfound <<<
 [INFO] 
@@ -36,246 +44,109 @@
 
  :: Spring Boot ::               (v3.5.11)
 
-2026-06-17T19:54:53.453+05:30  INFO 24044 --- [lostfound] [           main] uom.msd.lostfound.LostfoundApplication   : Starting LostfoundApplication using Java 21.0.10 with PID 24044 (C:\Users\abdul\Downloads\Lost-Found-System-dulen_frontend\Lost-Found-System-dulen_frontend\backend\target\classes started by abdul in C:\Users\abdul\Downloads\Lost-Found-System-dulen_frontend\Lost-Found-System-dulen_frontend\backend)
-2026-06-17T19:54:53.455+05:30  INFO 24044 --- [lostfound] [           main] uom.msd.lostfound.LostfoundApplication   : No active profile set, falling back to 1 default profile: "default"
-2026-06-17T19:54:54.249+05:30  INFO 24044 --- [lostfound] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-06-17T19:54:54.345+05:30  INFO 24044 --- [lostfound] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 78 ms. Found 5 JPA repository interfaces.
-2026-06-17T19:54:54.913+05:30  INFO 24044 --- [lostfound] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8085 (http)
-2026-06-17T19:54:54.926+05:30  INFO 24044 --- [lostfound] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-06-17T19:54:54.926+05:30  INFO 24044 --- [lostfound] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.52]
-2026-06-17T19:54:54.983+05:30  INFO 24044 --- [lostfound] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-06-17T19:54:54.984+05:30  INFO 24044 --- [lostfound] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1480 ms
-2026-06-17T19:54:55.032+05:30 ERROR 24044 --- [lostfound] [           main] com.zaxxer.hikari.HikariConfig           : Failed to load driver class org.h2.Driver from HikariConfig class classloader jdk.internal.loader.ClassLoaders$AppClassLoader@70dea4e
-2026-06-17T19:54:55.034+05:30 ERROR 24044 --- [lostfound] [           main] o.s.b.web.embedded.tomcat.TomcatStarter  : Error starting Tomcat context. Exception: org.springframework.beans.factory.UnsatisfiedDependencyException. Message: Error creating bean with name 'jwtAuthenticationFilter' defined in file [C:\Users\abdul\Downloads\Lost-Found-System-dulen_frontend\Lost-Found-System-dulen_frontend\backend\target\classes\uom\msd\lostfound\auth\JwtAuthenticationFilter.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'authService': Unsatisfied dependency expressed through field 'userRepository': Error creating bean with name 'userRepository' defined in uom.msd.lostfound.repositories.UserRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Cannot resolve reference to bean 'jpaSharedEM_entityManagerFactory' while setting bean property 'entityManager'
-2026-06-17T19:54:55.053+05:30  INFO 24044 --- [lostfound] [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2026-06-17T19:54:55.066+05:30  WARN 24044 --- [lostfound] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Unable to start web server
-2026-06-17T19:54:55.076+05:30  INFO 24044 --- [lostfound] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+2026-06-18T18:20:08.794+05:30  INFO 22416 --- [lostfound] [           main] uom.msd.lostfound.LostfoundApplication   : Starting LostfoundApplication using Java 21.0.10 with PID 22416 (C:\Users\abdul\Downloads\Lost-Found-System-runnable-final\Lost-Found-System-runnable\backend\target\classes started by abdul in C:\Users\abdul\Downloads\Lost-Found-System-runnable-final\Lost-Found-System-runnable\backend)
+2026-06-18T18:20:08.799+05:30  INFO 22416 --- [lostfound] [           main] uom.msd.lostfound.LostfoundApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-06-18T18:20:10.452+05:30  INFO 22416 --- [lostfound] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-18T18:20:10.656+05:30  INFO 22416 --- [lostfound] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 194 ms. Found 9 JPA repository interfaces.
+2026-06-18T18:20:11.686+05:30  INFO 22416 --- [lostfound] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8085 (http)
+2026-06-18T18:20:11.718+05:30  INFO 22416 --- [lostfound] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-18T18:20:11.718+05:30  INFO 22416 --- [lostfound] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.52]
+2026-06-18T18:20:11.845+05:30  INFO 22416 --- [lostfound] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-18T18:20:11.858+05:30  INFO 22416 --- [lostfound] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2957 ms
+2026-06-18T18:20:12.135+05:30  INFO 22416 --- [lostfound] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-18T18:20:12.206+05:30  INFO 22416 --- [lostfound] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.42.Final
+2026-06-18T18:20:12.253+05:30  INFO 22416 --- [lostfound] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-18T18:20:12.812+05:30  INFO 22416 --- [lostfound] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-18T18:20:12.860+05:30  INFO 22416 --- [lostfound] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-18T18:20:13.223+05:30  INFO 22416 --- [lostfound] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7752c0e7
+2026-06-18T18:20:13.223+05:30  INFO 22416 --- [lostfound] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-18T18:20:13.350+05:30  INFO 22416 --- [lostfound] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 18.4
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-18T18:20:15.174+05:30  INFO 22416 --- [lostfound] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: create table audit_logs (id bigint generated by default as identity, action varchar(255) not null check (action in ('APPROVE_CLAIM','REJECT_CLAIM','REQUEST_EVIDENCE','SCHEDULE_PICKUP','CONFIRM_HANDOVER','CLOSE_CLAIM')), entity_id bigint not null, entity_type varchar(100) not null, notes TEXT, outcome varchar(50) not null, timestamp timestamp(6) not null, admin_id bigint, primary key (id))
+Hibernate: create table claims (id bigint generated by default as identity, evidence TEXT, requested_at timestamp(6) not null, status varchar(255) not null check (status in ('PENDING','APPROVED','REJECTED','AWAITING_PICKUP','HANDED_OVER','CLOSED')), updated_at timestamp(6) not null, claimant_id bigint not null, item_match_id bigint not null, primary key (id))
+Hibernate: create table evidence_requests (id bigint generated by default as identity, message TEXT not null, requested_at timestamp(6) not null, responded_at timestamp(6), response_message TEXT, status varchar(255) not null check (status in ('REQUESTED','PROVIDED','PENDING')), claim_id bigint not null, primary key (id))
+Hibernate: create table item_images (id bigint generated by default as identity, created_at timestamp(6) not null, image_url varchar(500) not null, item_id bigint not null, primary key (id))
+Hibernate: create table item_matches (id bigint generated by default as identity, confidence_score numeric(3,2) not null, created_at timestamp(6) not null, status varchar(255) not null check (status in ('SUGGESTED','ACCEPTED','REJECTED','PENDING_REVIEW')), updated_at timestamp(6) not null, found_item_id bigint not null, lost_item_id bigint not null, primary key (id))
+Hibernate: create table items (id bigint generated by default as identity, category varchar(100), created_at timestamp(6) not null, description TEXT, location varchar(255), report_type varchar(255) not null check (report_type in ('LOST','FOUND')), status varchar(255) not null check (status in ('OPEN','MATCHED','CLAIMED','PENDING_REVIEW','AWAITING_PICKUP','SCHEDULED_FOR_AUCTION','SCHEDULED_FOR_DONATION','CLOSED')), title varchar(255) not null, updated_at timestamp(6) not null, user_id bigint not null, primary key (id))
+Hibernate: create table notifications (id bigint generated by default as identity, channel varchar(255) not null check (channel in ('IN_APP','EMAIL','BOTH')), created_at timestamp(6) not null, message TEXT not null, is_read boolean not null, read_at timestamp(6), reference_item_id bigint, title varchar(255) not null, type varchar(255) not null check (type in ('ITEM_MATCH','ITEM_CLAIMED','ITEM_RETURNED','REWARD_EARNED','REWARD_REDEEMED','GENERAL')), user_id bigint not null, primary key (id))
+Hibernate: create table pickup_schedules (id bigint generated by default as identity, handover_confirmed_at timestamp(6), location varchar(255) not null, scheduled_at timestamp(6) not null, claim_id bigint not null, handover_confirmed_by bigint, primary key (id))
+Hibernate: create table reward_ledger (id bigint generated by default as identity, created_at timestamp(6) not null, description varchar(255) not null, points integer not null, reference_id bigint, transaction_type varchar(255) not null check (transaction_type in ('CREDIT','DEBIT')), user_id bigint not null, primary key (id))
+Hibernate: create table users (id bigint generated by default as identity, created_at timestamp(6) not null, department varchar(100), email varchar(255), faculty varchar(100), full_name varchar(100), password_hash varchar(255) not null, phone varchar(20), profile_image_url varchar(255), reset_token varchar(255), reset_token_expiry timestamp(6), role varchar(10) not null check (role in ('USER','ADMIN')), student_id varchar(20), username varchar(50) not null, year_of_study varchar(50), primary key (id))
+Hibernate: create index idx_audit_logs_action on audit_logs (action)
+Hibernate: create index idx_audit_logs_admin_id on audit_logs (admin_id)
+Hibernate: create index idx_audit_logs_timestamp on audit_logs (timestamp)
+Hibernate: create index idx_audit_logs_entity on audit_logs (entity_type, entity_id)
+Hibernate: create index idx_audit_logs_admin_and_timestamp on audit_logs (admin_id, timestamp)
+Hibernate: create index idx_claims_status on claims (status)
+Hibernate: create index idx_claims_claimant_id on claims (claimant_id)
+Hibernate: create index idx_claims_requested_at on claims (requested_at)
+Hibernate: create index idx_claims_status_and_created_at on claims (status, requested_at)
+Hibernate: alter table if exists claims drop constraint if exists uk_claim_item_match
+2026-06-18T18:20:15.472+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2026-06-18T18:20:15.472+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "uk_claim_item_match" of relation "claims" does not exist, skipping
+Hibernate: alter table if exists claims add constraint uk_claim_item_match unique (item_match_id)
+Hibernate: create index idx_evidence_requests_claim_id on evidence_requests (claim_id)
+Hibernate: create index idx_evidence_requests_status on evidence_requests (status)
+Hibernate: create index idx_match_status on item_matches (status)
+Hibernate: create index idx_confidence_score on item_matches (confidence_score)
+Hibernate: create index idx_match_created_at on item_matches (created_at)
+Hibernate: alter table if exists item_matches drop constraint if exists uk_item_match
+2026-06-18T18:20:15.491+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2026-06-18T18:20:15.491+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "uk_item_match" of relation "item_matches" does not exist, skipping
+Hibernate: alter table if exists item_matches add constraint uk_item_match unique (lost_item_id, found_item_id)
+Hibernate: create index idx_report_type on items (report_type)
+Hibernate: create index idx_status on items (status)
+Hibernate: create index idx_user_id on items (user_id)
+Hibernate: create index idx_created_at on items (created_at)
+Hibernate: create index idx_pickup_schedules_claim_id on pickup_schedules (claim_id)
+Hibernate: create index idx_pickup_schedules_scheduled_at on pickup_schedules (scheduled_at)
+Hibernate: alter table if exists pickup_schedules drop constraint if exists uk_pickup_claim
+2026-06-18T18:20:15.502+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2026-06-18T18:20:15.502+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "uk_pickup_claim" of relation "pickup_schedules" does not exist, skipping
+Hibernate: alter table if exists pickup_schedules add constraint uk_pickup_claim unique (claim_id)
+Hibernate: alter table if exists users drop constraint if exists UKr43af9ap4edm43mmtq01oddj6
+2026-06-18T18:20:15.516+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2026-06-18T18:20:15.516+05:30  WARN 22416 --- [lostfound] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "ukr43af9ap4edm43mmtq01oddj6" of relation "users" does not exist, skipping
+Hibernate: alter table if exists users add constraint UKr43af9ap4edm43mmtq01oddj6 unique (username)
+Hibernate: alter table if exists audit_logs add constraint FKipd9i0r8h4lyhkehn7nm5qkc0 foreign key (admin_id) references users
+Hibernate: alter table if exists claims add constraint FK882n1pydx5dehaufafidufaps foreign key (claimant_id) references users
+Hibernate: alter table if exists claims add constraint FKobot48oyawtfua576eb9520mm foreign key (item_match_id) references item_matches
+Hibernate: alter table if exists evidence_requests add constraint FKn2dqq9prpbahnti8xvkxr8j1j foreign key (claim_id) references claims
+Hibernate: alter table if exists item_images add constraint FK31vykiuqi6nfw2rmvw37qlydy foreign key (item_id) references items
+Hibernate: alter table if exists item_matches add constraint FKqroi30jf6ibn93md0a6tk5uy3 foreign key (found_item_id) references items
+Hibernate: alter table if exists item_matches add constraint FKcoh1j7ah8vvw12shb3fpamuxd foreign key (lost_item_id) references items
+Hibernate: alter table if exists items add constraint FKft8pmhndq1kntvyfaqcybhxvx foreign key (user_id) references users
+Hibernate: alter table if exists pickup_schedules add constraint FK3gr7bnrrwsi25jm2wqmoe9mh9 foreign key (claim_id) references claims
+Hibernate: alter table if exists pickup_schedules add constraint FK6u5jol7f2nsg4ejpwb8x0fi3f foreign key (handover_confirmed_by) references users
+2026-06-18T18:20:15.565+05:30  INFO 22416 --- [lostfound] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-18T18:20:16.378+05:30  INFO 22416 --- [lostfound] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-06-18T18:20:18.875+05:30  WARN 22416 --- [lostfound] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-06-18T18:20:19.303+05:30  WARN 22416 --- [lostfound] [           main] .s.s.UserDetailsServiceAutoConfiguration : 
 
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2026-06-17T19:54:55.089+05:30 ERROR 24044 --- [lostfound] [           main] o.s.boot.SpringApplication               : Application run failed
+Using generated security password: 09c491fe-ebcb-4f8d-8dfc-d56e49b79167
 
-org.springframework.context.ApplicationContextException: Unable to start web server
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:170) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:622) ~[spring-context-6.2.16.jar:6.2.16]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350) ~[spring-boot-3.5.11.jar:3.5.11]
-	at uom.msd.lostfound.LostfoundApplication.main(LostfoundApplication.java:12) ~[classes/:na]
-Caused by: org.springframework.boot.web.server.WebServerException: Unable to start embedded Tomcat
-	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:147) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.<init>(TomcatWebServer.java:107) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory.getTomcatWebServer(TomcatServletWebServerFactory.java:517) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory.getWebServer(TomcatServletWebServerFactory.java:219) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.createWebServer(ServletWebServerApplicationContext.java:193) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:167) ~[spring-boot-3.5.11.jar:3.5.11]
-	... 8 common frames omitted
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jwtAuthenticationFilter' defined in file [C:\Users\abdul\Downloads\Lost-Found-System-dulen_frontend\Lost-Found-System-dulen_frontend\backend\target\classes\uom\msd\lostfound\auth\JwtAuthenticationFilter.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'authService': Unsatisfied dependency expressed through field 'userRepository': Error creating bean with name 'userRepository' defined in uom.msd.lostfound.repositories.UserRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Cannot resolve reference to bean 'jpaSharedEM_entityManagerFactory' while setting bean property 'entityManager'
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1395) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1232) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.getOrderedBeansOfType(ServletContextInitializerBeans.java:230) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:184) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:179) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAdaptableBeans(ServletContextInitializerBeans.java:164) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.<init>(ServletContextInitializerBeans.java:96) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.getServletContextInitializerBeans(ServletWebServerApplicationContext.java:271) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.selfInitialize(ServletWebServerApplicationContext.java:245) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.web.embedded.tomcat.TomcatStarter.onStartup(TomcatStarter.java:52) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.apache.catalina.core.StandardContext.startInternal(StandardContext.java:4452) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:164) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1201) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1191) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[na:na]
-	at org.apache.tomcat.util.threads.InlineExecutorService.execute(InlineExecutorService.java:81) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at java.base/java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:145) ~[na:na]
-	at org.apache.catalina.core.ContainerBase.startInternal(ContainerBase.java:747) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.StandardHost.startInternal(StandardHost.java:783) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:164) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1201) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1191) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317) ~[na:na]
-	at org.apache.tomcat.util.threads.InlineExecutorService.execute(InlineExecutorService.java:81) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at java.base/java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:145) ~[na:na]
-	at org.apache.catalina.core.ContainerBase.startInternal(ContainerBase.java:747) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.StandardEngine.startInternal(StandardEngine.java:201) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:164) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.StandardService.startInternal(StandardService.java:410) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:164) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.core.StandardServer.startInternal(StandardServer.java:868) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:164) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.apache.catalina.startup.Tomcat.start(Tomcat.java:436) ~[tomcat-embed-core-10.1.52.jar:10.1.52]
-	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:128) ~[spring-boot-3.5.11.jar:3.5.11]
-	... 13 common frames omitted
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'authService': Unsatisfied dependency expressed through field 'userRepository': Error creating bean with name 'userRepository' defined in uom.msd.lostfound.repositories.UserRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Cannot resolve reference to bean 'jpaSharedEM_entityManagerFactory' while setting bean property 'entityManager'
-	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:787) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:767) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:146) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:509) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1459) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:606) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1708) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1653) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:913) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 54 common frames omitted
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'userRepository' defined in uom.msd.lostfound.repositories.UserRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Cannot resolve reference to bean 'jpaSharedEM_entityManagerFactory' while setting bean property 'entityManager'
-	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference(BeanDefinitionValueResolver.java:377) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveValueIfNecessary(BeanDefinitionValueResolver.java:135) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyPropertyValues(AbstractAutowireCapableBeanFactory.java:1725) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1474) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:606) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1708) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1653) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:784) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 68 common frames omitted
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jpaSharedEM_entityManagerFactory': Cannot resolve reference to bean 'entityManagerFactory' while setting constructor argument
-	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference(BeanDefinitionValueResolver.java:377) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveValueIfNecessary(BeanDefinitionValueResolver.java:135) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveConstructorArguments(ConstructorResolver.java:691) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:513) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1375) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1205) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference(BeanDefinitionValueResolver.java:365) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 80 common frames omitted
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'dataSourceScriptDatabaseInitializer' defined in class path resource [org/springframework/boot/autoconfigure/sql/init/DataSourceInitializationConfiguration.class]: Unsatisfied dependency expressed through method 'dataSourceScriptDatabaseInitializer' parameter 0: Error creating bean with name 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSource' threw exception with message: Failed to load driver class org.h2.Driver in either of HikariConfig class loader or Thread context classloader
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:546) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1375) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1205) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.BeanDefinitionValueResolver.resolveReference(BeanDefinitionValueResolver.java:365) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 92 common frames omitted
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSource' threw exception with message: Failed to load driver class org.h2.Driver in either of HikariConfig class loader or Thread context classloader
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:657) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:645) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1375) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1205) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1708) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1653) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:913) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 104 common frames omitted
-Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSource' threw exception with message: Failed to load driver class org.h2.Driver in either of HikariConfig class loader or Thread context classloader
-	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:200) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:89) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:169) ~[spring-beans-6.2.16.jar:6.2.16]
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 117 common frames omitted
-Caused by: java.lang.RuntimeException: Failed to load driver class org.h2.Driver in either of HikariConfig class loader or Thread context classloader
-	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:514) ~[HikariCP-6.3.3.jar:na]
-	at org.springframework.boot.jdbc.DataSourceBuilder$MappedDataSourceProperty.set(DataSourceBuilder.java:478) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.jdbc.DataSourceBuilder$MappedDataSourceProperties.set(DataSourceBuilder.java:370) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.jdbc.DataSourceBuilder.build(DataSourceBuilder.java:185) ~[spring-boot-3.5.11.jar:3.5.11]
-	at org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration.createDataSource(DataSourceConfiguration.java:67) ~[spring-boot-autoconfigure-3.5.11.jar:3.5.11]
-	at org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration$Hikari.dataSource(DataSourceConfiguration.java:127) ~[spring-boot-autoconfigure-3.5.11.jar:3.5.11]
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:172) ~[spring-beans-6.2.16.jar:6.2.16]
-	... 120 common frames omitted
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
 
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  5.029 s
-[INFO] Finished at: 2026-06-17T19:54:55+05:30
-[INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.11:run (default-cli) on project lostfound: Process terminated with exit code: 1 -> [Help 1]
-org.apache.maven.lifecycle.LifecycleExecutionException: Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.11:run (default-cli) on project lostfound: Process terminated with exit code: 1
-    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:333)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
-    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
-    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
-    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
-    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
-    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
-    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
-    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
-    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
-    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
-    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:919)
-    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:285)
-    at org.apache.maven.cli.MavenCli.main (MavenCli.java:207)
-    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
-    at java.lang.reflect.Method.invoke (Method.java:580)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:255)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:201)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:361)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:314)
-Caused by: org.apache.maven.plugin.MojoExecutionException: Process terminated with exit code: 1
-    at org.springframework.boot.maven.JavaProcessExecutor.run (JavaProcessExecutor.java:74)
-    at org.springframework.boot.maven.RunMojo.run (RunMojo.java:84)
-    at org.springframework.boot.maven.AbstractRunMojo.run (AbstractRunMojo.java:255)
-    at org.springframework.boot.maven.AbstractRunMojo.execute (AbstractRunMojo.java:218)
-    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
-    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
-    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
-    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
-    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
-    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
-    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
-    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
-    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
-    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
-    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
-    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:919)
-    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:285)
-    at org.apache.maven.cli.MavenCli.main (MavenCli.java:207)
-    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
-    at java.lang.reflect.Method.invoke (Method.java:580)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:255)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:201)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:361)
-    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:314)
-[ERROR] 
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+2026-06-18T18:20:19.314+05:30  INFO 22416 --- [lostfound] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-06-18T18:20:19.985+05:30  INFO 22416 --- [lostfound] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8085 (http) with context path '/'
+2026-06-18T18:20:20.006+05:30  INFO 22416 --- [lostfound] [           main] uom.msd.lostfound.LostfoundApplication   : Started LostfoundApplication in 12.049 seconds (process running for 12.731)
+Hibernate: select u1_0.id from users u1_0 where u1_0.username=? fetch first ? rows only
+Hibernate: insert into users (created_at,department,email,faculty,full_name,password_hash,phone,profile_image_url,reset_token,reset_token_expiry,role,student_id,username,year_of_study) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+Default admin user created: admin / admin123
+Hibernate: select u1_0.id from users u1_0 where u1_0.username=? fetch first ? rows only
+Hibernate: insert into users (created_at,department,email,faculty,full_name,password_hash,phone,profile_image_url,reset_token,reset_token_expiry,role,student_id,username,year_of_study) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+Default student user created: student / student123
+Hibernate: select count(*) from items i1_0
+Hibernate: insert into items (category,created_at,description,location,report_type,status,title,updated_at,user_id) values (?,?,?,?,?,?,?,?,?)
+Hibernate: insert into items (category,created_at,description,location,report_type,status,title,updated_at,user_id) values (?,?,?,?,?,?,?,?,?)
+Hibernate: insert into items (category,created_at,description,location,report_type,status,title,updated_at,user_id) values (?,?,?,?,?,?,?,?,?)
+Hibernate: insert into items (category,created_at,description,location,report_type,status,title,updated_at,user_id) values (?,?,?,?,?,?,?,?,?)
+Mock lost and found items seeded successfully.
+^CTerminate batch job (Y/N)? 

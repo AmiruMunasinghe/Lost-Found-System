@@ -76,6 +76,7 @@ export default function Sidebar({
     if (role === "admin") {
       return [
         { label: "Dashboard", key: "admin-dashboard", icon: <LayoutDashboard size={20} /> },
+        { label: "Browse Items", key: "browse", icon: <Search size={20} /> },
         { label: "Manage Reports", key: "admin-reports", icon: <ScrollText size={20} /> },
         { label: "Manage Users", key: "admin-users", icon: <User size={20} /> },
         { label: "Analytics", key: "admin-analytics", icon: <LayoutDashboard size={20} /> },
@@ -85,11 +86,15 @@ export default function Sidebar({
     }
 
     return [
+      { label: "Browse Items", key: "browse", icon: <Search size={20} /> },
       { label: "Dashboard", key: "dashboard", icon: <LayoutDashboard size={20} /> },
       { label: "Report Lost", key: "postlost", icon: <FilePlus2 size={20} /> },
       { label: "Report Found", key: "postfound", icon: <Megaphone size={20} /> },
       { label: "My Reports", key: "reports", icon: <ScrollText size={20} /> },
       { label: "Match Results", key: "matchresults", icon: <Link2 size={20} /> },
+      { label: "Claim Item", key: "claim", icon: <PackageCheck size={20} /> },
+      { label: "Return Item", key: "return", icon: <PackageSearch size={20} /> },
+      { label: "Rewards & Badges", key: "rewards", icon: <Trophy size={20} /> },
       { label: "Settings", key: "settings", icon: <Settings size={20} /> },
       { label: "Help & Support", key: "help-support", icon: <LifeBuoy size={20} /> },
     ];

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, getSavedUser } from "./client";
 
 function normalizeReportType(value) {
   const text = String(value || "").toUpperCase();
@@ -20,8 +20,11 @@ export function toFrontendItem(item) {
     venue: item.location || item.venue || "",
     type: reportType.toLowerCase(),
     reportType,
-    status: item.status || "OPEN",
+    status: item.status || "PENDING_REVIEW",
+    userId: item.userId,
     date: item.createdAt ? String(item.createdAt).slice(0, 10) : item.date || "",
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
     imageUrls: item.imageUrls || [],
   };
 }
@@ -55,9 +58,15 @@ export async function getAllItems() {
   return Array.isArray(data) ? data.map(toFrontendItem) : [];
 }
 
-// Backward-compatible name used by old components
 export async function getItems() {
   return getAllItems();
+}
+
+export async function getMyItems(userId) {
+  const id = userId || getSavedUser()?.id;
+  if (!id) return [];
+  const data = await apiRequest(`/items/user/${id}`);
+  return Array.isArray(data) ? data.map(toFrontendItem) : [];
 }
 
 export async function getItemById(id) {
@@ -73,7 +82,12 @@ export async function searchItems(searchTerm) {
 
 export async function getItemsByType(type) {
   const reportType = normalizeReportType(type);
-  const data = await apiRequest(`/items/filter?type=${reportType}`);
+  const data = await apiRequest(`/items/type/${reportType}`);
+  return Array.isArray(data) ? data.map(toFrontendItem) : [];
+}
+
+export async function getItemsByStatus(status) {
+  const data = await apiRequest(`/items/status/${status}`);
   return Array.isArray(data) ? data.map(toFrontendItem) : [];
 }
 
@@ -88,6 +102,13 @@ export async function createItem(itemData, forcedType) {
   const data = await apiRequest("/items", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+  return toFrontendItem(data);
+}
+
+export async function updateItemStatus(itemId, status) {
+  const data = await apiRequest(`/items/${itemId}/status?status=${status}`, {
+    method: "PUT",
   });
   return toFrontendItem(data);
 }

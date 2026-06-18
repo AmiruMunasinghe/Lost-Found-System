@@ -1,26 +1,37 @@
-const API_BASE_URL = "http://192.168.8.100:8081";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8085";
+
+export function normalizeRole(role, fallback = "student") {
+  const value = String(role || fallback || "student").toLowerCase();
+  if (value === "admin" || value === "role_admin") return "admin";
+  if (value === "user" || value === "student" || value === "role_user") return "student";
+  return fallback === "admin" ? "admin" : "student";
+}
 
 export function getSavedUser() {
-  const saved = localStorage.getItem("lost_found_user");
+  const saved = localStorage.getItem("lost_found_user") || localStorage.getItem("lostFoundUser");
   if (!saved) return null;
   try {
-    return JSON.parse(saved);
+    const user = JSON.parse(saved);
+    return { ...user, role: normalizeRole(user.role) };
   } catch {
     localStorage.removeItem("lost_found_user");
+    localStorage.removeItem("lostFoundUser");
     return null;
   }
 }
 
 export function saveUserSession(authResponse, fallback = {}) {
-  const token = authResponse?.accessToken || authResponse?.token || authResponse?.jwt || "";
+  const token = authResponse?.accessToken || authResponse?.token || authResponse?.jwt || fallback.accessToken || fallback.token || "";
   const backendUser = authResponse?.user || authResponse || {};
+  const role = normalizeRole(backendUser.role || fallback.role, fallback.role || "student");
 
   const user = {
     id: backendUser.id ?? fallback.id ?? null,
     username: backendUser.username || fallback.username || fallback.name || "User",
-    name: backendUser.name || backendUser.username || fallback.name || "User",
+    name: backendUser.name || backendUser.fullName || backendUser.username || fallback.name || "User",
     email: backendUser.email || fallback.email || "",
-    role: backendUser.role || fallback.role || "student",
+    role,
+    backendRole: backendUser.role || fallback.backendRole || (role === "admin" ? "ADMIN" : "USER"),
     fullName: backendUser.fullName || fallback.fullName || "",
     phone: backendUser.phone || fallback.phone || "",
     studentId: backendUser.studentId || fallback.studentId || "",
@@ -33,16 +44,18 @@ export function saveUserSession(authResponse, fallback = {}) {
   };
 
   localStorage.setItem("lost_found_user", JSON.stringify(user));
+  localStorage.setItem("lostFoundUser", JSON.stringify(user));
   return user;
 }
 
 export function clearUserSession() {
   localStorage.removeItem("lost_found_user");
+  localStorage.removeItem("lostFoundUser");
 }
 
 export function getToken() {
   const user = getSavedUser();
-  return user?.accessToken || user?.token || null;
+  return user?.accessToken || user?.token || localStorage.getItem("adminToken") || null;
 }
 
 export async function apiRequest(path, options = {}) {
@@ -59,13 +72,10 @@ export async function apiRequest(path, options = {}) {
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      // Don't redirect if we're actually trying to log in (wrong password)
-      if (!path.includes("/auth/login")) {
-        clearUserSession();
-        window.location.href = "/login";
-        throw new Error("Session expired. Please log in again.");
-      }
+    if (response.status === 401 && !path.includes("/auth/login")) {
+      clearUserSession();
+      window.location.href = "/login";
+      throw new Error("Session expired. Please log in again.");
     }
 
     const contentType = response.headers.get("content-type") || "";

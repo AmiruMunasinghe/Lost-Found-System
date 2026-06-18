@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import uom.msd.lostfound.enums.MatchStatus;
 import uom.msd.lostfound.models.ItemMatch;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,14 +25,14 @@ public interface ItemMatchRepository extends JpaRepository<ItemMatch, Long> {
     @Query("SELECT im FROM ItemMatch im WHERE im.lostItem.id = :itemId OR im.foundItem.id = :itemId")
     List<ItemMatch> findMatchesByItemId(@Param("itemId") Long itemId);
 
-    @Query("SELECT im FROM ItemMatch im WHERE im.lostItem.user.id = :userId OR im.foundItem.user.id = :userId")
+    @Query("SELECT im FROM ItemMatch im " +
+            "WHERE (im.lostItem.user.id = :userId OR im.foundItem.user.id = :userId) " +
+            "AND im.status IN (uom.msd.lostfound.enums.MatchStatus.SUGGESTED, uom.msd.lostfound.enums.MatchStatus.ACCEPTED) " +
+            "ORDER BY im.updatedAt DESC")
     List<ItemMatch> findMatchesVisibleToUser(@Param("userId") Long userId);
 
     @Query("SELECT im FROM ItemMatch im WHERE im.status = :status AND im.confidenceScore >= :minScore ORDER BY im.confidenceScore DESC")
-    List<ItemMatch> findByStatusAndMinConfidenceScore(
-            @Param("status") MatchStatus status,
-            @Param("minScore") java.math.BigDecimal minScore
-    );
+    List<ItemMatch> findByStatusAndMinConfidenceScore(@Param("status") MatchStatus status, @Param("minScore") BigDecimal minScore);
 
     @Query("SELECT COUNT(im) FROM ItemMatch im WHERE im.lostItem.id = :itemId AND im.status = :status")
     long countByLostItemIdAndStatus(@Param("itemId") Long itemId, @Param("status") MatchStatus status);

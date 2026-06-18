@@ -2,7 +2,7 @@ import { apiRequest, getSavedUser } from "./client";
 
 export function getCurrentUserId() {
   const user = getSavedUser();
-  return user?.id ?? null;
+  return user?.id ?? user?.user?.id ?? null;
 }
 
 /**

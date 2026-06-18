@@ -45,6 +45,7 @@ public class ItemServiceImpl implements ItemService {
         item.setDescription(request.getDescription());
         item.setCategory(request.getCategory());
         item.setLocation(request.getLocation());
+        item.setStatus(ItemStatus.PENDING_REVIEW);
 
         // Add images if provided
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {

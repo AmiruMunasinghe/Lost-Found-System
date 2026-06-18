@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { createItem, getAllItems } from "../api/items";
-import { runMatchingForLostItems } from "../api/matches";
+import { createItem } from "../api/items";
 
 const categories = ["Wallet", "Electronics", "Documents", "Keys", "Bags & Wallets", "Books", "Other"];
 
@@ -16,7 +15,7 @@ function useDark(dm) {
   };
 }
 
-function PostFoundForm({ navigateTo, darkMode, user }) {
+export default function PostFoundForm({ navigateTo, darkMode }) {
   const t = useDark(darkMode);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,7 +39,6 @@ function PostFoundForm({ navigateTo, darkMode, user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");
-
     const nextErrors = validate();
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -60,34 +58,11 @@ function PostFoundForm({ navigateTo, darkMode, user }) {
         imageUrls: [],
       });
 
-      let matchCount = 0;
-      try {
-        const allItems = await getAllItems();
-        const lostItemIds = allItems
-          .filter((item) => String(item.reportType || item.type || "").toUpperCase() === "LOST")
-          .filter((item) => String(item.status || "OPEN").toUpperCase() === "OPEN" || String(item.status || "").toUpperCase() === "PENDING_REVIEW")
-          .map((item) => item.id);
-
-        const matches = await runMatchingForLostItems(lostItemIds);
-        matchCount = Array.isArray(matches) ? matches.length : 0;
-      } catch (matchErr) {
-        console.warn("Found item saved, but matching did not run:", matchErr);
-      }
-
-      alert(`Found item saved successfully. Item ID: ${savedItem.id}. Matching returned ${matchCount} result(s).`);
-      setTitle("");
-      setDescription("");
-      setCategory("Wallet");
-      setColor("");
-      setLocation("");
-      setTime("");
-      setErrors({});
-
-      if (navigateTo) {
-        navigateTo("matchresults", { itemId: savedItem.id, type: "found" });
-      }
+      alert(`Report Found Item submitted successfully. It is now pending admin approval. Item ID: ${savedItem.id}`);
+      setTitle(""); setDescription(""); setCategory("Wallet"); setColor(""); setLocation(""); setTime(""); setErrors({});
+      if (navigateTo) navigateTo("browse");
     } catch (err) {
-      setApiError(err.message || "Failed to save found item. Please check backend and token.");
+      setApiError(err.message || "Failed to save item. Please check backend and token.");
     } finally {
       setSubmitting(false);
     }
@@ -97,100 +72,41 @@ function PostFoundForm({ navigateTo, darkMode, user }) {
     width: "100%", height: "54px", borderRadius: "14px",
     border: `1px solid ${err ? "#E24B4A" : t.inputBorder}`,
     padding: "0 18px", fontSize: "15px", boxSizing: "border-box",
-    outline: "none", fontFamily: "inherit",
-    background: t.inputBg,
-    color: t.text,
-    colorScheme: darkMode ? "dark" : "light",
+    outline: "none", fontFamily: "inherit", background: t.inputBg,
+    color: t.text, colorScheme: darkMode ? "dark" : "light",
   });
 
-  const textareaStyle = (err) => ({
-    ...inputStyle(err),
-    height: "auto",
-    minHeight: "110px",
-    padding: "14px 18px",
-    resize: "vertical",
-  });
-
-  const labelStyle = {
-    display: "block", marginBottom: 10,
-    color: t.body, fontWeight: 600, fontSize: 15,
-  };
-
+  const textareaStyle = (err) => ({ ...inputStyle(err), height: "auto", minHeight: "110px", padding: "14px 18px", resize: "vertical" });
+  const labelStyle = { display: "block", marginBottom: 10, color: t.body, fontWeight: 600, fontSize: 15 };
   const fieldWrap = { marginBottom: 16 };
 
   return (
     <>
       <style>{`
-        .found-form input::placeholder, .found-form textarea::placeholder { color: ${t.muted}; }
-        .found-form input::-webkit-calendar-picker-indicator { filter: ${darkMode ? "invert(1)" : "none"}; }
+        .report-form input::placeholder, .report-form textarea::placeholder { color: ${t.muted}; }
+        .report-form input::-webkit-calendar-picker-indicator { filter: ${darkMode ? "invert(1)" : "none"}; }
       `}</style>
 
-      <div className="found-form" style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", display: "flex", justifyContent: "center", padding: "8px 0" }}>
+      <div className="report-form" style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", display: "flex", justifyContent: "center", padding: "8px 0" }}>
         <div style={{ width: "100%", maxWidth: "560px" }}>
-          <button
-            type="button"
-            style={{ background: "none", border: "none", color: t.link, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", marginBottom: 20 }}
-            onClick={() => navigateTo && navigateTo("dashboard")}
-          >← Back to Dashboard</button>
+          <button type="button" style={{ background: "none", border: "none", color: t.link, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", marginBottom: 20 }} onClick={() => navigateTo && navigateTo("dashboard")}>← Back to Dashboard</button>
 
-          <div style={{
-            background: t.card, borderRadius: "22px", padding: "36px 32px",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: `1px solid ${t.border}`,
-          }}>
+          <div style={{ background: t.card, borderRadius: "22px", padding: "36px 32px", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: `1px solid ${t.border}` }}>
             <div style={{ marginBottom: "24px", textAlign: "center" }}>
               <h2 style={{ fontSize: 26, fontWeight: 800, color: t.text, margin: "0 0 6px" }}>Report Found Item 🟢</h2>
-              <p style={{ fontSize: 15, color: t.muted, margin: 0 }}>This will save to the backend `/items` API.</p>
+              <p style={{ fontSize: 15, color: t.muted, margin: 0 }}>Your report will be saved as pending until admin approval.</p>
             </div>
 
             {apiError && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 12, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>{apiError}</div>}
 
             <form onSubmit={handleSubmit}>
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Item Title</label>
-                <input placeholder="e.g. Black Wallet Found" value={title}
-                  onChange={(e) => { setTitle(e.target.value); setErrors({ ...errors, title: null }); }}
-                  style={inputStyle(errors.title)} />
-                {errors.title && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.title}</span>}
-              </div>
-
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Category</label>
-                <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle(errors.category)}>
-                  {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
-
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Location Found</label>
-                <input placeholder="e.g. Library" value={location}
-                  onChange={(e) => { setLocation(e.target.value); setErrors({ ...errors, location: null }); }}
-                  style={inputStyle(errors.location)} />
-                {errors.location && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.location}</span>}
-              </div>
-
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Color / Identifying Detail</label>
-                <input placeholder="e.g. Black, red strap" value={color} onChange={(e) => setColor(e.target.value)} style={inputStyle(false)} />
-              </div>
-
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Description</label>
-                <textarea placeholder="Add details that can help matching..." value={description}
-                  onChange={(e) => { setDescription(e.target.value); setErrors({ ...errors, description: null }); }}
-                  style={textareaStyle(errors.description)} />
-                {errors.description && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.description}</span>}
-              </div>
-
-              <div style={fieldWrap}>
-                <label style={labelStyle}>Approximate Time Found</label>
-                <input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle(false)} />
-              </div>
-
-              <button type="submit" disabled={submitting} style={{
-                width: "100%", height: "60px", border: "none", borderRadius: "14px",
-                background: submitting ? "#94a3b8" : "linear-gradient(90deg,#16a34a,#22c55e)", color: "#fff",
-                fontSize: "17px", fontWeight: "700", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", marginTop: 8,
-              }}>{submitting ? "Saving..." : "Submit Found Item"}</button>
+              <div style={fieldWrap}><label style={labelStyle}>Item Title</label><input placeholder="e.g. Black Wallet" value={title} onChange={(e) => { setTitle(e.target.value); setErrors({ ...errors, title: null }); }} style={inputStyle(errors.title)} />{errors.title && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.title}</span>}</div>
+              <div style={fieldWrap}><label style={labelStyle}>Category</label><select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle(errors.category)}>{categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+              <div style={fieldWrap}><label style={labelStyle}>Location Found</label><input placeholder="e.g. Library" value={location} onChange={(e) => { setLocation(e.target.value); setErrors({ ...errors, location: null }); }} style={inputStyle(errors.location)} />{errors.location && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.location}</span>}</div>
+              <div style={fieldWrap}><label style={labelStyle}>Color / Identifying Detail</label><input placeholder="e.g. Black, red strap" value={color} onChange={(e) => setColor(e.target.value)} style={inputStyle(false)} /></div>
+              <div style={fieldWrap}><label style={labelStyle}>Description</label><textarea placeholder="Add details that can help matching..." value={description} onChange={(e) => { setDescription(e.target.value); setErrors({ ...errors, description: null }); }} style={textareaStyle(errors.description)} />{errors.description && <span style={{ color: "#E24B4A", fontSize: 13 }}>{errors.description}</span>}</div>
+              <div style={fieldWrap}><label style={labelStyle}>Approximate Time Found</label><input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle(false)} /></div>
+              <button type="submit" disabled={submitting} style={{ width: "100%", height: "60px", border: "none", borderRadius: "14px", background: submitting ? "#94a3b8" : "linear-gradient(90deg,#16a34a,#22c55e)", color: "#fff", fontSize: "17px", fontWeight: "700", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", marginTop: 8 }}>{submitting ? "Submitting for approval..." : "Submit for Admin Approval"}</button>
             </form>
           </div>
         </div>
@@ -198,5 +114,3 @@ function PostFoundForm({ navigateTo, darkMode, user }) {
     </>
   );
 }
-
-export default PostFoundForm;

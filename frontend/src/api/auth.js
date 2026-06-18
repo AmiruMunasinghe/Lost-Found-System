@@ -1,5 +1,22 @@
 import { apiRequest, saveUserSession, clearUserSession, getSavedUser } from "./client";
 
+function normalizeFrontendRole(value, loginId = "") {
+  const roleText = String(value || "").trim().toLowerCase();
+  const loginText = String(loginId || "").trim().toLowerCase();
+
+  if (
+    roleText === "admin" ||
+    roleText === "role_admin" ||
+    roleText === "administrator" ||
+    loginText === "admin" ||
+    loginText === "admin@uom.lk"
+  ) {
+    return "admin";
+  }
+
+  return "student";
+}
+
 export async function registerUser({ name, username, email, password, role = "student" }) {
   const preferredUsername = username || name || email?.split("@")[0];
 
@@ -12,11 +29,14 @@ export async function registerUser({ name, username, email, password, role = "st
     }),
   });
 
+  const backendUser = response?.user || {};
+  const frontendRole = normalizeFrontendRole(backendUser.role || role, preferredUsername);
+
   return saveUserSession(response, {
     username: preferredUsername,
     name: preferredUsername,
     email,
-    role,
+    role: frontendRole,
   });
 }
 
@@ -32,18 +52,40 @@ export async function loginUser({ identifier, email, username, password }) {
     }),
   });
 
-  const role = String(loginId || "").toLowerCase().includes("admin") ? "admin" : "student";
+  const backendUser = response?.user || {};
+  const role = normalizeFrontendRole(backendUser.role, loginId);
 
-  return saveUserSession(response, {
-    username: loginId,
-    name: loginId,
-    email: loginId,
+  const user = saveUserSession(response, {
+    username: backendUser.username || loginId,
+    name: backendUser.username || loginId,
+    email: backendUser.email || loginId,
     role,
   });
+
+  // Force the normalized frontend role because backend returns USER/ADMIN, while the frontend routes use student/admin.
+  user.role = role;
+  localStorage.setItem("lost_found_user", JSON.stringify(user));
+
+  if (role === "admin") {
+    localStorage.setItem("adminToken", user.accessToken || user.token || "");
+    localStorage.setItem("adminUser", JSON.stringify({
+      id: user.id || "A-09",
+      name: user.fullName || user.name || user.username || "Admin",
+      email: user.email || "admin@uom.lk",
+      role: "ADMIN",
+    }));
+  } else {
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
+  }
+
+  return user;
 }
 
 export function logoutUser() {
   clearUserSession();
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("adminUser");
 }
 
 export function getCurrentUserFromStorage() {

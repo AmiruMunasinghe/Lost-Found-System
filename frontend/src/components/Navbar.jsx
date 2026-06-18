@@ -1,10 +1,6 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Bell, CheckCircle2, ChevronDown, Menu, Moon, Sun, X } from "lucide-react";
-import {
-  getUnreadNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-} from "../api/notifications";
+import { getAllNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "../api/notifications";
 
 const C = {
   primary: "#0F5FFF",
@@ -12,27 +8,6 @@ const C = {
   border: "#d0d5dd",
   body: "#344054",
 };
-
-function formatTime(dateStr) {
-  if (!dateStr) return "";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} minute${mins > 1 ? "s" : ""} ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
-  const days = Math.floor(hrs / 24);
-  if (days === 1) return "Yesterday";
-  return `${days} days ago`;
-}
-
-function typeFromNotification(n) {
-  const t = String(n.type || "").toLowerCase();
-  if (t.includes("match")) return "match";
-  if (t.includes("reward") || t.includes("badge")) return "reward";
-  if (t.includes("resolv") || t.includes("claim")) return "resolved";
-  return "info";
-}
 
 function useClickOutside(ref, enabled, onOutsideClick) {
   useEffect(() => {
@@ -65,29 +40,67 @@ export default function Navbar({
   const [showNotifications, setShowNotifications] = useState(false);
   const [publicMenuOpen, setPublicMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      const data = await getUnreadNotifications(user.id);
-      setNotifications(Array.isArray(data) ? data : []);
-    } catch {
-      // silently ignore — keep existing state
-    }
-  }, [user?.id]);
-
-  // Fetch on mount and whenever the user changes; poll every 60s
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
-  }, [isLoggedIn, fetchNotifications]);
+  const [notificationLoading, setNotificationLoading] = useState(false);
+  const [notificationError, setNotificationError] = useState("");
 
   useClickOutside(notificationRef, showNotifications, () => setShowNotifications(false));
   useClickOutside(publicMenuRef, publicMenuOpen, () => setPublicMenuOpen(false));
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const getUserId = () => user?.id || user?.user?.id || null;
+
+  const formatNotificationTime = (value) => {
+    if (!value) return "Just now";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Just now";
+
+    const diffMs = Date.now() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin} min ago`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    return date.toLocaleDateString();
+  };
+
+  const normalizeNotification = (notification) => ({
+    id: notification.id,
+    title: notification.title || "Notification",
+    message: notification.message || notification.title || "You have a new notification.",
+    time: formatNotificationTime(notification.createdAt),
+    read: Boolean(notification.read),
+    type: String(notification.type || "GENERAL").toLowerCase(),
+    referenceItemId: notification.referenceItemId,
+  });
+
+  const loadNotifications = async () => {
+    const userId = getUserId();
+    if (!userId) {
+      setNotifications([]);
+      return;
+    }
+
+    try {
+      setNotificationLoading(true);
+      setNotificationError("");
+      const data = await getAllNotifications(userId);
+      setNotifications(Array.isArray(data) ? data.map(normalizeNotification) : []);
+    } catch (error) {
+      setNotificationError(error.message || "Failed to load notifications");
+      setNotifications([]);
+    } finally {
+      setNotificationLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) loadNotifications();
+    else setNotifications([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, user?.id]);
 
   const nb = darkMode
     ? {
@@ -148,7 +161,7 @@ export default function Navbar({
       home: "Home",
       about: "About",
       contact: "Contact",
-      browse: "Browse Items",
+      browse: "My Items",
       dashboard: "Dashboard",
       postlost: "Report Lost Item",
       postfound: "Report Found Item",
@@ -160,6 +173,7 @@ export default function Navbar({
       rewards: "Rewards & Badges",
       profile: "My Profile",
       settings: "Settings",
+      notifications: "Notifications",
       "help-support": "Help & Support",
       "admin-dashboard": "Admin Dashboard",
       "admin-reports": "Manage Reports",
@@ -171,33 +185,40 @@ export default function Navbar({
   };
 
   const markAsRead = async (id) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    const userId = getUserId();
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+
+    if (!userId) return;
     try {
-      if (user?.id) await markNotificationAsRead(id, user.id);
-    } catch {
-      fetchNotifications();
+      await markNotificationAsRead(id, userId);
+    } catch (error) {
+      console.warn("Failed to mark notification as read", error);
     }
   };
 
   const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    const userId = getUserId();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+    if (!userId) return;
     try {
-      if (user?.id) await markAllNotificationsAsRead(user.id);
-    } catch {
-      fetchNotifications();
+      await markAllNotificationsAsRead(userId);
+    } catch (error) {
+      console.warn("Failed to mark all notifications as read", error);
     }
   };
 
   const openNotificationTarget = (notification) => {
     markAsRead(notification.id);
-    const kind = typeFromNotification(notification);
-    if (kind === "match") {
+
+    if (notification.type === "match") {
       navigateTo("/matchresults");
-    } else if (kind === "reward") {
+    } else if (notification.type === "reward" || notification.type === "badge") {
       navigateTo("/rewards");
     } else {
       navigateTo("/reports");
     }
+
     setShowNotifications(false);
   };
 
@@ -302,60 +323,49 @@ export default function Navbar({
                 </div>
 
                 <div style={styles.notificationList}>
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: "24px", textAlign: "center", color: nb.panelMuted, fontSize: 14 }}>
-                      🔕 No unread notifications
-                    </div>
-                  ) : notifications.map((notification) => {
-                    const kind = typeFromNotification(notification);
-                    const typeIcon = { match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆", info: "📢" };
-                    return (
+                  {notificationLoading ? (
+                    <div style={{ padding: 18, color: nb.panelMuted }}>Loading notifications...</div>
+                  ) : notificationError ? (
+                    <div style={{ padding: 18, color: "#ef4444" }}>{notificationError}</div>
+                  ) : notifications.length === 0 ? (
+                    <div style={{ padding: 18, color: nb.panelMuted }}>No notifications yet.</div>
+                  ) : (
+                    notifications.map((notification) => (
                       <button
                         key={notification.id}
                         style={{
                           ...styles.notificationItem,
-                          background: notification.isRead ? nb.panelCard : nb.unreadBg,
+                          background: notification.read ? nb.panelCard : nb.unreadBg,
                           borderBottom: `1px solid ${nb.border}`,
                         }}
                         onClick={() => openNotificationTarget(notification)}
                       >
-                        <span style={styles.notificationIcon}>{typeIcon[kind] || "📢"}</span>
+                        <span style={styles.notificationIcon}>
+                          {{ match: "🔔", reward: "⭐", resolved: "✅", badge: "🏆", general: "📢", item_matched: "🔔", claim_update: "✅" }[notification.type] || "📢"}
+                        </span>
 
                         <span style={styles.notificationBody}>
-                          {notification.title && (
-                            <span style={{ fontSize: 11, color: nb.panelMuted, fontWeight: 600, display: "block", marginBottom: 2 }}>
-                              {notification.title}
-                            </span>
-                          )}
                           <span
                             style={{
                               ...styles.notificationMessage,
                               color: nb.panelText,
-                              fontWeight: notification.isRead ? 500 : 800,
+                              fontWeight: notification.read ? 500 : 800,
                             }}
                           >
                             {notification.message}
                           </span>
-                          <span style={{ ...styles.notificationTime, color: nb.panelMuted }}>
-                            {formatTime(notification.createdAt)}
-                          </span>
+                          <span style={{ ...styles.notificationTime, color: nb.panelMuted }}>{notification.time}</span>
                         </span>
 
-                        {!notification.isRead && <span style={styles.unreadDot} />}
+                        {!notification.read && <span style={styles.unreadDot} />}
                       </button>
-                    );
-                  })}
+                    ))
+                  )}
                 </div>
 
                 <div style={{ ...styles.notificationFooter, borderTop: `1px solid ${nb.border}` }}>
                   <button style={styles.markReadBtn} onClick={markAllAsRead}>
                     <CheckCircle2 size={15} /> Mark all as read
-                  </button>
-                  <button
-                    style={{ ...styles.markReadBtn, marginLeft: "auto" }}
-                    onClick={() => { setShowNotifications(false); navigateTo("/notifications"); }}
-                  >
-                    View all
                   </button>
                 </div>
               </div>

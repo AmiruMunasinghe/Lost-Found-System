@@ -26,12 +26,13 @@ import Rewards from "./pages/Rewards";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import HelpSupport from "./pages/HelpSupport";
+import Notifications from "./pages/Notifications";
+import AdminPortal from "./admin/App";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminReports from "./pages/AdminReports";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAnalytics from "./pages/AdminAnalytics";
-import Notifications from "./pages/Notifications";
 
 const PAGES = {
   // Public
@@ -43,7 +44,7 @@ const PAGES = {
   forgot: { component: ForgotPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   reset: { component: ResetPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
   "reset-password": { component: ResetPassword, authRequired: false, guestOnly: true, allowedRoles: ["guest"] },
-  browse: { component: BrowseItems, authRequired: false, allowedRoles: ["guest", "student", "admin"] },
+  browse: { component: BrowseItems, authRequired: true, allowedRoles: ["student"] },
 
   // Authenticated Student/Staff
   dashboard: { component: Dashboard, authRequired: true, allowedRoles: ["student", "admin"] },
@@ -58,29 +59,39 @@ const PAGES = {
   profile: { component: Profile, authRequired: true, allowedRoles: ["student", "admin"] },
   settings: { component: Settings, authRequired: true, allowedRoles: ["student", "admin"] },
   "help-support": { component: HelpSupport, authRequired: true, allowedRoles: ["student", "admin"] },
+  notifications: { component: Notifications, authRequired: true, allowedRoles: ["student", "admin"] },
 
   // Admin
   "admin-dashboard": { component: AdminDashboard, authRequired: true, allowedRoles: ["admin"] },
   "admin-reports": { component: AdminReports, authRequired: true, allowedRoles: ["admin"] },
   "admin-users": { component: AdminUsers, authRequired: true, allowedRoles: ["admin"] },
   "admin-analytics": { component: AdminAnalytics, authRequired: true, allowedRoles: ["admin"] },
-  notifications: { component: Notifications, authRequired: true, allowedRoles: ["student", "admin"] },
 };
+
+function isAdminPortalPage(pageKey) {
+  return pageKey === "admin" || pageKey.startsWith("admin/");
+}
+
+function normalizeAdminPortalPage(pageKey) {
+  if (pageKey === "admin" || pageKey === "admin/login") return "admin/claims";
+  return pageKey;
+}
 
 function getStoredUser() {
   try {
-    const savedUser = localStorage.getItem("lost_found_user");
+    const savedUser = localStorage.getItem("lostFoundUser");
     return savedUser ? JSON.parse(savedUser) : null;
   } catch (error) {
-    localStorage.removeItem("lost_found_user");
+    localStorage.removeItem("lostFoundUser");
     return null;
   }
 }
 
 function getPageFromUrl() {
   const path = window.location.pathname.replace(/^\//, "");
-  const page = path === "" ? "home" : path;
-  return PAGES[page] ? page : "home";
+  if (!path) return "home";
+  if (isAdminPortalPage(path)) return normalizeAdminPortalPage(path);
+  return PAGES[path] ? path : "home";
 }
 
 function getInitialIsMobile() {
@@ -102,9 +113,9 @@ function App() {
     setUserState(newUser);
 
     if (newUser) {
-      localStorage.setItem("lost_found_user", JSON.stringify(newUser));
+      localStorage.setItem("lostFoundUser", JSON.stringify(newUser));
     } else {
-      localStorage.removeItem("lost_found_user");
+      localStorage.removeItem("lostFoundUser");
     }
   }, []);
 
@@ -112,31 +123,35 @@ function App() {
     let pageKey = pathOrKey.replace(/^\//, "");
     if (pageKey === "") pageKey = "home";
 
+    const currentUser = userRef.current;
+    const isLoggedIn = !!currentUser;
+
+    if (isAdminPortalPage(pageKey)) {
+      pageKey = normalizeAdminPortalPage(pageKey);
+    }
+
     const pageConfig = PAGES[pageKey];
     let targetPage = pageKey;
     let nextParams = params;
 
-    if (!pageConfig) {
+    if (isAdminPortalPage(pageKey)) {
+      if (!isLoggedIn || currentUser.role !== "admin") {
+        targetPage = "login";
+        nextParams = { next: pageKey, nextParams: params };
+      }
+    } else if (!pageConfig) {
       targetPage = "home";
       nextParams = {};
     } else {
-      const currentUser = userRef.current;
-      const isLoggedIn = !!currentUser;
-
       if (pageConfig.authRequired && !isLoggedIn) {
         targetPage = "login";
         nextParams = { next: pageKey, nextParams: params };
       } else if (pageConfig.guestOnly && isLoggedIn) {
-        const r = currentUser.role?.toLowerCase();
-        targetPage = r === "admin" ? "admin-dashboard" : "browse";
+        targetPage = currentUser.role === "admin" ? "admin/claims" : "browse";
         nextParams = {};
-      } else {
-        let r = currentUser ? currentUser.role?.toLowerCase() : "guest";
-        if (r === "user") r = "student";
-        if (!pageConfig.allowedRoles.includes(r)) {
-          targetPage = currentUser ? (r === "admin" ? "admin-dashboard" : "browse") : "home";
-          nextParams = {};
-        }
+      } else if (!pageConfig.allowedRoles.includes(currentUser ? currentUser.role : "guest")) {
+        targetPage = currentUser ? (currentUser.role === "admin" ? "admin/claims" : "browse") : "home";
+        nextParams = {};
       }
     }
 
@@ -181,7 +196,11 @@ function App() {
     const handlePopState = (event) => {
       const path = window.location.pathname.replace(/^\//, "");
       const page = path === "" ? "home" : path;
-      setCurrentPage(PAGES[page] ? page : "home");
+      if (isAdminPortalPage(page)) {
+        setCurrentPage(normalizeAdminPortalPage(page));
+      } else {
+        setCurrentPage(PAGES[page] ? page : "home");
+      }
       setPageParams(event.state?.params || {});
     };
 
@@ -193,14 +212,20 @@ function App() {
   React.useEffect(() => {
     const pageConfig = PAGES[currentPage];
 
+    const isLoggedIn = !!userState;
+    const role = userState ? userState.role : "guest";
+
+    if (isAdminPortalPage(currentPage)) {
+      if (!isLoggedIn || role !== "admin") {
+        navigateTo("/login", { next: currentPage, nextParams: pageParams }, true);
+      }
+      return;
+    }
+
     if (!pageConfig) {
       navigateTo("/", {}, true);
       return;
     }
-
-    const isLoggedIn = !!userState;
-    let role = userState?.role ? userState.role.toLowerCase() : "guest";
-    if (role === "user") role = "student";
 
     if (pageConfig.authRequired && !isLoggedIn) {
       navigateTo("/login", { next: currentPage, nextParams: pageParams }, true);
@@ -208,20 +233,32 @@ function App() {
     }
 
     if (pageConfig.guestOnly && isLoggedIn) {
-      navigateTo(role === "admin" ? "/admin-dashboard" : "/browse", {}, true);
+      navigateTo(role === "admin" ? "/admin/claims" : "/browse", {}, true);
       return;
     }
 
     if (!pageConfig.allowedRoles.includes(role)) {
-      navigateTo(isLoggedIn ? (role === "admin" ? "/admin-dashboard" : "/browse") : "/", {}, true);
+      navigateTo(isLoggedIn ? (role === "admin" ? "/admin/claims" : "/browse") : "/", {}, true);
     }
   }, [currentPage, userState, navigateTo]);
 
   const PageComponent = PAGES[currentPage]?.component || PAGES.home.component;
   const user = userState;
-  let userRole = user?.role ? user.role.toLowerCase() : "guest";
-  if (userRole === "user") userRole = "student";
+  const userRole = user ? user.role : "guest";
   const dm = darkMode;
+
+  if (isAdminPortalPage(currentPage) && user?.role === "admin") {
+    return (
+      <NavigationContext.Provider value={{ navigate: navigateTo, currentPage, pageParams }}>
+        <AdminPortal
+          onLogout={() => {
+            setUser(null);
+            navigateTo("/login", {}, true);
+          }}
+        />
+      </NavigationContext.Provider>
+    );
+  }
 
   const floatAnimation = `
     @keyframes float {
