@@ -83,7 +83,7 @@ export default function Dashboard({ navigateTo, darkMode, user }) {
   const stats = [
     { num: "3", label: "Active reports", color: "#0F5FFF" },
     { num: String(matchesCount || 0), label: "Matches found", color: "#3B6D11" },
-    { num: "250", label: "Reward points", color: "#BA7517" },
+    // { num: "250", label: "Reward points", color: "#BA7517" },
   ];
 
   const actions = [
