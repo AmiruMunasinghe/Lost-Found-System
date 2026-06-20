@@ -20,8 +20,8 @@ It allows students and staff to interact with the system.
 - Report lost items
 - Report found items
 - View matches
-- Notification system
-- Profile and reward points display
+- In-app notification system
+- Profile management
 
 ---
 

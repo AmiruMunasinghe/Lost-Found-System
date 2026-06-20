@@ -7,7 +7,7 @@ The system provides a centralized platform for:
 - Reporting lost items
 - Submitting found items
 - Automatic matching between lost and found items
-- Notifications and reward system
+- In-app notifications
 - Administrative control and monitoring
 
 ---
@@ -33,9 +33,8 @@ The system provides a centralized platform for:
 - User authentication (JWT-based)
 - Lost & found item management
 - Automated matching engine
-- Notification system
+- In-app notification system
 - Admin dashboard (user & content management)
-- Reward system
 
 ---
 

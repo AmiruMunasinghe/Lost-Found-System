@@ -20,4 +20,4 @@ This documentation helps developers understand:
 - The backend is implemented as a Spring Boot application.
 - The primary API base path is the service root, with a few nested namespaces under `/api`.
 - JWT authentication is used for protected endpoints.
-- The backend also exposes internal event and reward APIs.
+- The backend exposes internal event APIs used by the matching engine to trigger in-app notifications.

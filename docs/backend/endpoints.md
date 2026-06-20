@@ -271,15 +271,14 @@
 ## Notification API
 
 ### POST /api/notifications
-- Description: Send a new notification.
+- Description: Send a new in-app notification.
 - Request body (JSON):
   - `userId` number, required
-  - `type` string, required (`ITEM_MATCH`, `ITEM_CLAIMED`, `ITEM_RETURNED`, `REWARD_EARNED`, `REWARD_REDEEMED`, `GENERAL`)
+  - `type` string, required (`ITEM_MATCH`, `ITEM_CLAIMED`, `ITEM_RETURNED`, `GENERAL`)
   - `title` string, required
   - `message` string, required
-  - `channel` string, required (`IN_APP`, `EMAIL`, `BOTH`)
+  - `channel` string, required (`IN_APP`)
   - `referenceItemId` number, optional
-  - `recipientEmail` string, optional when `channel` is `EMAIL` or `BOTH`
 - Response: `NotificationResponse`
 - Status: `201 Created`
 
@@ -319,33 +318,6 @@
   - `userId` number
 - Response: no content
 - Status: `204 No Content`
-
-## Reward API
-
-### POST /api/rewards/transactions
-- Description: Record a reward credit or debit transaction.
-- Request body (JSON):
-  - `userId` number, required
-  - `points` integer, required, minimum `1`
-  - `transactionType` string, required (`CREDIT` or `DEBIT`)
-  - `description` string, required
-  - `referenceId` number, optional
-- Response: `RewardLedgerEntryResponse`
-- Status: `201 Created`
-
-### GET /api/rewards/users/{userId}
-- Description: Get reward balance and history for a user.
-- Path parameter:
-  - `userId` number
-- Response: `RewardBalanceResponse`
-- Status: `200 OK`
-
-### GET /api/rewards/users/{userId}/balance
-- Description: Get current reward balance for a user.
-- Path parameter:
-  - `userId` number
-- Response: JSON object with `balance`
-- Status: `200 OK`
 
 ## Event API
 
