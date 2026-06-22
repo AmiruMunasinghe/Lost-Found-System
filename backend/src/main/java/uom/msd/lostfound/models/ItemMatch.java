@@ -1,6 +1,10 @@
 package uom.msd.lostfound.models;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import uom.msd.lostfound.enums.MatchStatus;
 
 import java.math.BigDecimal;
@@ -14,6 +18,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_confidence_score", columnList = "confidence_score"),
         @Index(name = "idx_match_created_at", columnList = "created_at")
 })
+@Getter
+@Setter
+@NoArgsConstructor 
 public class ItemMatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,9 +41,11 @@ public class ItemMatch {
     @Column(nullable = false)
     private MatchStatus status = MatchStatus.SUGGESTED;
 
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Setter(AccessLevel.NONE) 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
@@ -51,69 +60,10 @@ public class ItemMatch {
         updatedAt = LocalDateTime.now();
     }
 
-    public ItemMatch() {
-    }
-
     public ItemMatch(Item lostItem, Item foundItem, BigDecimal confidenceScore) {
         this.lostItem = lostItem;
         this.foundItem = foundItem;
         this.confidenceScore = confidenceScore;
         this.status = MatchStatus.SUGGESTED;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Item getLostItem() {
-        return lostItem;
-    }
-
-    public void setLostItem(Item lostItem) {
-        this.lostItem = lostItem;
-    }
-
-    public Item getFoundItem() {
-        return foundItem;
-    }
-
-    public void setFoundItem(Item foundItem) {
-        this.foundItem = foundItem;
-    }
-
-    public BigDecimal getConfidenceScore() {
-        return confidenceScore;
-    }
-
-    public void setConfidenceScore(BigDecimal confidenceScore) {
-        this.confidenceScore = confidenceScore;
-    }
-
-    public MatchStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(MatchStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
